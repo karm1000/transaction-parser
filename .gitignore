@@ -5,3 +5,9 @@
 tags
 node_modules
 __pycache__
+
+## Build Files ###
+dist/
+
+### Vs Code ###
+.vscode/
