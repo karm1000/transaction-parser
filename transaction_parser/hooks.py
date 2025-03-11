@@ -3,7 +3,7 @@ app_title = "Transaction Parser"
 app_publisher = "Resilient Tech"
 app_description = "AI-powered add-on for ERPNext that extracts data from PDFs and creates draft records automatically."
 app_email = "info@resilient.tech"
-app_license = "mit"
+app_license = "GNU General Public License (v3)"
 
 # Apps
 # ------------------
@@ -241,4 +241,3 @@ app_license = "mit"
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
