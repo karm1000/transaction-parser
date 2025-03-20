@@ -7,6 +7,9 @@ from transaction_parser.transaction_parser.document_generators.utils import (
 )
 from transaction_parser.transaction_parser.document_parser.parser import DocumentParser
 from transaction_parser.transaction_parser.utils import is_enabled
+from transaction_parser.transaction_parser.utils.notification import (
+    enqueue_notification,
+)
 
 
 @frappe.whitelist()
@@ -31,6 +34,8 @@ def _parse(country, doctype, file_url, page_limit=None):
     generator = get_document_generator(country, doctype)
     doc = generator().generate(parsed_data)
 
-    print(doc.name)
-
-    # TODO: push notification to the user
+    enqueue_notification(
+        document_type=doctype,
+        document_name=doc.name,
+        subject=_(f"Draft {doctype} {doc.name} has been created"),
+    )
