@@ -67,20 +67,29 @@ class DocumentParser:
         if not self.settings.reuse_previously_parsed_data:
             return
 
+        file_names = self._get_duplicate_file_names()
+
         filters = {
             "integration_request_service": SERVICE_NAME,
             "status": "Completed",
             "reference_doctype": "File",
-            "reference_docname": self.file_doc.name,
+            "reference_docname": ["in", file_names],
         }
 
-        parsed_data = frappe.get_value(
+        parsed_data = frappe.db.get_value(
             "Integration Request",
             filters=filters,
             fieldname="output",
         )
 
-        return to_dict(parsed_data)
+        return to_dict(parsed_data, throw=False)
+
+    def _get_duplicate_file_names(self):
+        return frappe.get_all(
+            "File",
+            filters={"file_url": self.file_url},
+            pluck="name",
+        )
 
     def _get_ai_response(self):
         client = AIClient(self.settings)
