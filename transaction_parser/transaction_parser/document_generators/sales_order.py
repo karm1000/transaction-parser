@@ -8,5 +8,6 @@ from transaction_parser.transaction_parser.document_generators.transaction impor
 class SalesOrder(Transaction):
     DOCTYPE = "Sales Order"
 
-    def generate(self, parsed_data):
-        pass
+    def set_details(self):
+        super().set_details()
+        # Add Sales Order specific details here

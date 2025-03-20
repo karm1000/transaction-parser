@@ -37,5 +37,5 @@ def _parse(country, doctype, file_url, page_limit=None):
     enqueue_notification(
         document_type=doctype,
         document_name=doc.name,
-        subject=_(f"Draft {doctype} {doc.name} has been created"),
+        subject=_(f"{doctype} {doc.name} has been created"),
     )
