@@ -9,5 +9,8 @@ class SalesOrder(Transaction):
     DOCTYPE = "Sales Order"
 
     def set_details(self):
-        super().set_details()
-        # Add Sales Order specific details here
+        pass
+
+    ### Company
+    def get_company(self, parsed_company_name):
+        pass
