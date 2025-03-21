@@ -42,7 +42,7 @@ class TransactionGenerator:
         self.doc.flags.ignore_links = True
 
     ### Company
-    def get_company(self, *, company, party):
+    def get_company(self, company, party):
         if found := frappe.db.exists("Company", {"name": ["in", [company, party]]}):
             if found == party:
                 self.is_company_party_inverted = True
@@ -68,7 +68,7 @@ class TransactionGenerator:
         return self.companies
 
     ### Party
-    def get_party(self, *, company, party):
+    def get_party(self, company, party):
         if not self.PARTY_DOCTYPE:
             raise NotImplementedError("PARTY_DOCTYPE is not defined")
 
@@ -97,6 +97,35 @@ class TransactionGenerator:
             self.parties = frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name")
 
         return self.parties
+
+    ### Address
+    def get_company_address(self, company, address):
+        return self.get_address(company, address, "Company")
+
+    def get_party_address(self, party, address):
+        return self.get_address(party, address, self.PARTY_DOCTYPE)
+
+    def get_address(self, company, address, doctype):
+        addresses = frappe.get_all(
+            "Dynamic Link",
+            filters={
+                "parenttype": "Address",
+                "link_doctype": doctype,
+                "link_name": company,
+            },
+            pluck="parent",
+        )
+
+        if found := frappe.db.exists(
+            "Address",
+            {
+                "pincode": address.postal_code,
+                "name": ["in", addresses],
+            },
+        ):
+            return found
+
+        frappe.throw(_("Could not find Address"))
 
     ### Currency
     def get_currency(self):
