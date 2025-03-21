@@ -1,10 +1,10 @@
 from transaction_parser.transaction_parser.document_generators.sales_order import (
-    SalesOrder,
+    SalesOrderGenerator,
 )
 from transaction_parser.transaction_parser.regional_overrides.india.document_generators.transaction import (
-    IndiaTransaction,
+    IndiaTransactionGenerator,
 )
 
 
-class IndiaSalesOrder(IndiaTransaction, SalesOrder):
+class IndiaSalesOrderGenerator(IndiaTransactionGenerator, SalesOrderGenerator):
     pass

@@ -1,11 +1,11 @@
 import frappe
 
 from transaction_parser.transaction_parser.document_generators.transaction import (
-    Transaction,
+    TransactionGenerator,
 )
 
 
-class SalesOrder(Transaction):
+class SalesOrderGenerator(TransactionGenerator):
     DOCTYPE = "Sales Order"
 
     def set_details(self):

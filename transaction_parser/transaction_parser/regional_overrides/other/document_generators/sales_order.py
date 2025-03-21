@@ -1,7 +1,7 @@
 from transaction_parser.transaction_parser.document_generators.sales_order import (
-    SalesOrder,
+    SalesOrderGenerator,
 )
 
 
-class OtherSalesOrder(SalesOrder):
+class OtherSalesOrderGenerator(SalesOrderGenerator):
     pass

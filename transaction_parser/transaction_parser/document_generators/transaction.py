@@ -4,7 +4,7 @@ from erpnext.stock.get_item_details import get_item_details
 from rapidfuzz import process
 
 
-class Transaction:
+class TransactionGenerator:
     DOCTYPE = None
 
     def __init__(self):

@@ -1,9 +1,9 @@
 from transaction_parser.transaction_parser.document_generators.transaction import (
-    Transaction,
+    TransactionGenerator,
 )
 
 
-class IndiaTransaction(Transaction):
+class IndiaTransactionGenerator(TransactionGenerator):
     def get_company(self, company_obj, party_obj):
         # Validate GSTIN
         # search for gstin in company or address (get_party_for_gstin)
