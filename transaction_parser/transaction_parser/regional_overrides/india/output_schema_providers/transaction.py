@@ -1,9 +1,9 @@
 from transaction_parser.transaction_parser.document_parser.output_schema_providers.transaction import (
-    Transaction,
+    TransactionSchema,
 )
 
 
-class IndiaTransaction(Transaction):
+class IndiaTransactionSchema(TransactionSchema):
     def get_default_party_schema(self):
         return {
             **super().get_default_party_schema(),

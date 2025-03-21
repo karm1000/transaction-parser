@@ -3,7 +3,7 @@ import frappe
 from transaction_parser.transaction_parser.utils import to_dict
 
 
-class Transaction:
+class TransactionSchema:
     def __init__(self, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
@@ -76,7 +76,7 @@ class Transaction:
     def get_custom_document_schema(self):
         return to_dict(self.settings.document, throw=False)
 
-    #### Tax
+    ### Tax
     def get_tax_schema(self):
         if not self.tax:
             self.tax = self._get_tax_schema()
