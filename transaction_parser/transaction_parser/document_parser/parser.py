@@ -15,7 +15,7 @@ from transaction_parser.transaction_parser.document_parser.ai_utils.prompts impo
     get_system_prompt,
     get_user_prompt,
 )
-from transaction_parser.transaction_parser.document_parser.output_schema_providers.utils import (
+from transaction_parser.transaction_parser.document_parser.output_schema_providers import (
     get_output_schema_provider,
 )
 from transaction_parser.transaction_parser.utils import to_dict

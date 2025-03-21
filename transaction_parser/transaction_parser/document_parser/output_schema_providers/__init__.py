@@ -1,16 +1,12 @@
-from transaction_parser.transaction_parser.document_parser.output_schema_providers.sales_order import (
-    SalesOrderSchema,
-)
-from transaction_parser.transaction_parser.regional_overrides.output_schema_providers import (
-    REGIONAL_OUTPUT_SCHEMA_PROVIDERS,
-)
+import frappe
+from frappe import _
 
-DEFAULT_OUTPUT_SCHEMA_PROVIDERS = {
-    "Sales Order": SalesOrderSchema,
-}
+from transaction_parser.transaction_parser.regional_overrides.utils import get_class
 
 
-OUTPUT_SCHEMA_PROVIDERS = {
-    **REGIONAL_OUTPUT_SCHEMA_PROVIDERS,
-    "DEFAULT": DEFAULT_OUTPUT_SCHEMA_PROVIDERS,
-}
+def get_output_schema_provider(country, doctype):
+    try:
+        return get_class(country, doctype, "Schema")
+
+    except Exception:
+        frappe.throw(_(f"{doctype} Schema Provider not found for {country}"))
