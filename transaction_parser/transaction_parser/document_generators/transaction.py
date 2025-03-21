@@ -38,7 +38,7 @@ class Transaction:
         self.doc.flags.ignore_links = True
 
     ### Company
-    def get_company(self):
+    def get_company(self, company_name, party_name):
         # TODO: review required
         # PROPOSED IDEA:
         # Each transaction will have company in their own specific format
@@ -47,6 +47,14 @@ class Transaction:
         # Each transaction should have their own implementation of `get_company` method
 
         parsed_company_name = self.parsed_data.company
+
+        if found := frappe.db.exists(
+            "Company", {"name": ["in", [company_name, party_name]]}
+        ):
+            if found == party_name:
+                self.is_company_party_inverted = True
+
+            return found
 
         if not parsed_company_name:
             return get_default_company()
@@ -81,9 +89,10 @@ class Transaction:
         # TODO: Implement
         item = frappe._dict()
 
-        item.item_name = self.guess_item_name(parsed_item.description)
+        # item.item_name = self.guess_item_name(parsed_item.description)
         item.item_code = self.get_item_code(item.item_name)
-        item.uom = self.guess_item_uom(parsed_item.unit)
+        # item.uom = self.guess_item_uom(parsed_item.unit)
+        # TODO: customer item code
         item.qty = parsed_item.quantity
         item.rate = parsed_item.rate
         item.amount = parsed_item.amount
@@ -143,6 +152,6 @@ class Transaction:
         )
 
     ### Utility
-    def guess_value(self, parsed_value, options, score_cutoff=None):
+    def guess_value(self, parsed_value, options, score_cutoff=80):
         # TODO: default `score_cutoff` to some predefined value ???
         return process.extractOne(parsed_value, options, score_cutoff=score_cutoff)[0]
