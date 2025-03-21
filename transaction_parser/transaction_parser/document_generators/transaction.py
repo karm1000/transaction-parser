@@ -1,6 +1,6 @@
 import frappe
-from erpnext import get_default_company, get_default_currency
 from erpnext.stock.get_item_details import get_item_details
+from frappe import _
 from rapidfuzz import process
 
 
@@ -13,7 +13,9 @@ class TransactionGenerator:
 
         self.parsed_data = None
         self.doc = None
-        self.company_names = None
+
+        self.is_company_party_inverted = False
+        self.companies = None
         self.item_names = None
         self.uoms = None
 
@@ -38,37 +40,30 @@ class TransactionGenerator:
         self.doc.flags.ignore_links = True
 
     ### Company
-    def get_company(self, company_name, party_name):
-        # TODO: review required
-        # PROPOSED IDEA:
-        # Each transaction will have company in their own specific format
-        # E.g.: Sales Order has company in `vendor`, `buyer.billing` and `buyer.shipping` fields
-        # So, we can return default company from here
-        # Each transaction should have their own implementation of `get_company` method
-
-        parsed_company_name = self.parsed_data.company
-
-        if found := frappe.db.exists(
-            "Company", {"name": ["in", [company_name, party_name]]}
-        ):
-            if found == party_name:
+    def get_company(self, company, party):
+        if found := frappe.db.exists("Company", {"name": ["in", [company, party]]}):
+            if found == party:
                 self.is_company_party_inverted = True
 
             return found
 
-        if not parsed_company_name:
-            return get_default_company()
+        if found := self.guess_company(company):
+            return found
 
-        return frappe.get_doc("Company", self.guess_company_name(parsed_company_name))
+        if found := self.guess_company(party):
+            self.is_company_party_inverted = True
+            return found
 
-    def guess_company_name(self, parsed_company_name):
-        return self.guess_value(parsed_company_name, self._get_company_names())
+        frappe.throw(_("Could not find Company"))
 
-    def _get_company_names(self):
-        if not self.company_names:
-            self.company_names = frappe.db.get_all("Company", pluck="name")
+    def guess_company(self, company):
+        return self.guess_value(company, self._get_all_companies())
 
-        return self.company_names
+    def _get_all_companies(self):
+        if not self.companies:
+            self.companies = frappe.db.get_all("Company", pluck="name")
+
+        return self.companies
 
     ### Currency
     def get_currency(self):
@@ -153,5 +148,7 @@ class TransactionGenerator:
 
     ### Utility
     def guess_value(self, parsed_value, options, score_cutoff=80):
-        # TODO: default `score_cutoff` to some predefined value ???
-        return process.extractOne(parsed_value, options, score_cutoff=score_cutoff)[0]
+        if result := process.extractOne(
+            parsed_value, options, score_cutoff=score_cutoff
+        ):
+            return result[0]
