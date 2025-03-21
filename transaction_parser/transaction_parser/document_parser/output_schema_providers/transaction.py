@@ -166,7 +166,8 @@ class TransactionSchema:
 
     def get_default_item_schema(self):
         return {
-            "buyer_item_id": "string | null",
+            "serial_number": "int | null",
+            "party_item_code": "string | null",
             "description": "string",
             "hsn_code": "string",
             "quantity": "float",
