@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from transaction_parser.transaction_parser.document_generators.utils import (
+from transaction_parser.transaction_parser.document_generators import (
     get_document_generator,
 )
 from transaction_parser.transaction_parser.document_parser.parser import DocumentParser
@@ -29,9 +29,9 @@ def parse(doctype, country, file_url, page_limit=None):
 
 def _parse(country, doctype, file_url, page_limit=None):
     parser = DocumentParser()
-    parsed_data = parser.parse(country, doctype, file_url, page_limit)
-
     generator = get_document_generator(country, doctype)
+
+    parsed_data = parser.parse(country, doctype, file_url, page_limit)
     doc = generator().generate(parsed_data)
 
     enqueue_notification(
