@@ -13,7 +13,7 @@ class SalesOrder(Transaction):
 
         if not company_name:
             # Notification with link to error log
-            raise ValueError("Company {0} not found".format(self.parsed_data.company))
+            raise ValueError(f"Company {self.parsed_data.company} not found")
 
     ### Company
     def get_company(self, parsed_company_name):

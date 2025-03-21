@@ -4,7 +4,6 @@ from transaction_parser.transaction_parser.document_generators.transaction impor
 
 
 class IndiaTransaction(Transaction):
-
     def get_company(self, company_obj, party_obj):
         # Validate GSTIN
         # search for gstin in company or address (get_party_for_gstin)
@@ -14,7 +13,7 @@ class IndiaTransaction(Transaction):
 
         # rapid fuzz with GSTIN
 
-        {"gstin": "company_name"}
+        # {"gstin": "company_name"}
 
         # rapid fuzz with PAN
         return super().get_company(company_obj, party_obj)
