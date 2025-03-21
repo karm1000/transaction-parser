@@ -6,6 +6,7 @@ from rapidfuzz import process
 
 class TransactionGenerator:
     DOCTYPE = None
+    PARTY_DOCTYPE = None
 
     def __init__(self):
         if not self.DOCTYPE:
@@ -16,6 +17,7 @@ class TransactionGenerator:
 
         self.is_company_party_inverted = False
         self.companies = None
+        self.parties = None
         self.item_names = None
         self.uoms = None
 
@@ -40,7 +42,7 @@ class TransactionGenerator:
         self.doc.flags.ignore_links = True
 
     ### Company
-    def get_company(self, company, party):
+    def get_company(self, *, company, party):
         if found := frappe.db.exists("Company", {"name": ["in", [company, party]]}):
             if found == party:
                 self.is_company_party_inverted = True
@@ -64,6 +66,37 @@ class TransactionGenerator:
             self.companies = frappe.db.get_all("Company", pluck="name")
 
         return self.companies
+
+    ### Party
+    def get_party(self, *, company, party):
+        if not self.PARTY_DOCTYPE:
+            raise NotImplementedError("PARTY_DOCTYPE is not defined")
+
+        if found := frappe.db.exists(
+            self.PARTY_DOCTYPE, {"name": ["in", [company, party]]}
+        ):
+            if found == company:
+                self.is_company_party_inverted = True
+
+            return found
+
+        if found := self.guess_party(party):
+            return found
+
+        if found := self.guess_party(company):
+            self.is_company_party_inverted = True
+            return found
+
+        frappe.throw(_("Could not find Party"))
+
+    def guess_party(self, party):
+        return self.guess_value(party, self._get_all_parties())
+
+    def _get_all_parties(self):
+        if not self.parties:
+            self.parties = frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name")
+
+        return self.parties
 
     ### Currency
     def get_currency(self):
