@@ -10,9 +10,6 @@ def get_document_generator(country, doctype):
     document_generator = DOCUMENT_GENERATORS.get(country, {}).get(doctype)
 
     if not document_generator:
-        document_generator = DOCUMENT_GENERATORS.get("DEFAULT", {}).get(doctype)
-
-    if not document_generator:
-        frappe.throw(_(f"No document generator found for {doctype}"))
+        frappe.throw(_(f"No {doctype} Generator found for {country}"))
 
     return document_generator
