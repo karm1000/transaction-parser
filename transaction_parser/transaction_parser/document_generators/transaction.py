@@ -18,6 +18,7 @@ class TransactionGenerator:
         self.is_company_party_inverted = False
         self.companies = None
         self.parties = None
+        self.currencies = None
         self.item_names = None
         self.uoms = None
 
@@ -128,15 +129,24 @@ class TransactionGenerator:
         frappe.throw(_("Could not find Address"))
 
     ### Currency
-    def get_currency(self):
-        # TODO: Implement
-        pass
+    def get_currency(self, currency):
+        if found := frappe.db.exists("Currency", {"name": currency}):
+            return found
 
-    def guess_currency(self, parsed_currency):
-        return self.guess_value(parsed_currency, self._get_currencies())
+        # TODO: review => is guess required ???
+        if found := self.guess_currency(currency):
+            return found
 
-    def _get_currencies(self):
-        return frappe.db.get_all("Currency", pluck="name")
+        frappe.throw(_("Could not find Currency"))
+
+    def guess_currency(self, currency):
+        return self.guess_value(currency, self._get_all_currencies())
+
+    def _get_all_currencies(self):
+        if not self.currencies:
+            self.currencies = frappe.db.get_all("Currency", pluck="name")
+
+        return self.currencies
 
     ### Items
     def get_items(self):
