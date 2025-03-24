@@ -12,19 +12,24 @@ class TransactionGenerator:
         if not self.DOCTYPE:
             raise NotImplementedError("DOCTYPE is not defined")
 
+        if not self.PARTY_DOCTYPE:
+            raise NotImplementedError("PARTY_DOCTYPE is not defined")
+
         self.parsed_data = None
         self.doc = None
-        self.is_company_party_inverted = False
 
         self.companies = None
         self.parties = None
-        self.currencies = None
+        self.addresses = {}
+
+        self.is_company_party_inverted = False
 
     def generate(self, parsed_data):
         self.parsed_data = parsed_data
         self.doc = frappe.new_doc(self.DOCTYPE)
 
         self.set_details()
+        self.set_attachment()
         self.set_flags()
 
         return self.doc.save()
@@ -34,6 +39,10 @@ class TransactionGenerator:
             "set_details() method must be implemented by subclass"
         )
 
+    def set_attachment(self):
+        # TODO: Implement
+        pass
+
     def set_flags(self):
         self.doc.flags.ignore_permissions = True
         self.doc.flags.ignore_mandatory = True
@@ -41,21 +50,11 @@ class TransactionGenerator:
         self.doc.flags.ignore_links = True
 
     ### Company
-    def get_company(self, company, party):
-        if found := frappe.db.exists("Company", {"name": ["in", [company, party]]}):
-            if found == party:
-                self.is_company_party_inverted = True
-
+    def get_company(self, company):
+        if found := frappe.db.exists("Company", {"name": company}):
             return found
 
-        if found := self.guess_company(company):
-            return found
-
-        if found := self.guess_company(party):
-            self.is_company_party_inverted = True
-            return found
-
-        frappe.throw(_("Could not find Company"))
+        return self.guess_company(company)
 
     def guess_company(self, company):
         return self.guess_value(company, self._get_all_companies())
@@ -67,26 +66,11 @@ class TransactionGenerator:
         return self.companies
 
     ### Party
-    def get_party(self, company, party):
-        if not self.PARTY_DOCTYPE:
-            raise NotImplementedError("PARTY_DOCTYPE is not defined")
-
-        if found := frappe.db.exists(
-            self.PARTY_DOCTYPE, {"name": ["in", [company, party]]}
-        ):
-            if found == company:
-                self.is_company_party_inverted = True
-
+    def get_party(self, party):
+        if found := frappe.db.exists(self.PARTY_DOCTYPE, {"name": party}):
             return found
 
-        if found := self.guess_party(party):
-            return found
-
-        if found := self.guess_party(company):
-            self.is_company_party_inverted = True
-            return found
-
-        frappe.throw(_("Could not find Party"))
+        return self.guess_party(party)
 
     def guess_party(self, party):
         return self.guess_value(party, self._get_all_parties())
@@ -98,38 +82,41 @@ class TransactionGenerator:
         return self.parties
 
     ### Address
-    def get_company_address(self, company, address):
-        return self.get_address(company, address, "Company")
+    def get_company_address(self, company, address, address_type=None):
+        return self.get_address(company, address, address_type, "Company")
 
-    def get_party_address(self, party, address):
-        return self.get_address(party, address, self.PARTY_DOCTYPE)
+    def get_party_address(self, party, address, address_type=None):
+        return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
 
-    def get_address(self, company, address, doctype):
-        addresses = frappe.get_all(
-            "Dynamic Link",
-            filters={
-                "parenttype": "Address",
-                "link_doctype": doctype,
-                "link_name": company,
-            },
-            pluck="parent",
-        )
+    def get_address(self, company, address, address_type, linked_doctype):
+        addresses = self._get_all_addresses(company, linked_doctype)
 
-        if found := frappe.db.exists(
-            "Address",
-            {
-                "pincode": address.postal_code,
-                "name": ["in", addresses],
-            },
-        ):
-            return found
+        filters = {
+            "pincode": address.postal_code,
+            "name": ["in", addresses],
+        }
 
-        frappe.throw(_("Could not find Address"))
+        if address_type:
+            filters["address_type"] = address_type
 
-    ### Items
-    def get_items(self, items, company=None, currency=None):
-        return [self.get_item(item, company, currency) for item in items]
+        return frappe.db.exists("Address", filters)
 
+    def _get_all_addresses(self, company, linked_doctype):
+        # TODO: make key as a combination of company and linked_doctype
+        if self.addresses.get(company) is None:
+            self.addresses[company] = frappe.get_all(
+                "Dynamic Link",
+                filters={
+                    "parenttype": "Address",
+                    "link_doctype": linked_doctype,
+                    "link_name": company,
+                },
+                pluck="parent",
+            )
+
+        return self.addresses[company]
+
+    ### Item
     def get_item(self, item, company, currency):
         _item = frappe._dict()
 
@@ -139,17 +126,17 @@ class TransactionGenerator:
         _item.party_item_code = item.party_item_code
         _item.item_code = self.get_item_code(_item)
 
-        return {
-            **self._get_item_details(_item, company, currency),
-            **_item,
-        }
+        return frappe._dict(
+            {
+                **self._get_item_details(_item, company, currency),
+                **_item,
+            }
+        )
 
-    ### Item Code
     def get_item_code(self, item):
         # TODO: Implement
         pass
 
-    ### Item Details from ERP
     def _get_item_details(self, item, company, currency):
         if not (item.item_code and company and currency):
             return {}
@@ -174,6 +161,9 @@ class TransactionGenerator:
         return self.parsed_data.document_details.date
 
     ### Currency
+    def set_currency(self):
+        self.doc.currency = self.get_currency()
+
     def get_currency(self):
         return self.parsed_data.document_details.currency
 
