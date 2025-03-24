@@ -34,8 +34,19 @@ def _parse(country, doctype, file_url, page_limit=None):
     parsed_data = parser.parse(country, doctype, file_url, page_limit)
     doc = generator().generate(parsed_data)
 
+    attach_file(doc, file_url)
+
     enqueue_notification(
         document_type=doctype,
         document_name=doc.name,
         subject=_(f"{doctype} {doc.name} has been created"),
     )
+
+
+def attach_file(doc, file_url):
+    file = frappe.get_last_doc("File", {"file_url": file_url})
+
+    file.attached_to_doctype = doc.doctype
+    file.attached_to_name = doc.name
+
+    file.save()

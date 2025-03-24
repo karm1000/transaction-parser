@@ -29,7 +29,6 @@ class TransactionGenerator:
         self.doc = frappe.new_doc(self.DOCTYPE)
 
         self.set_details()
-        self.set_attachment()
         self.set_flags()
 
         return self.doc.save()
@@ -38,10 +37,6 @@ class TransactionGenerator:
         raise NotImplementedError(
             "set_details() method must be implemented by subclass"
         )
-
-    def set_attachment(self):
-        # TODO: Implement
-        pass
 
     def set_flags(self):
         self.doc.flags.ignore_permissions = True
