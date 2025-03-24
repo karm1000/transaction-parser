@@ -126,26 +126,6 @@ class TransactionGenerator:
 
         frappe.throw(_("Could not find Address"))
 
-    ### Currency
-    def get_currency(self, currency):
-        if found := frappe.db.exists("Currency", {"name": currency}):
-            return found
-
-        # TODO: review => is guess required ???
-        if found := self.guess_currency(currency):
-            return found
-
-        frappe.throw(_("Could not find Currency"))
-
-    def guess_currency(self, currency):
-        return self.guess_value(currency, self._get_all_currencies())
-
-    def _get_all_currencies(self):
-        if not self.currencies:
-            self.currencies = frappe.db.get_all("Currency", pluck="name")
-
-        return self.currencies
-
     ### Items
     def get_items(self, items, company=None, currency=None):
         return [self.get_item(item, company, currency) for item in items]
@@ -184,6 +164,18 @@ class TransactionGenerator:
                 "doctype": self.DOCTYPE,
             }
         )
+
+    ### Document Number
+    def get_document_number(self):
+        return self.parsed_data.document_details.number
+
+    ### Document Date
+    def get_document_date(self):
+        return self.parsed_data.document_details.date
+
+    ### Currency
+    def get_currency(self):
+        return self.parsed_data.document_details.currency
 
     ### Utility
     def guess_value(self, parsed_value, options, score_cutoff=80):
