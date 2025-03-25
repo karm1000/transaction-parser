@@ -19,8 +19,16 @@ class SalesOrderGenerator(TransactionGenerator):
         self.buyer_shipping = None
         self.items = None
 
+    def initialize(self, parsed_data):
+        super().initialize(parsed_data)
+
+        _buyer = self.document.buyer
+
+        self.vendor = self.document.vendor
+        self.buyer_billing = _buyer.billing
+        self.buyer_shipping = _buyer.shipping
+
     def set_details(self):
-        self.initialize()
         self.set_po_number()
         self.set_po_date()
         self.set_delivery_date()
@@ -28,18 +36,9 @@ class SalesOrderGenerator(TransactionGenerator):
         self.set_company()
         self.set_customer()
         self.set_company_address()
-        self.set_customer_address()
+        self.set_billing_address()
         self.set_shipping_address()
         self.set_items()
-
-    def initialize(self):
-        _document_details = self.parsed_data.document_details
-        _buyer = self.parsed_data.document_details.buyer
-
-        self.vendor = _document_details.vendor
-        self.buyer_billing = _buyer.billing
-        self.buyer_shipping = _buyer.shipping
-        self.items = self.parsed_data.document_items
 
     def set_po_number(self):
         self.doc.po_no = self.get_document_number()
@@ -51,34 +50,59 @@ class SalesOrderGenerator(TransactionGenerator):
         self.doc.delivery_date = self.get_delivery_date()
 
     def get_delivery_date(self):
-        return self.parsed_data.document_details.delivery_date
+        return self.document.delivery_date
 
     def set_company(self):
         self.doc.company = self.get_company()
 
     def get_company(self):
-        if found := super().get_company(self.vendor.name):
+        # search
+        if found := self.search_company(self.vendor.name):
             return found
 
-        if found := super().get_company(self.buyer_billing.name):
+        if found := self.search_company(self.buyer_billing.name):
             self.vendor, self.buyer_billing = self.buyer_billing, self.vendor
             return found
 
-        if found := super().get_company(self.buyer_shipping.name):
+        if found := self.search_company(self.buyer_shipping.name):
+            self.vendor, self.buyer_shipping = self.buyer_shipping, self.vendor
+            return found
+
+        # guess
+        if found := self.guess_company(self.vendor.name):
+            return found
+
+        if found := self.guess_company(self.buyer_billing.name):
+            self.vendor, self.buyer_billing = self.buyer_billing, self.vendor
+            return found
+
+        if found := self.guess_company(self.buyer_shipping.name):
             self.vendor, self.buyer_shipping = self.buyer_shipping, self.vendor
             return found
 
     def set_customer(self):
-        self.doc.customer = self.get_customer()
+        self.doc.customer = self.get_party()
 
-    def get_customer(self):
-        if found := super().get_party(self.buyer_billing.name):
+    def get_party(self):
+        # search
+        if found := self.search_party(self.buyer_billing.name):
             return found
 
-        if found := super().get_party(self.buyer_shipping.name):
+        if found := self.search_party(self.buyer_shipping.name):
             return found
 
-        if found := super().get_party(self.vendor.name):
+        if found := self.search_party(self.vendor.name):
+            # TODO: some flag to remember inversion state
+            return found
+
+        # guess
+        if found := self.guess_party(self.buyer_billing.name):
+            return found
+
+        if found := self.guess_party(self.buyer_shipping.name):
+            return found
+
+        if found := self.guess_party(self.vendor.name):
             # TODO: some flag to remember inversion state
             return found
 
@@ -94,10 +118,10 @@ class SalesOrderGenerator(TransactionGenerator):
         if found := super().get_company_address(_company, self.vendor.address):
             return found
 
-    def set_customer_address(self):
-        self.doc.customer_address = self.get_customer_address()
+    def set_billing_address(self):
+        self.doc.customer_address = self.get_billing_address()
 
-    def get_customer_address(self):
+    def get_billing_address(self):
         _customer = self.doc.customer
 
         if not _customer:
@@ -156,6 +180,7 @@ class SalesOrderGenerator(TransactionGenerator):
         )
 
     def get_item_code(self, item):
+        # TODO: reduce to a single database call
         return frappe.db.get_value(
             "Item Customer Detail",
             filters={

@@ -15,23 +15,24 @@ class TransactionGenerator:
         if not self.PARTY_DOCTYPE:
             raise NotImplementedError("PARTY_DOCTYPE is not defined")
 
-        self.parsed_data = None
-        self.doc = None
-
-        self.companies = None
-        self.parties = None
-        self.addresses = {}
-
-        self.is_company_party_inverted = False
-
     def generate(self, parsed_data):
-        self.parsed_data = parsed_data
-        self.doc = frappe.new_doc(self.DOCTYPE)
-
+        self.initialize(parsed_data)
         self.set_details()
         self.set_flags()
 
         return self.doc.save()
+
+    def initialize(self, parsed_data):
+        self.doc = frappe.new_doc(self.DOCTYPE)
+
+        self.parsed_data = parsed_data
+        self.document = parsed_data.document_details
+        self.items = parsed_data.document_items
+        self.totals = parsed_data.totals
+
+        self.companies = None
+        self.parties = None
+        self.addresses = {}
 
     def set_details(self):
         raise NotImplementedError(
@@ -46,33 +47,42 @@ class TransactionGenerator:
 
     ### Company
     def get_company(self, company):
-        if found := frappe.db.exists("Company", {"name": company}):
+        if found := self.search_company(company):
             return found
 
         return self.guess_company(company)
+
+    def search_company(self, company):
+        return company if company in self._get_all_companies() else None
 
     def guess_company(self, company):
         return self.guess_value(company, self._get_all_companies())
 
     def _get_all_companies(self):
         if not self.companies:
-            self.companies = frappe.db.get_all("Company", pluck="name")
+            self.companies = self._get_all_businesses("Company")
 
         return self.companies
 
+    def _get_all_businesses(self, doctype):
+        return set(frappe.db.get_all(doctype, pluck="name"))
+
     ### Party
     def get_party(self, party):
-        if found := frappe.db.exists(self.PARTY_DOCTYPE, {"name": party}):
+        if found := self.search_party(party):
             return found
 
         return self.guess_party(party)
+
+    def search_party(self, party):
+        return party if party in self._get_all_parties() else None
 
     def guess_party(self, party):
         return self.guess_value(party, self._get_all_parties())
 
     def _get_all_parties(self):
         if not self.parties:
-            self.parties = frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name")
+            self.parties = self._get_all_businesses(self.PARTY_DOCTYPE)
 
         return self.parties
 
@@ -83,8 +93,14 @@ class TransactionGenerator:
     def get_party_address(self, party, address, address_type=None):
         return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
 
-    def get_address(self, company, address, address_type, linked_doctype):
-        addresses = self._get_all_addresses(company, linked_doctype)
+    def get_address(self, business, address, address_type, doctype):
+        if found := self.search_address(business, address, address_type, doctype):
+            return found
+
+        # TODO: fuzzy match address
+
+    def search_address(self, business, address, address_type, doctype):
+        addresses = self._get_all_addresses(business, doctype)
 
         filters = {
             "pincode": address.postal_code,
@@ -96,20 +112,22 @@ class TransactionGenerator:
 
         return frappe.db.exists("Address", filters)
 
-    def _get_all_addresses(self, company, linked_doctype):
-        # TODO: make key as a combination of company and linked_doctype
-        if self.addresses.get(company) is None:
-            self.addresses[company] = frappe.get_all(
-                "Dynamic Link",
-                filters={
-                    "parenttype": "Address",
-                    "link_doctype": linked_doctype,
-                    "link_name": company,
-                },
-                pluck="parent",
+    def _get_all_addresses(self, business, linked_doctype):
+        # TODO: make key as a combination of business and linked_doctype
+        if self.addresses.get(business) is None:
+            self.addresses[business] = set(
+                frappe.get_all(
+                    "Dynamic Link",
+                    filters={
+                        "parenttype": "Address",
+                        "link_doctype": linked_doctype,
+                        "link_name": business,
+                    },
+                    pluck="parent",
+                )
             )
 
-        return self.addresses[company]
+        return self.addresses[business]
 
     ### Item
     def get_item(self, item, company, currency):
@@ -149,18 +167,18 @@ class TransactionGenerator:
 
     ### Document Number
     def get_document_number(self):
-        return self.parsed_data.document_details.number
+        return self.document.number
 
     ### Document Date
     def get_document_date(self):
-        return self.parsed_data.document_details.date
+        return self.document.date
 
     ### Currency
     def set_currency(self):
         self.doc.currency = self.get_currency()
 
     def get_currency(self):
-        return self.parsed_data.document_details.currency
+        return self.document.currency
 
     ### Utility
     def guess_value(self, parsed_value, options, score_cutoff=80):
