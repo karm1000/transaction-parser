@@ -1,24 +1,101 @@
+import frappe
+
 from transaction_parser.transaction_parser.document_generators.transaction import (
     TransactionGenerator,
 )
 
 
 class IndiaTransactionGenerator(TransactionGenerator):
-    def get_company(self, company_obj, party_obj):
-        # Validate GSTIN
-        # search for gstin in company or address (get_party_for_gstin)
+    def __init__(self):
+        # TODO: Design Decision - `Throw error if India Compliance is not installed` OR `silently ignore and continue basic stuffs`
 
-        # Validate PAN
-        # search for pan in company or address (get_party_for_pan)
+        if "india_compliance" not in frappe.get_installed_apps():
+            frappe.throw("Please install India Compliance app for India transactions")
 
-        # rapid fuzz with GSTIN
+        super().__init__()
 
-        # {"gstin": "company_name"}
+    def initialize(self, parsed_data):
+        super().initialize(parsed_data)
 
-        # rapid fuzz with PAN
-        return super().get_company(company_obj, party_obj)
+        self.company_gstins = None
+        self.company_pans = None
 
-    def get_address(self, address_obj):
-        pass
+    def search_company(self, company):
+        if found := self.search_company_by_gstin(company.gstin):
+            return found
 
-    pass
+        if found := self.search_company_by_pan(company.pan):
+            return found
+
+        return super().search_company(company)
+
+    def search_company_by_gstin(self, gstin):
+        from india_compliance.gst_india.utils import get_party_for_gstin, validate_gstin
+
+        if not gstin:
+            return
+
+        try:
+            if validate_gstin(gstin):
+                return get_party_for_gstin(gstin, "Company")
+
+        except Exception:
+            return
+
+    def search_company_by_pan(self, pan):
+        from india_compliance.gst_india.utils import is_valid_pan
+
+        if not pan:
+            return
+
+        if is_valid_pan(pan):
+            return frappe.db.get_value("Company", {"pan": pan}, fieldname="name")
+
+    def guess_company(self, company):
+        if found := self.guess_company_by_gstin(company.gstin):
+            return found
+
+        if found := self.guess_company_by_pan(company.pan):
+            return found
+
+        return super().guess_company(company)
+
+    def guess_company_by_gstin(self, gstin):
+        if found := self.guess_value(gstin, self._get_all_company_gstins()):
+            return self._get_all_company_gstins().get(found)
+
+    def _get_all_company_gstins(self):
+        if not self.company_gstins:
+            self.company_gstins = self._get_all_gstins("Company")
+
+        return self.company_gstins
+
+    def _get_all_gstins(self, doctype):
+        return frappe._dict(
+            frappe.db.get_all(
+                doctype,
+                filters={"gstin": ["!=", ""]},
+                fields=["gstin", "name"],
+                as_list=True,
+            )
+        )
+
+    def guess_company_by_pan(self, pan):
+        if found := self.guess_value(pan, self._get_all_company_pans()):
+            return self._get_all_company_pans().get(found)
+
+    def _get_all_company_pans(self):
+        if not self.company_pans:
+            self.company_pans = self._get_all_pans("Company")
+
+        return self.company_pans
+
+    def _get_all_pans(self, doctype):
+        return frappe._dict(
+            frappe.db.get_all(
+                doctype,
+                filters={"pan": ["!=", ""]},
+                fields=["pan", "name"],
+                as_list=True,
+            )
+        )

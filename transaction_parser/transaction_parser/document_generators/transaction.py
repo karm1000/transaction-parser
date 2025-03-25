@@ -185,8 +185,6 @@ class TransactionGenerator:
         return self.document.currency
 
     ### Utility
-    def guess_value(self, parsed_value, options, score_cutoff=80):
-        if result := process.extractOne(
-            parsed_value, options, score_cutoff=score_cutoff
-        ):
+    def guess_value(self, value, options, score_cutoff=80):
+        if result := process.extractOne(value, options, score_cutoff=score_cutoff):
             return result[0]
