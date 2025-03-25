@@ -4,6 +4,9 @@ from transaction_parser.transaction_parser.document_generators.transaction impor
     TransactionGenerator,
 )
 
+GSTIN_SCORE_CUTOFF = 93
+PAN_SCORE_CUTOFF = 90
+
 
 class IndiaTransactionGenerator(TransactionGenerator):
     def __init__(self):
@@ -70,7 +73,9 @@ class IndiaTransactionGenerator(TransactionGenerator):
         return super().guess_company(company)
 
     def guess_company_by_gstin(self, gstin):
-        if found := self.guess_value(gstin, self._get_all_company_gstins()):
+        if found := self.guess_value(
+            gstin, self._get_all_company_gstins(), score_cutoff=GSTIN_SCORE_CUTOFF
+        ):
             return self._get_all_company_gstins().get(found)
 
     def _get_all_company_gstins(self):
@@ -90,7 +95,9 @@ class IndiaTransactionGenerator(TransactionGenerator):
         )
 
     def guess_company_by_pan(self, pan):
-        if found := self.guess_value(pan, self._get_all_company_pans()):
+        if found := self.guess_value(
+            pan, self._get_all_company_pans(), score_cutoff=PAN_SCORE_CUTOFF
+        ):
             return self._get_all_company_pans().get(found)
 
     def _get_all_company_pans(self):
@@ -135,7 +142,9 @@ class IndiaTransactionGenerator(TransactionGenerator):
         return super().guess_party(party)
 
     def guess_party_by_gstin(self, gstin):
-        if found := self.guess_value(gstin, self._get_all_party_gstins()):
+        if found := self.guess_value(
+            gstin, self._get_all_party_gstins(), score_cutoff=GSTIN_SCORE_CUTOFF
+        ):
             return self._get_all_party_gstins().get(found)
 
     def _get_all_party_gstins(self):
@@ -145,7 +154,9 @@ class IndiaTransactionGenerator(TransactionGenerator):
         return self.party_gstins
 
     def guess_party_by_pan(self, pan):
-        if found := self.guess_value(pan, self._get_all_party_pans()):
+        if found := self.guess_value(
+            pan, self._get_all_party_pans(), score_cutoff=PAN_SCORE_CUTOFF
+        ):
             return self._get_all_party_pans().get(found)
 
     def _get_all_party_pans(self):
