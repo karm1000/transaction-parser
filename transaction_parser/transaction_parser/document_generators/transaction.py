@@ -92,7 +92,10 @@ class TransactionGenerator:
 
     ### Address
     def get_company_address(self, company, address, address_type=None):
-        return self.get_address(company, address, address_type, "Company")
+        if found := self.get_address(company, address, address_type, "Company"):
+            return found
+
+        return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
 
     def get_party_address(self, party, address, address_type=None):
         return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
