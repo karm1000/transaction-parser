@@ -115,6 +115,8 @@ class SalesOrderGenerator(TransactionGenerator):
         if not _company:
             return
 
+        _company = frappe._dict({**self.vendor, "name": _company})
+
         if found := super().get_company_address(_company, self.vendor.address):
             return found
 
@@ -126,6 +128,8 @@ class SalesOrderGenerator(TransactionGenerator):
 
         if not _customer:
             return
+
+        _customer = frappe._dict({**self.buyer_billing, "name": _customer})
 
         if found := super().get_party_address(
             _customer, self.buyer_billing.address, "Billing"
@@ -149,6 +153,8 @@ class SalesOrderGenerator(TransactionGenerator):
 
         if not _customer:
             return
+
+        _customer = frappe._dict({**self.buyer_shipping, "name": _customer})
 
         if found := super().get_party_address(
             _customer, self.buyer_shipping.address, "Shipping"

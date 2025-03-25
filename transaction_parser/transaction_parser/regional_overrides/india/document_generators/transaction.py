@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 
 from transaction_parser.transaction_parser.document_generators.transaction import (
     TransactionGenerator,
@@ -13,7 +14,9 @@ class IndiaTransactionGenerator(TransactionGenerator):
         # TODO: Design Decision - `Throw error if India Compliance is not installed` OR `silently ignore and continue basic stuffs`
 
         if "india_compliance" not in frappe.get_installed_apps():
-            frappe.throw("Please install India Compliance app for India transactions")
+            frappe.throw(
+                _("Please install India Compliance app for India transactions")
+            )
 
         super().__init__()
 
@@ -39,17 +42,22 @@ class IndiaTransactionGenerator(TransactionGenerator):
         return self.search_business_by_gstin(gstin, "Company")
 
     def search_business_by_gstin(self, gstin, doctype):
-        from india_compliance.gst_india.utils import get_party_for_gstin, validate_gstin
+        from india_compliance.gst_india.utils import get_party_for_gstin
 
         if not gstin:
             return
 
+        if self.is_valid_gstin(gstin):
+            return get_party_for_gstin(gstin, doctype)
+
+    def is_valid_gstin(self, gstin):
+        from india_compliance.gst_india.utils import validate_gstin
+
         try:
-            if validate_gstin(gstin):
-                return get_party_for_gstin(gstin, doctype)
+            return validate_gstin(gstin)
 
         except Exception:
-            return
+            return False
 
     def search_company_by_pan(self, pan):
         return self.search_business_by_pan(pan, "Company")
@@ -61,7 +69,10 @@ class IndiaTransactionGenerator(TransactionGenerator):
             return
 
         if is_valid_pan(pan):
-            return frappe.db.get_value(doctype, {"pan": pan}, fieldname="name")
+            return self.get_party_for_pan(pan, doctype)
+
+    def get_party_for_pan(self, pan, doctype):
+        return frappe.db.get_value(doctype, {"pan": pan}, fieldname="name")
 
     def guess_company(self, company):
         if found := self.guess_company_by_gstin(company.gstin):
@@ -164,3 +175,20 @@ class IndiaTransactionGenerator(TransactionGenerator):
             self.party_pans = self._get_all_pans(self.PARTY_DOCTYPE)
 
         return self.party_pans
+
+    ### Address
+    def search_address(self, business, address, address_type, doctype):
+        if found := self.search_address_by_gstin(business.gstin):
+            return found
+
+        return super().search_address(business, address, address_type, doctype)
+
+    def search_address_by_gstin(self, gstin):
+        if not gstin:
+            return
+
+        if self.is_valid_gstin(gstin):
+            return self.get_address_for_gstin(gstin)
+
+    def get_address_for_gstin(self, gstin):
+        return frappe.db.get_value("Address", {"gstin": gstin})

@@ -121,20 +121,22 @@ class TransactionGenerator:
 
     def _get_all_addresses(self, business, linked_doctype):
         # TODO: make key as a combination of business and linked_doctype
-        if self.addresses.get(business) is None:
-            self.addresses[business] = set(
+        _business = business.name
+
+        if self.addresses.get(_business) is None:
+            self.addresses[_business] = set(
                 frappe.get_all(
                     "Dynamic Link",
                     filters={
                         "parenttype": "Address",
                         "link_doctype": linked_doctype,
-                        "link_name": business,
+                        "link_name": _business,
                     },
                     pluck="parent",
                 )
             )
 
-        return self.addresses[business]
+        return self.addresses[_business]
 
     ### Item
     def get_item(self, item, company, currency):
