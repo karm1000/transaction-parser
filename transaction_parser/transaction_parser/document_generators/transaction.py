@@ -53,10 +53,12 @@ class TransactionGenerator:
         return self.guess_company(company)
 
     def search_company(self, company):
-        return company if company in self._get_all_companies() else None
+        _company = company.name
+
+        return _company if _company in self._get_all_companies() else None
 
     def guess_company(self, company):
-        return self.guess_value(company, self._get_all_companies())
+        return self.guess_value(company.name, self._get_all_companies())
 
     def _get_all_companies(self):
         if not self.companies:
@@ -75,10 +77,12 @@ class TransactionGenerator:
         return self.guess_party(party)
 
     def search_party(self, party):
-        return party if party in self._get_all_parties() else None
+        _party = party.name
+
+        return _party if _party in self._get_all_parties() else None
 
     def guess_party(self, party):
-        return self.guess_value(party, self._get_all_parties())
+        return self.guess_value(party.name, self._get_all_parties())
 
     def _get_all_parties(self):
         if not self.parties:

@@ -57,26 +57,26 @@ class SalesOrderGenerator(TransactionGenerator):
 
     def get_company(self):
         # search
-        if found := self.search_company(self.vendor.name):
+        if found := self.search_company(self.vendor):
             return found
 
-        if found := self.search_company(self.buyer_billing.name):
+        if found := self.search_company(self.buyer_billing):
             self.vendor, self.buyer_billing = self.buyer_billing, self.vendor
             return found
 
-        if found := self.search_company(self.buyer_shipping.name):
+        if found := self.search_company(self.buyer_shipping):
             self.vendor, self.buyer_shipping = self.buyer_shipping, self.vendor
             return found
 
         # guess
-        if found := self.guess_company(self.vendor.name):
+        if found := self.guess_company(self.vendor):
             return found
 
-        if found := self.guess_company(self.buyer_billing.name):
+        if found := self.guess_company(self.buyer_billing):
             self.vendor, self.buyer_billing = self.buyer_billing, self.vendor
             return found
 
-        if found := self.guess_company(self.buyer_shipping.name):
+        if found := self.guess_company(self.buyer_shipping):
             self.vendor, self.buyer_shipping = self.buyer_shipping, self.vendor
             return found
 
@@ -85,24 +85,24 @@ class SalesOrderGenerator(TransactionGenerator):
 
     def get_party(self):
         # search
-        if found := self.search_party(self.buyer_billing.name):
+        if found := self.search_party(self.buyer_billing):
             return found
 
-        if found := self.search_party(self.buyer_shipping.name):
+        if found := self.search_party(self.buyer_shipping):
             return found
 
-        if found := self.search_party(self.vendor.name):
+        if found := self.search_party(self.vendor):
             # TODO: some flag to remember inversion state
             return found
 
         # guess
-        if found := self.guess_party(self.buyer_billing.name):
+        if found := self.guess_party(self.buyer_billing):
             return found
 
-        if found := self.guess_party(self.buyer_shipping.name):
+        if found := self.guess_party(self.buyer_shipping):
             return found
 
-        if found := self.guess_party(self.vendor.name):
+        if found := self.guess_party(self.vendor):
             # TODO: some flag to remember inversion state
             return found
 
