@@ -52,6 +52,9 @@ class SalesOrderGenerator(TransactionGenerator):
     def get_delivery_date(self):
         return self.document.delivery_date
 
+    def set_currency(self):
+        self.doc.currency = self.get_currency()
+
     def set_company(self):
         self.doc.company = self.get_company()
 

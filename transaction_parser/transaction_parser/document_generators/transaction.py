@@ -57,17 +57,18 @@ class TransactionGenerator:
 
         return _company if _company in self._get_all_companies() else None
 
-    def guess_company(self, company):
-        return self.guess_value(company.name, self._get_all_companies())
-
     def _get_all_companies(self):
         if not self.companies:
-            self.companies = self._get_all_businesses("Company")
+            self.companies = set(frappe.db.get_all("Company", pluck="name"))
 
         return self.companies
 
-    def _get_all_businesses(self, doctype):
-        return set(frappe.db.get_all(doctype, pluck="name"))
+    def guess_company(self, company):
+        return self.guess_value(company.name, self._get_all_companies())
+
+    def guess_value(self, value, options, score_cutoff=80):
+        if result := process.extractOne(value, options, score_cutoff=score_cutoff):
+            return result[0]
 
     ### Party
     def get_party(self, party):
@@ -81,24 +82,21 @@ class TransactionGenerator:
 
         return _party if _party in self._get_all_parties() else None
 
-    def guess_party(self, party):
-        return self.guess_value(party.name, self._get_all_parties())
-
     def _get_all_parties(self):
         if not self.parties:
-            self.parties = self._get_all_businesses(self.PARTY_DOCTYPE)
+            self.parties = set(frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name"))
 
         return self.parties
+
+    def guess_party(self, party):
+        return self.guess_value(party.name, self._get_all_parties())
 
     ### Address
     def get_company_address(self, company, address, address_type=None):
         if found := self.get_address(company, address, address_type, "Company"):
             return found
 
-        return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
-
-    def get_party_address(self, party, address, address_type=None):
-        return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
+        return self._get_default_company_address()
 
     def get_address(self, business, address, address_type, doctype):
         if found := self.search_address(business, address, address_type, doctype):
@@ -138,6 +136,12 @@ class TransactionGenerator:
 
         return self.addresses[_business]
 
+    def _get_default_company_address(self):
+        return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
+
+    def get_party_address(self, party, address, address_type=None):
+        return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
+
     ### Item
     def get_item(self, item, company, currency):
         _item = frappe._dict()
@@ -174,22 +178,12 @@ class TransactionGenerator:
             }
         )
 
-    ### Document Number
+    ### Document
     def get_document_number(self):
         return self.document.number
 
-    ### Document Date
     def get_document_date(self):
         return self.document.date
 
-    ### Currency
-    def set_currency(self):
-        self.doc.currency = self.get_currency()
-
     def get_currency(self):
         return self.document.currency
-
-    ### Utility
-    def guess_value(self, value, options, score_cutoff=80):
-        if result := process.extractOne(value, options, score_cutoff=score_cutoff):
-            return result[0]
