@@ -4,4 +4,8 @@ from transaction_parser.transaction_parser.document_parser.output_schema_provide
 
 
 class OtherTransactionSchema(TransactionSchema):
-    pass
+    def get_default_party_schema(self):
+        return {
+            **super().get_default_party_schema(),
+            "tax_id": "string (Country Specific Unique Tax Identifier)",
+        }
