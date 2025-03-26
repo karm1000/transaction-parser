@@ -7,6 +7,6 @@ class IndiaTransactionSchema(TransactionSchema):
     def get_default_party_schema(self):
         return {
             **super().get_default_party_schema(),
-            "GSTIN": "string (GST Identification Number)",
-            "PAN": "string (Permanent Account Number)",
+            "gstin": "string (GST Identification Number)",
+            "pan": "string (Permanent Account Number)",
         }

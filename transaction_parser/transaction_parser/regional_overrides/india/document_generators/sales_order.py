@@ -6,5 +6,5 @@ from transaction_parser.transaction_parser.regional_overrides.india.document_gen
 )
 
 
-class IndiaSalesOrderGenerator(IndiaTransactionGenerator, SalesOrderGenerator):
+class IndiaSalesOrderGenerator(SalesOrderGenerator, IndiaTransactionGenerator):
     pass

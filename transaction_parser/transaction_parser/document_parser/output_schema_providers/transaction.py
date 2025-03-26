@@ -36,7 +36,7 @@ class TransactionSchema:
     def get_default_transaction_schema(self):
         return {
             "document_details": None,
-            "items": [self.get_item_schema()],
+            "document_items": [self.get_item_schema()],
             "totals": {
                 "subtotal": "float",
                 "taxes": [self.get_tax_schema()],
@@ -166,7 +166,8 @@ class TransactionSchema:
 
     def get_default_item_schema(self):
         return {
-            "buyer_item_id": "string | null",
+            "serial_number": "int | null",
+            "party_item_code": "string | null",
             "description": "string",
             "hsn_code": "string",
             "quantity": "float",
