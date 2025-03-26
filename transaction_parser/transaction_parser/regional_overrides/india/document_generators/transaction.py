@@ -42,13 +42,11 @@ class IndiaTransactionGenerator(TransactionGenerator):
         return self.search_business_by_gstin(gstin, "Company")
 
     def search_business_by_gstin(self, gstin, doctype):
-        from india_compliance.gst_india.utils import get_party_for_gstin
-
         if not gstin:
             return
 
         if self.is_valid_gstin(gstin):
-            return get_party_for_gstin(gstin, doctype)
+            return self.get_business_for_gstin(gstin, doctype)
 
     def is_valid_gstin(self, gstin):
         from india_compliance.gst_india.utils import validate_gstin
@@ -59,19 +57,27 @@ class IndiaTransactionGenerator(TransactionGenerator):
         except Exception:
             return False
 
+    def get_business_for_gstin(self, gstin, doctype):
+        from india_compliance.gst_india.utils import get_party_for_gstin
+
+        return get_party_for_gstin(gstin, doctype)
+
     def search_company_by_pan(self, pan):
         return self.search_business_by_pan(pan, "Company")
 
     def search_business_by_pan(self, pan, doctype):
-        from india_compliance.gst_india.utils import is_valid_pan
-
         if not pan:
             return
 
-        if is_valid_pan(pan):
-            return self.get_party_for_pan(pan, doctype)
+        if self.is_valid_pan(pan):
+            return self.get_business_for_pan(pan, doctype)
 
-    def get_party_for_pan(self, pan, doctype):
+    def is_valid_pan(self, pan):
+        from india_compliance.gst_india.utils import is_valid_pan
+
+        return is_valid_pan(pan)
+
+    def get_business_for_pan(self, pan, doctype):
         return frappe.db.get_value(doctype, {"pan": pan}, fieldname="name")
 
     def guess_company(self, company):
