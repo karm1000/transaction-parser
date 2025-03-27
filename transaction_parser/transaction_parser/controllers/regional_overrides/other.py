@@ -1,20 +1,34 @@
 import frappe
 
-from transaction_parser.transaction_parser.document_generators.transaction import (
-    TransactionGenerator,
-)
+from transaction_parser.transaction_parser.controllers.sales_order import SalesOrder
+from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
 TAX_ID_SCORE_CUTOFF = 90
 
 
-class OtherTransactionGenerator(TransactionGenerator):
+class OtherTransaction(Transaction):
     def initialize(self, parsed_data):
         super().initialize(parsed_data)
 
         self.company_tax_ids = None
         self.party_tax_ids = None
 
+    ###################################
+    ########## Output Schema ##########
+    ###################################
+
+    def get_default_party_schema(self):
+        return {
+            **super().get_default_party_schema(),
+            "tax_id": "string (Country Specific Unique Tax Identifier)",
+        }
+
+    ##################################
+    ########## Data Mapping ##########
+    ##################################
+
     ### Company
+
     def search_company(self, company):
         if found := self.search_company_by_tax_id(company.tax_id):
             return found
@@ -64,6 +78,7 @@ class OtherTransactionGenerator(TransactionGenerator):
         )
 
     ### Party
+
     def search_party(self, party):
         if found := self.search_party_by_tax_id(party.tax_id):
             return found
@@ -90,3 +105,7 @@ class OtherTransactionGenerator(TransactionGenerator):
             self.party_tax_ids = self._get_all_tax_ids(self.PARTY_DOCTYPE)
 
         return self.party_tax_ids
+
+
+class OtherSalesOrder(SalesOrder, OtherTransaction):
+    pass

@@ -1,18 +1,15 @@
 import frappe
 from frappe import _
 
-from transaction_parser.transaction_parser.document_generators.transaction import (
-    TransactionGenerator,
-)
+from transaction_parser.transaction_parser.controllers.sales_order import SalesOrder
+from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
 GSTIN_SCORE_CUTOFF = 93
 PAN_SCORE_CUTOFF = 90
 
 
-class IndiaTransactionGenerator(TransactionGenerator):
+class IndiaTransaction(Transaction):
     def __init__(self):
-        # TODO: Design Decision - `Throw error if India Compliance is not installed` OR `silently ignore and continue basic stuffs`
-
         if "india_compliance" not in frappe.get_installed_apps():
             frappe.throw(
                 _("Please install India Compliance app for India transactions")
@@ -20,15 +17,31 @@ class IndiaTransactionGenerator(TransactionGenerator):
 
         super().__init__()
 
-    def initialize(self, parsed_data):
-        super().initialize(parsed_data)
+    def initialize(self):
+        super().initialize()
 
         self.company_gstins = None
         self.company_pans = None
         self.party_gstins = None
         self.party_pans = None
 
+    ###################################
+    ########## Output Schema ##########
+    ###################################
+
+    def get_default_party_schema(self):
+        return {
+            **super().get_default_party_schema(),
+            "gstin": "string (GST Identification Number)",
+            "pan": "string (Permanent Account Number)",
+        }
+
+    ##################################
+    ########## Data Mapping ##########
+    ##################################
+
     ### Company
+
     def search_company(self, company):
         if found := self.search_company_by_gstin(company.gstin):
             return found
@@ -134,6 +147,7 @@ class IndiaTransactionGenerator(TransactionGenerator):
         )
 
     ### Party
+
     def search_party(self, party):
         if found := self.search_party_by_gstin(party.gstin):
             return found
@@ -183,6 +197,7 @@ class IndiaTransactionGenerator(TransactionGenerator):
         return self.party_pans
 
     ### Address
+
     def search_address(self, business, address, address_type, doctype):
         if found := self.search_address_by_gstin(business.gstin):
             return found
@@ -198,3 +213,7 @@ class IndiaTransactionGenerator(TransactionGenerator):
 
     def get_address_for_gstin(self, gstin):
         return frappe.db.get_value("Address", {"gstin": gstin})
+
+
+class IndiaSalesOrder(SalesOrder, IndiaTransaction):
+    pass
