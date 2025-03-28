@@ -3,7 +3,7 @@ INPUT_DOCUMENTS = {
 }
 
 
-def get_system_prompt(doctype, output_schema):
+def get_system_prompt(doctype, schema):
     return (
         "You are a JSON data extraction and validation expert for your company's ERP platform.\n"
         "Your role is to analyze the documents and generate a structured JSON output following specific schemas and business rules.\n"
@@ -25,9 +25,11 @@ def get_system_prompt(doctype, output_schema):
         "14. Apply appropriate decimal precision for monetary values\n"
         "The output should be valid JSON that can be parsed and processed by automated systems.\n"
         "Json Format:\n\n"
-        f"{output_schema}"
+        f"{schema}"
     )
 
 
-def get_user_prompt(document_text):
-    return f"Extract and validate the following document data into JSON format:\n\n{document_text}"
+def get_user_prompt(data):
+    return (
+        f"Extract and validate the following document data into JSON format:\n\n{data}"
+    )

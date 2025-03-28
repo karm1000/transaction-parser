@@ -1,32 +1,32 @@
 import frappe
 
-from transaction_parser.transaction_parser.document_generators.transaction import (
-    TransactionGenerator,
-)
+from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
 
-class SalesOrderGenerator(TransactionGenerator):
-    # TODO: remove dependency of methods on each other
-
+class SalesOrder(Transaction):
     DOCTYPE = "Sales Order"
     PARTY_DOCTYPE = "Customer"
 
-    def __init__(self):
-        super().__init__()
+    ###################################
+    ########## Output Schema ##########
+    ###################################
 
-        self.vendor = None
-        self.buyer_billing = None
-        self.buyer_shipping = None
-        self.items = None
+    def get_default_document_schema(self):
+        return {
+            **super().get_default_document_schema(),
+            "delivery_date": "date | null",
+            "payment_terms": "string (e.g., '30 days from invoice')",
+            "project_reference": "string | null",
+            "buyer": {
+                "shipping": self.get_party_schema(),
+                "billing": self.get_party_schema(),
+            },
+            "vendor": self.get_party_schema(),
+        }
 
-    def initialize(self, parsed_data):
-        super().initialize(parsed_data)
-
-        _buyer = self.document.buyer
-
-        self.vendor = self.document.vendor
-        self.buyer_billing = _buyer.billing
-        self.buyer_shipping = _buyer.shipping
+    ##################################
+    ########## Data Mapping ##########
+    ##################################
 
     def set_details(self):
         self.set_po_number()
@@ -50,64 +50,70 @@ class SalesOrderGenerator(TransactionGenerator):
         self.doc.delivery_date = self.get_delivery_date()
 
     def get_delivery_date(self):
-        return self.document.delivery_date
+        return self.data.document_details.delivery_date
 
     def set_currency(self):
         self.doc.currency = self.get_currency()
+
+    ### Company
 
     def set_company(self):
         self.doc.company = self.get_company()
 
     def get_company(self):
         # search
-        if found := self.search_company(self.vendor):
+        if found := self.search_company(self.data.document_details.vendor):
             return found
 
-        if found := self.search_company(self.buyer_billing):
-            self.vendor, self.buyer_billing = self.buyer_billing, self.vendor
+        if found := self.search_company(self.data.document_details.buyer.billing):
+            # TODO: some flag to remember inversion state
             return found
 
-        if found := self.search_company(self.buyer_shipping):
-            self.vendor, self.buyer_shipping = self.buyer_shipping, self.vendor
+        if found := self.search_company(self.data.document_details.buyer.shipping):
+            # TODO: some flag to remember inversion state
             return found
 
         # guess
-        if found := self.guess_company(self.vendor):
+        if found := self.guess_company(self.data.document_details.vendor):
             return found
 
-        if found := self.guess_company(self.buyer_billing):
-            self.vendor, self.buyer_billing = self.buyer_billing, self.vendor
+        if found := self.guess_company(self.data.document_details.buyer.billing):
+            # TODO: some flag to remember inversion state
             return found
 
-        if found := self.guess_company(self.buyer_shipping):
-            self.vendor, self.buyer_shipping = self.buyer_shipping, self.vendor
+        if found := self.guess_company(self.data.document_details.buyer.shipping):
+            # TODO: some flag to remember inversion state
             return found
+
+    ### Customer
 
     def set_customer(self):
         self.doc.customer = self.get_party()
 
     def get_party(self):
         # search
-        if found := self.search_party(self.buyer_billing):
+        if found := self.search_party(self.data.document_details.buyer.billing):
             return found
 
-        if found := self.search_party(self.buyer_shipping):
+        if found := self.search_party(self.data.document_details.buyer.shipping):
             return found
 
-        if found := self.search_party(self.vendor):
+        if found := self.search_party(self.data.document_details.vendor):
             # TODO: some flag to remember inversion state
             return found
 
         # guess
-        if found := self.guess_party(self.buyer_billing):
+        if found := self.guess_party(self.data.document_details.buyer.billing):
             return found
 
-        if found := self.guess_party(self.buyer_shipping):
+        if found := self.guess_party(self.data.document_details.buyer.shipping):
             return found
 
-        if found := self.guess_party(self.vendor):
+        if found := self.guess_party(self.data.document_details.vendor):
             # TODO: some flag to remember inversion state
             return found
+
+    ### Address
 
     def set_company_address(self):
         self.doc.company_address = self.get_company_address()
@@ -118,9 +124,11 @@ class SalesOrderGenerator(TransactionGenerator):
         if not _company:
             return
 
-        _company = frappe._dict({**self.vendor, "name": _company})
+        _company = frappe._dict({**self.data.document_details.vendor, "name": _company})
 
-        if found := super().get_company_address(_company, self.vendor.address):
+        if found := super().get_company_address(
+            _company, self.data.document_details.vendor.address
+        ):
             return found
 
     def set_billing_address(self):
@@ -132,20 +140,19 @@ class SalesOrderGenerator(TransactionGenerator):
         if not _customer:
             return
 
-        _customer = frappe._dict({**self.buyer_billing, "name": _customer})
+        _customer = frappe._dict(
+            {**self.data.document_details.buyer.billing, "name": _customer}
+        )
 
         if found := super().get_party_address(
-            _customer, self.buyer_billing.address, "Billing"
+            _customer, self.data.document_details.buyer.billing.address, "Billing"
         ):
             return found
 
         if found := super().get_party_address(
-            _customer, self.buyer_billing.address, "Shipping"
+            _customer, self.data.document_details.buyer.billing.address, "Shipping"
         ):
-            self.buyer_billing, self.buyer_shipping = (
-                self.buyer_shipping,
-                self.buyer_billing,
-            )
+            # TODO: some flag to remember inversion state
             return found
 
     def set_shipping_address(self):
@@ -157,24 +164,28 @@ class SalesOrderGenerator(TransactionGenerator):
         if not _customer:
             return
 
-        _customer = frappe._dict({**self.buyer_shipping, "name": _customer})
+        _customer = frappe._dict(
+            {**self.data.document_details.buyer.shipping, "name": _customer}
+        )
 
         if found := super().get_party_address(
-            _customer, self.buyer_shipping.address, "Shipping"
+            _customer, self.data.document_details.buyer.shipping.address, "Shipping"
         ):
             return found
 
         if found := super().get_party_address(
-            _customer, self.buyer_shipping.address, "Billing"
+            _customer, self.data.document_details.buyer.shipping.address, "Billing"
         ):
             # TODO: some flag to remember inversion state
             return found
+
+    ### Items
 
     def set_items(self):
         self.doc.items = self.get_items()
 
     def get_items(self):
-        return [self.get_item(item) for item in self.items]
+        return [self.get_item(item) for item in self.data.document_items]
 
     def get_item(self, item):
         _item = super().get_item(item, self.doc.company, self.doc.currency)

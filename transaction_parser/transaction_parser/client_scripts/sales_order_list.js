@@ -35,7 +35,7 @@ frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 			primary_action_label: __("Submit"),
 			primary_action(values) {
 				frappe.call({
-					method: "transaction_parser.transaction_parser.parser.parse",
+					method: "transaction_parser.transaction_parser.parse",
 					args: {
 						doctype: DOCTYPE,
 						country: values.country,
