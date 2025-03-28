@@ -3,17 +3,14 @@ from frappe import _
 
 BASE_PATH = "transaction_parser.transaction_parser.controllers"
 REGIONAL_OVERRIDES_MODULE = "regional_overrides"
+CUSTOM_OVERRIDES_HOOK = "transaction_parser_overrides"
 
 
 def get_controller(country, doctype):
-    # TODO: get country & doctype specific controller from hooks (custom implementations)
-
     if controller := _get_controller(country, doctype):
         return controller
 
-    # TODO: get `other country` & doctype specific controller from hooks (custom implementations)
-
-    if controller := _get_controller("Other", doctype):
+    if (country != "Other") and (controller := _get_controller("Other", doctype)):
         return controller
 
     if controller := _get_default_controller(doctype):
@@ -23,14 +20,42 @@ def get_controller(country, doctype):
 
 
 def _get_controller(country, doctype):
-    _country = frappe.scrub(country)
+    if controller := _get_controller_from_hooks(country, doctype):
+        return controller
+
+    _module = frappe.scrub(country)
     _class = _get_class_name(country, doctype)
 
-    return _get_attr(f"{BASE_PATH}.{REGIONAL_OVERRIDES_MODULE}.{_country}.{_class}")
+    return _get_attr(f"{BASE_PATH}.{REGIONAL_OVERRIDES_MODULE}.{_module}.{_class}")
 
 
-def _get_default_controller(doctype):
-    return _get_attr(f"{BASE_PATH}.{doctype}.{doctype}")
+def _get_controller_from_hooks(country, doctype):
+    """
+    Hook Example:
+
+    transaction_parser_overrides = {
+        "India": {
+            "Sales Order": [
+                "path.to.controller.ClassName",
+            ]
+        }
+    }
+    """
+    overrides = frappe.get_hooks(CUSTOM_OVERRIDES_HOOK)
+
+    if not overrides:
+        return
+
+    if not (country_overrides := overrides.get(country)):
+        return
+
+    if not (doctype_overrides := country_overrides.get(doctype)):
+        return
+
+    if not (import_path := doctype_overrides[-1]):
+        return
+
+    return _get_attr(import_path)
 
 
 def _get_class_name(*args):
@@ -43,3 +68,10 @@ def _get_attr(path):
 
     except Exception:
         return
+
+
+def _get_default_controller(doctype):
+    _module = frappe.scrub(doctype)
+    _class = _get_class_name(doctype)
+
+    return _get_attr(f"{BASE_PATH}.{_module}.{_class}")
