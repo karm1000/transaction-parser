@@ -50,10 +50,14 @@ class FileProcessor:
     def _apply_ocr(self):
         temp_file = TemporaryFile()
 
+        # TODO: fix text encoding issues after OCR
+
         ocrmypdf.ocr(
             input_file=self.file,
             output_file=temp_file,
-            force_ocr=True,  # TODO: study its impact
+            progress_bar=False,
+            rotate_pages=True,
+            force_ocr=True,
             deskew=True,  # TODO: study its impact
         )
 
