@@ -127,8 +127,10 @@ class Transaction:
 
     def get_default_schema(self):
         return {
-            "document_details": self.get_document_schema(),
-            "document_items": [self.get_item_schema()],
+            "document_number": "string (unique identifier)",
+            "document_date": "date | null",
+            "currency": "ISO currency code (e.g., INR, USD, etc.)",
+            "item_list": [self.get_item_schema()],
             "totals": {
                 "subtotal": "float",
                 "taxes": [self.get_tax_schema()],
@@ -144,30 +146,6 @@ class Transaction:
 
     def get_custom_schema(self):
         return to_dict(self.settings.base_schema, throw=False)
-
-    ### Document
-
-    def get_document_schema(self):
-        if not self.document_schema:
-            self.document_schema = self._get_document_schema()
-
-        return self.document_schema
-
-    def _get_document_schema(self):
-        return {
-            **self.get_default_document_schema(),
-            **self.get_custom_document_schema(),
-        }
-
-    def get_default_document_schema(self):
-        return {
-            "number": "string (unique identifier)",
-            "date": "date | null",
-            "currency": "ISO currency code (e.g., INR, USD, etc.)",
-        }
-
-    def get_custom_document_schema(self):
-        return to_dict(self.settings.document_schema, throw=False)
 
     ### Item
 
@@ -443,10 +421,10 @@ class Transaction:
     ### Document
 
     def get_document_number(self):
-        return self.data.document_details.number
+        return self.data.document_number
 
     def get_document_date(self):
-        return self.data.document_details.date
+        return self.data.document_date
 
     def get_currency(self):
-        return self.data.document_details.currency
+        return self.data.currency

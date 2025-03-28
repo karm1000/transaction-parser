@@ -17,7 +17,6 @@
   "custom_fields_section",
   "column_break_kdtw",
   "base_schema",
-  "document_schema",
   "tax_schema",
   "address_schema",
   "party_schema",
@@ -94,12 +93,6 @@
   },
   {
    "depends_on": "eval: doc.enabled",
-   "fieldname": "document_schema",
-   "fieldtype": "JSON",
-   "label": "Document Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
    "fieldname": "tax_schema",
    "fieldtype": "JSON",
    "label": "Tax Schema"
@@ -126,7 +119,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-28 08:36:39.770780",
+ "modified": "2025-03-28 18:48:46.534140",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
