@@ -59,10 +59,10 @@ class Transaction:
     #####################################
 
     def get_file_content(self, file_url, page_limit=None):
-        if self.settings.reuse_previously_parsed_data and (
-            content := self.get_saved_content(file_url)
-        ):
-            return content
+        # if self.settings.reuse_previously_parsed_data and (
+        #     content := self.get_saved_content(file_url)
+        # ):
+        #     return content
 
         return self.parse_file_content(file_url, page_limit)
 
