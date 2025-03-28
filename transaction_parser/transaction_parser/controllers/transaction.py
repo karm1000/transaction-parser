@@ -30,8 +30,10 @@ class Transaction:
 
         self.set_details()
         self.set_flags()
+        self.doc.save()
+        self.attach_file()
 
-        return self.doc.save()
+        return self.doc
 
     def initialize(self):
         # file processing
@@ -58,38 +60,38 @@ class Transaction:
     ########## File Processing ##########
     #####################################
 
+    # def get_file_content(self, file_url, page_limit=None):
+    #     if self.settings.reuse_previously_parsed_data and (
+    #         content := self.get_saved_content(file_url)
+    #     ):
+    #         return content
+
+    #     return self.parse_file_content(file_url, page_limit)
+
+    # def get_saved_content(self, file_url):
+    #     duplicate_names = frappe.get_all(
+    #         "File", filters={"file_url": file_url}, pluck="name"
+    #     )
+
+    #     filters = {
+    #         "integration_request_service": SERVICE_NAME,
+    #         "status": "Completed",
+    #         "reference_doctype": "File",
+    #         "reference_docname": ["in", duplicate_names],
+    #     }
+
+    #     response = frappe.db.get_value(
+    #         "Integration Request", filters=filters, fieldname="output"
+    #     )
+
+    #     if not response:
+    #         return
+
+    #     response = to_dict(response, throw=False)
+
+    #     return get_content(response)
+
     def get_file_content(self, file_url, page_limit=None):
-        # if self.settings.reuse_previously_parsed_data and (
-        #     content := self.get_saved_content(file_url)
-        # ):
-        #     return content
-
-        return self.parse_file_content(file_url, page_limit)
-
-    def get_saved_content(self, file_url):
-        duplicate_names = frappe.get_all(
-            "File", filters={"file_url": file_url}, pluck="name"
-        )
-
-        filters = {
-            "integration_request_service": SERVICE_NAME,
-            "status": "Completed",
-            "reference_doctype": "File",
-            "reference_docname": ["in", duplicate_names],
-        }
-
-        response = frappe.db.get_value(
-            "Integration Request", filters=filters, fieldname="output"
-        )
-
-        if not response:
-            return
-
-        response = to_dict(response, throw=False)
-
-        return get_content(response)
-
-    def parse_file_content(self, file_url, page_limit=None):
         processor = FileProcessor()
         file_details = processor.get_details(file_url, page_limit)
 
@@ -292,6 +294,14 @@ class Transaction:
         self.doc.flags.ignore_mandatory = True
         self.doc.flags.ignore_validate = True
         self.doc.flags.ignore_links = True
+
+    def attach_file(self):
+        doc = frappe.get_doc("File", self.file_details.docname)
+
+        doc.attached_to_doctype = self.DOCTYPE
+        doc.attached_to_name = self.doc.name
+
+        doc.save()
 
     ### Company
 

@@ -25,22 +25,30 @@ def parse(doctype, country, file_url, page_limit=None):
 
 
 def _parse(country, doctype, file_url, page_limit=None):
-    controller = get_controller(country, doctype)()
-    doc = controller.generate(file_url, page_limit)
+    try:
+        filename = file_url.split("/")[-1]
 
-    attach_file(doc, file_url)
+        controller = get_controller(country, doctype)()
+        doc = controller.generate(file_url, page_limit)
 
-    enqueue_notification(
-        document_type=doctype,
-        document_name=doc.name,
-        subject=_(f"{doctype} {doc.name} has been created"),
-    )
+        notification = {
+            "document_type": doctype,
+            "document_name": doc.name,
+            "subject": _(f"{doctype} {doc.name} generated from {filename}"),
+        }
 
+    except Exception:
+        error_log = frappe.log_error(
+            "Transaction Parser API Error",
+            reference_doctype="File",
+            reference_name=filename,
+        )
 
-def attach_file(doc, file_url):
-    file = frappe.get_last_doc("File", {"file_url": file_url})
+        notification = {
+            "document_type": error_log.doctype,
+            "document_name": error_log.name,
+            "subject": _(f"Failed to generate {doctype} from {filename}"),
+        }
 
-    file.attached_to_doctype = doc.doctype
-    file.attached_to_name = doc.name
-
-    file.save()
+    finally:
+        enqueue_notification(**notification)
