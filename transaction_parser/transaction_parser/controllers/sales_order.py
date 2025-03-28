@@ -185,19 +185,23 @@ class SalesOrder(Transaction):
         self.doc.items = self.get_items()
 
     def get_items(self):
-        return [self.get_item(item) for item in self.data.document_items]
+        return [self.get_item_doc(item) for item in self.data.document_items]
 
-    def get_item(self, item):
-        _item = super().get_item(item, self.doc.company, self.doc.currency)
-        _item.customer_item_code = item.party_item_code
-
+    def get_item_doc(self, item):
         return frappe.get_doc(
             {
                 "doctype": "Sales Order Item",
                 "parentfield": "items",
-                **_item,
+                **self.get_item(item),
             }
         )
+
+    def get_item(self, item):
+        # NOTE: This method assumes that company and currency have been set in the document.
+        return {
+            **super().get_item(item, self.doc.company, self.doc.currency),
+            "customer_item_code": item.party_item_code,
+        }
 
     def get_item_code(self, item):
         # TODO: reduce to a single database call

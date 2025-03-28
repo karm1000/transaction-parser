@@ -396,13 +396,13 @@ class Transaction:
     ### Item
 
     def get_item(self, item, company, currency):
-        _item = frappe._dict()
-
-        _item.qty = item.quantity
-        _item.rate = item.rate
-        _item.amount = item.amount
-        _item.party_item_code = item.party_item_code
-        _item.item_code = self.get_item_code(_item)
+        _item = frappe._dict(
+            {
+                **item,
+                "qty": item.quantity,
+                "item_code": self.get_item_code(item),
+            }
+        )
 
         return frappe._dict(
             {
