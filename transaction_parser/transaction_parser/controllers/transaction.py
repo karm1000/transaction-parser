@@ -38,7 +38,7 @@ class Transaction:
         self.file_details = None
 
         # output schema
-        self.transaction_schema = None
+        self.schema = None
         self.document_schema = None
         self.tax_schema = None
         self.address_schema = None
@@ -112,23 +112,18 @@ class Transaction:
     ###################################
 
     def get_schema(self):
-        return self.get_transaction_schema()
+        if not self.schema:
+            self.schema = self._get_schema()
 
-    ### Transaction
+        return self.schema
 
-    def get_transaction_schema(self):
-        if not self.transaction_schema:
-            self.transaction_schema = self._get_transaction_schema()
-
-        return self.transaction_schema
-
-    def _get_transaction_schema(self):
+    def _get_schema(self):
         return {
-            **self.get_default_transaction_schema(),
-            **self.get_custom_transaction_schema(),
+            **self.get_default_schema(),
+            **self.get_custom_schema(),
         }
 
-    def get_default_transaction_schema(self):
+    def get_default_schema(self):
         return {
             "document_details": self.get_document_schema(),
             "document_items": [self.get_item_schema()],
@@ -145,8 +140,8 @@ class Transaction:
             },
         }
 
-    def get_custom_transaction_schema(self):
-        return to_dict(self.settings.transaction, throw=False)
+    def get_custom_schema(self):
+        return to_dict(self.settings.base_schema, throw=False)
 
     ### Document
 
@@ -170,7 +165,7 @@ class Transaction:
         }
 
     def get_custom_document_schema(self):
-        return to_dict(self.settings.document, throw=False)
+        return to_dict(self.settings.document_schema, throw=False)
 
     ### Item
 
@@ -203,7 +198,7 @@ class Transaction:
         }
 
     def get_custom_item_schema(self):
-        return to_dict(self.settings.item, throw=False)
+        return to_dict(self.settings.item_schema, throw=False)
 
     ### Tax
 
@@ -227,7 +222,7 @@ class Transaction:
         }
 
     def get_custom_tax_schema(self):
-        return to_dict(self.settings.tax, throw=False)
+        return to_dict(self.settings.tax_schema, throw=False)
 
     ### Party
 
@@ -254,7 +249,7 @@ class Transaction:
         }
 
     def get_custom_party_schema(self):
-        return to_dict(self.settings.party, throw=False)
+        return to_dict(self.settings.party_schema, throw=False)
 
     ### Address
 
@@ -281,7 +276,7 @@ class Transaction:
         }
 
     def get_custom_address_schema(self):
-        return to_dict(self.settings.address, throw=False)
+        return to_dict(self.settings.address_schema, throw=False)
 
     ##################################
     ########## Data Mapping ##########
