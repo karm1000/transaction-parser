@@ -6,6 +6,7 @@ from transaction_parser.transaction_parser.controllers.transaction import Transa
 
 GSTIN_SCORE_CUTOFF = 93
 PAN_SCORE_CUTOFF = 90
+HSN_SCORE_CUTOFF = 90
 
 
 class IndiaTransaction(Transaction):
@@ -24,6 +25,7 @@ class IndiaTransaction(Transaction):
         self.company_pans = None
         self.party_gstins = None
         self.party_pans = None
+        self.hsn_codes = None
 
     ###################################
     ########## Output Schema ##########
@@ -213,6 +215,34 @@ class IndiaTransaction(Transaction):
 
     def get_address_for_gstin(self, gstin):
         return frappe.db.get_value("Address", {"gstin": gstin})
+
+    ### Item
+
+    def get_item(self, item, company, currency):
+        return {
+            **super().get_item(item, company, currency),
+            "gst_hsn_code": self.get_hsn_code(item.hsn_code),
+        }
+
+    def get_hsn_code(self, hsn_code):
+        if found := self.search_hsn_code(hsn_code):
+            return found
+
+        return self.guess_hsn_code(hsn_code)
+
+    def search_hsn_code(self, hsn_code):
+        return hsn_code if hsn_code in self._get_all_hsn_codes() else None
+
+    def guess_hsn_code(self, hsn_code):
+        return self.guess_value(
+            hsn_code, self._get_all_hsn_codes(), score_cutoff=HSN_SCORE_CUTOFF
+        )
+
+    def _get_all_hsn_codes(self):
+        if not self.hsn_codes:
+            self.hsn_codes = set(frappe.get_all("GST HSN Code", pluck="name"))
+
+        return self.hsn_codes
 
 
 class IndiaSalesOrder(SalesOrder, IndiaTransaction):
