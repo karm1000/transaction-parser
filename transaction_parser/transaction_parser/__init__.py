@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import cint
+from frappe.utils import cint, cstr
 
 from transaction_parser.transaction_parser.controllers import get_controller
 from transaction_parser.transaction_parser.utils import is_enabled
@@ -17,15 +17,17 @@ def parse(doctype, country, file_url, page_limit=None):
 
     frappe.enqueue(
         _parse,
-        country=country,
-        doctype=doctype,
-        file_url=file_url,
+        country=cstr(country),
+        doctype=cstr(doctype),
+        file_url=cstr(file_url),
         page_limit=cint(page_limit),
     )
 
 
 def _parse(country, doctype, file_url, page_limit=None):
     try:
+        filename = file_url.split("/")[-1]
+
         file = frappe.get_last_doc("File", filters={"file_url": file_url})
         filename = file.file_name
 
