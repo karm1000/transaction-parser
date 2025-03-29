@@ -50,8 +50,6 @@ class Transaction:
 
         # data mapping
         self.data = None
-        self.companies = None
-        self.parties = None
         self.addresses = {}
 
         # draft document
@@ -286,18 +284,12 @@ class Transaction:
         return self.guess_company(company)
 
     def search_company(self, company):
-        _company = company.name
-
-        return _company if _company in self._get_all_companies() else None
-
-    def _get_all_companies(self):
-        if not self.companies:
-            self.companies = set(frappe.db.get_all("Company", pluck="name"))
-
-        return self.companies
+        return frappe.db.exists("Company", company.name)
 
     def guess_company(self, company):
-        return self.guess_value(company.name, self._get_all_companies())
+        return self.guess_value(
+            company.name, frappe.db.get_all("Company", pluck="name")
+        )
 
     def guess_value(self, value, options, score_cutoff=80):
         if result := process.extractOne(value, options, score_cutoff=score_cutoff):
@@ -312,18 +304,12 @@ class Transaction:
         return self.guess_party(party)
 
     def search_party(self, party):
-        _party = party.name
-
-        return _party if _party in self._get_all_parties() else None
-
-    def _get_all_parties(self):
-        if not self.parties:
-            self.parties = set(frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name"))
-
-        return self.parties
+        return frappe.db.exists(self.PARTY_DOCTYPE, party.name)
 
     def guess_party(self, party):
-        return self.guess_value(party.name, self._get_all_parties())
+        return self.guess_value(
+            party.name, frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name")
+        )
 
     ### Address
 
