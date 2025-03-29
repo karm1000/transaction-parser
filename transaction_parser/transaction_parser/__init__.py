@@ -26,10 +26,11 @@ def parse(doctype, country, file_url, page_limit=None):
 
 def _parse(country, doctype, file_url, page_limit=None):
     try:
-        filename = file_url.split("/")[-1]
+        file = frappe.get_last_doc("File", filters={"file_url": file_url})
+        filename = file.file_name
 
         controller = get_controller(country, doctype)()
-        doc = controller.generate(file_url, page_limit)
+        doc = controller.generate(file, page_limit)
 
         notification = {
             "document_type": doctype,

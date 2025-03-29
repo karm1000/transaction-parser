@@ -22,10 +22,11 @@ class Transaction:
 
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
-    def generate(self, file_url, page_limit=None):
+    def generate(self, file, page_limit=None):
         self.initialize()
 
-        self.data = self.get_file_content(file_url, page_limit)
+        self.file = file
+        self.data = self.get_file_content(page_limit)
         self.doc = frappe.new_doc(self.DOCTYPE)
 
         self.set_details()
@@ -37,7 +38,7 @@ class Transaction:
 
     def initialize(self):
         # file processing
-        self.file_details = None
+        self.file = None
 
         # output schema
         self.schema = None
@@ -91,9 +92,9 @@ class Transaction:
 
     #     return get_content(response)
 
-    def get_file_content(self, file_url, page_limit=None):
+    def get_file_content(self, page_limit=None):
         processor = FileProcessor()
-        file_details = processor.get_details(file_url, page_limit)
+        content = processor.get_content(self.file, page_limit)
 
         schema = self.get_schema()
 
@@ -101,11 +102,9 @@ class Transaction:
         response = parser.parse(
             doctype=self.DOCTYPE,
             schema=schema,
-            file_doc_name=file_details.docname,
-            data=file_details.content,
+            file_doc_name=self.file.name,
+            data=content,
         )
-
-        self.file_details = file_details
 
         return get_content(response)
 
@@ -274,12 +273,9 @@ class Transaction:
         self.doc.flags.ignore_links = True
 
     def attach_file(self):
-        doc = frappe.get_doc("File", self.file_details.docname)
-
-        doc.attached_to_doctype = self.DOCTYPE
-        doc.attached_to_name = self.doc.name
-
-        doc.save()
+        self.file.attached_to_doctype = self.DOCTYPE
+        self.file.attached_to_name = self.doc.name
+        self.file.save()
 
     ### Company
 
