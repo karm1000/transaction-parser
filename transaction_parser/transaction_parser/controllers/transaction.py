@@ -353,6 +353,16 @@ class Transaction:
         return frappe.db.exists("Address", filters)
 
     def _get_all_addresses(self, business, linked_doctype):
+        """
+        Returns a list addresses for a given business.
+
+        Example:
+        self.addresses = {
+            "business_1": [ "address_1", "address_2", ... ],
+            "business_2": [ "address_1", "address_2", ... ],
+            ...
+        }
+        """
         # TODO: make key as a combination of business and linked_doctype
         _business = business.name
 
@@ -380,24 +390,13 @@ class Transaction:
     ### Item
 
     def get_item(self, item, company, currency):
-        _item = frappe._dict(
-            {
-                **item,
-                "qty": item.quantity,
-                "item_code": self.get_item_code(item),
-            }
-        )
-
         return frappe._dict(
             {
-                **self._get_item_details(_item, company, currency),
-                **_item,
+                **self._get_item_details(item, company, currency),
+                **item,
+                "qty": item.quantity,
             }
         )
-
-    def get_item_code(self, item):
-        # TODO: Implement
-        pass
 
     def _get_item_details(self, item, company, currency):
         if not (item.item_code and company and currency):
@@ -406,7 +405,7 @@ class Transaction:
         return get_item_details(
             {
                 "item_code": item.item_code,
-                "qty": item.qty,
+                "qty": item.quantity,
                 "rate": item.rate,
                 "company": company,
                 "currency": currency,

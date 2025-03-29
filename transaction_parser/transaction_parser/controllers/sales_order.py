@@ -7,6 +7,12 @@ class SalesOrder(Transaction):
     DOCTYPE = "Sales Order"
     PARTY_DOCTYPE = "Customer"
 
+    def initialize(self):
+        super().initialize()
+
+        # data mapping
+        self.item_codes = None
+
     ###################################
     ########## Output Schema ##########
     ###################################
@@ -179,32 +185,56 @@ class SalesOrder(Transaction):
         self.doc.items = self.get_items()
 
     def get_items(self):
-        return [self.get_item_doc(item) for item in self.data.item_list]
+        if not self.data.item_list:
+            return []
+
+        return [self.get_item_doc(self.get_item(item)) for item in self.data.item_list]
+
+    def get_item(self, item):
+        # NOTE: This method assumes that company and currency have been set in the document.
+        item.item_code = self._get_all_item_codes().get(item.party_item_code)
+
+        return {
+            **super().get_item(item, self.doc.company, self.doc.currency),
+            "customer_item_code": item.party_item_code,
+        }
+
+    def _get_all_item_codes(self):
+        """
+        Returns a dictionary that maps customer item code to item code.
+
+        Example:
+        {
+            "customer_item_code_1": "item_code_1",
+            "customer_item_code_2": "item_code_2",
+            ...
+        }
+        """
+        if self.item_codes is None:
+            customer_item_codes = [item.party_item_code for item in self.data.item_list]
+
+            filters = {
+                "parenttype": "Item",
+                "customer_name": self.doc.customer,
+                "ref_code": ["in", customer_item_codes],
+            }
+
+            self.item_codes = frappe._dict(
+                frappe.get_all(
+                    "Item Customer Detail",
+                    filters=filters,
+                    fields=["ref_code", "parent"],
+                    as_list=True,
+                )
+            )
+
+        return self.item_codes
 
     def get_item_doc(self, item):
         return frappe.get_doc(
             {
                 "doctype": "Sales Order Item",
                 "parentfield": "items",
-                **self.get_item(item),
+                **item,
             }
-        )
-
-    def get_item(self, item):
-        # NOTE: This method assumes that company and currency have been set in the document.
-        return {
-            **super().get_item(item, self.doc.company, self.doc.currency),
-            "customer_item_code": item.party_item_code,
-        }
-
-    def get_item_code(self, item):
-        # TODO: reduce to a single database call
-        return frappe.db.get_value(
-            "Item Customer Detail",
-            filters={
-                "parenttype": "Item",
-                "customer_name": self.doc.customer,
-                "ref_code": item.party_item_code,
-            },
-            fieldname="parent",
         )
