@@ -27,11 +27,11 @@ class Transaction:
 
         self.file = file
         self.data = self.get_file_content(page_limit)
-        self.doc = frappe.new_doc(self.DOCTYPE)
+        self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
 
         self.set_details()
         self.set_flags()
-        self.doc.save()
+        self.doc.insert()
         self.attach_file()
 
         return self.doc
