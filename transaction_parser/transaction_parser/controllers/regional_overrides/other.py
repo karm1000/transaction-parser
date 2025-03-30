@@ -27,20 +27,21 @@ class OtherTransaction(Transaction):
     ########## Data Mapping ##########
     ##################################
 
-    ### Company
-
-    def search_company(self, company):
-        if found := self.search_company_by_tax_id(company.tax_id):
+    ### Company and Party
+    def search_business(self, business, doctype):
+        if found := super().search_business(business, doctype):
             return found
 
-        return super().search_company(company)
-
-    def search_company_by_tax_id(self, tax_id):
-        return self.search_business_by_tax_id(tax_id, "Company")
+        if (business.tax_id) and (
+            found := self.search_business_by_tax_id(business.tax_id, doctype)
+        ):
+            return found
 
     def search_business_by_tax_id(self, tax_id, doctype):
-        if self.is_valid_tax_id(tax_id):
-            return self.get_business_for_tax_id(tax_id, doctype)
+        if not self.is_valid_tax_id(tax_id):
+            return
+
+        return self.get_business_for_tax_id(tax_id, doctype)
 
     def is_valid_tax_id(self, tax_id):
         # TODO: Implement
@@ -49,25 +50,34 @@ class OtherTransaction(Transaction):
     def get_business_for_tax_id(self, tax_id, doctype):
         return frappe.db.get_value(doctype, {"tax_id": tax_id})
 
-    def guess_company(self, company):
-        if found := self.guess_company_by_tax_id(company.tax_id):
+    def guess_business(self, business, doctype):
+        if found := super().guess_business(business, doctype):
             return found
 
-        return super().guess_company(company)
-
-    def guess_company_by_tax_id(self, tax_id):
-        if found := self.guess_value(
-            tax_id, self._get_all_company_tax_ids(), score_cutoff=TAX_ID_SCORE_CUTOFF
+        if (business.tax_id) and (
+            found := self.guess_business_by_tax_id(business.tax_id, doctype)
         ):
-            return self._get_all_company_tax_ids().get(found)
+            return found
 
-    def _get_all_company_tax_ids(self):
-        if not self.company_tax_ids:
-            self.company_tax_ids = self._get_all_tax_ids("Company")
+    def guess_business_by_tax_id(self, tax_id, doctype):
+        tax_ids = self._get_all_business_tax_ids(doctype)
 
-        return self.company_tax_ids
+        if found := self.guess_value(
+            tax_id, tax_ids.keys(), score_cutoff=TAX_ID_SCORE_CUTOFF
+        ):
+            return tax_ids.get(found)
 
-    def _get_all_tax_ids(self, doctype):
+    def _get_all_business_tax_ids(self, doctype):
+        """
+        Get all tax IDs for a given doctype.
+
+        Example:
+        {
+            "TAX_ID_1": "business_1",
+            "TAX_ID_2": "business_2",
+            ...
+        }
+        """
         return frappe._dict(
             frappe.db.get_all(
                 doctype,
@@ -76,35 +86,6 @@ class OtherTransaction(Transaction):
                 as_list=True,
             )
         )
-
-    ### Party
-
-    def search_party(self, party):
-        if found := self.search_party_by_tax_id(party.tax_id):
-            return found
-
-        return super().search_party(party)
-
-    def search_party_by_tax_id(self, tax_id):
-        return self.search_business_by_tax_id(tax_id, self.PARTY_DOCTYPE)
-
-    def guess_party(self, party):
-        if found := self.guess_party_by_tax_id(party.tax_id):
-            return found
-
-        return super().guess_party(party)
-
-    def guess_party_by_tax_id(self, tax_id):
-        if found := self.guess_value(
-            tax_id, self._get_all_party_tax_ids(), score_cutoff=TAX_ID_SCORE_CUTOFF
-        ):
-            return self._get_all_party_tax_ids().get(found)
-
-    def _get_all_party_tax_ids(self):
-        if not self.party_tax_ids:
-            self.party_tax_ids = self._get_all_tax_ids(self.PARTY_DOCTYPE)
-
-        return self.party_tax_ids
 
 
 class OtherSalesOrder(SalesOrder, OtherTransaction):
