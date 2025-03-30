@@ -22,9 +22,9 @@ class IndiaTransaction(Transaction):
     ########## Output Schema ##########
     ###################################
 
-    def get_default_party_schema(self):
+    def get_default_business_schema(self):
         return {
-            **super().get_default_party_schema(),
+            **super().get_default_business_schema(),
             "gstin": "string (GST Identification Number)",
             "pan": "string (Permanent Account Number)",
         }

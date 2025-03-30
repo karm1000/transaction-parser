@@ -24,10 +24,10 @@ class SalesOrder(Transaction):
             "payment_terms": "string (e.g., '30 days from invoice')",
             "project_reference": "string | null",
             "buyer": {
-                "shipping": self.get_party_schema(),
-                "billing": self.get_party_schema(),
+                "shipping": self.get_business_schema(),
+                "billing": self.get_business_schema(),
             },
-            "vendor": self.get_party_schema(),
+            "vendor": self.get_business_schema(),
         }
 
     ##################################

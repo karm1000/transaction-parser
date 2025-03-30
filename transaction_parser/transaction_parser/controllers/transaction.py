@@ -45,7 +45,7 @@ class Transaction:
         self.document_schema = None
         self.tax_schema = None
         self.address_schema = None
-        self.party_schema = None
+        self.business_schema = None
         self.item_schema = None
 
         # data mapping
@@ -202,19 +202,19 @@ class Transaction:
 
     ### Party
 
-    def get_party_schema(self):
-        if not self.party_schema:
-            self.party_schema = self._get_party_schema()
+    def get_business_schema(self):
+        if not self.business_schema:
+            self.business_schema = self._get_business_schema()
 
-        return self.party_schema
+        return self.business_schema
 
-    def _get_party_schema(self):
+    def _get_business_schema(self):
         return {
-            **self.get_default_party_schema(),
-            **self.get_custom_party_schema(),
+            **self.get_default_business_schema(),
+            **self.get_custom_business_schema(),
         }
 
-    def get_default_party_schema(self):
+    def get_default_business_schema(self):
         return {
             "name": "string",
             "address": self.get_address_schema(),
@@ -224,8 +224,8 @@ class Transaction:
             },
         }
 
-    def get_custom_party_schema(self):
-        return to_dict(self.settings.party_schema, throw=False)
+    def get_custom_business_schema(self):
+        return to_dict(self.settings.business_schema, throw=False)
 
     ### Address
 

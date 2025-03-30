@@ -19,7 +19,7 @@
   "base_schema",
   "tax_schema",
   "address_schema",
-  "party_schema",
+  "business_schema",
   "item_schema"
  ],
  "fields": [
@@ -105,21 +105,21 @@
   },
   {
    "depends_on": "eval: doc.enabled",
-   "fieldname": "party_schema",
-   "fieldtype": "JSON",
-   "label": "Party Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
    "fieldname": "item_schema",
    "fieldtype": "JSON",
    "label": "Item Schema"
+  },
+  {
+   "depends_on": "eval: doc.enabled",
+   "fieldname": "business_schema",
+   "fieldtype": "JSON",
+   "label": "Business Schema"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-28 18:48:46.534140",
+ "modified": "2025-03-30 18:18:53.228246",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

@@ -17,9 +17,9 @@ class OtherTransaction(Transaction):
     ########## Output Schema ##########
     ###################################
 
-    def get_default_party_schema(self):
+    def get_default_business_schema(self):
         return {
-            **super().get_default_party_schema(),
+            **super().get_default_business_schema(),
             "tax_id": "string (Country Specific Unique Tax Identifier)",
         }
 
