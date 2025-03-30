@@ -283,12 +283,19 @@ class Transaction:
         return self.guess_company(company)
 
     def search_company(self, company):
-        return frappe.db.exists("Company", company.name)
+        return self.search_business(company, "Company")
+
+    def search_business(self, business, doctype):
+        return frappe.db.exists(doctype, business.name)
 
     def guess_company(self, company):
-        return self.guess_value(
-            company.name, frappe.db.get_all("Company", pluck="name")
-        )
+        return self.guess_business(company, "Company")
+
+    def guess_business(self, business, doctype):
+        return self.guess_value(business.name, self._get_all_businesses(doctype))
+
+    def _get_all_businesses(self, doctype):
+        return frappe.db.get_all(doctype, pluck="name")
 
     def guess_value(self, value, options, score_cutoff=80):
         if result := process.extractOne(value, options, score_cutoff=score_cutoff):
@@ -303,12 +310,10 @@ class Transaction:
         return self.guess_party(party)
 
     def search_party(self, party):
-        return frappe.db.exists(self.PARTY_DOCTYPE, party.name)
+        return self.search_business(party, self.PARTY_DOCTYPE)
 
     def guess_party(self, party):
-        return self.guess_value(
-            party.name, frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name")
-        )
+        return self.guess_business(party, self.PARTY_DOCTYPE)
 
     ### Address
 
