@@ -50,7 +50,6 @@ class Transaction:
 
         # data mapping
         self.data = None
-        self.addresses = {}
 
         # draft document
         self.doc = None
@@ -326,46 +325,54 @@ class Transaction:
         # TODO: fuzzy match address
 
     def search_address(self, business, address, address_type, doctype):
-        addresses = self._get_all_addresses(business, doctype)
+        address_table = frappe.qb.DocType("Address")
+        link_table = frappe.qb.DocType("Dynamic Link")
 
-        filters = {
-            "pincode": address.postal_code,
-            "name": ["in", addresses],
-        }
+        query = (
+            frappe.qb.from_(address_table)
+            .join(link_table)
+            .on(address_table.name == link_table.parent)
+            .select(address_table.name)
+            .limit(1)
+            .where(link_table.link_doctype == doctype)
+            .where(link_table.link_name == business.name)
+            .where(address_table.pincode == address.postal_code)
+        )
 
         if address_type:
-            filters["address_type"] = address_type
+            query = query.where(address_table.pincode == address.postal_code)
 
-        return frappe.db.exists("Address", filters)
+        if found := query.run():
+            return found[0][0]
 
-    def _get_all_addresses(self, business, linked_doctype):
-        """
-        Returns a list addresses for a given business.
+    # def _get_all_addresses(self, business, linked_doctype):
+    #     """
+    #     Returns a list addresses for a given business.
 
-        Example:
-        self.addresses = {
-            "business_1": [ "address_1", "address_2", ... ],
-            "business_2": [ "address_1", "address_2", ... ],
-            ...
-        }
-        """
-        # TODO: make key as a combination of business and linked_doctype
-        _business = business.name
+    #     Example:
+    #     self.addresses = {
+    #         "business_1": [ "address_1", "address_2", ... ],
+    #         "business_2": [ "address_1", "address_2", ... ],
+    #         ...
+    #     }
+    #     """
+    #     # TODO: make key as a combination of business and linked_doctype
+    #     _business = business.name
 
-        if self.addresses.get(_business) is None:
-            self.addresses[_business] = set(
-                frappe.get_all(
-                    "Dynamic Link",
-                    filters={
-                        "parenttype": "Address",
-                        "link_doctype": linked_doctype,
-                        "link_name": _business,
-                    },
-                    pluck="parent",
-                )
-            )
+    #     if self.addresses.get(_business) is None:
+    #         self.addresses[_business] = set(
+    #             frappe.get_all(
+    #                 "Dynamic Link",
+    #                 filters={
+    #                     "parenttype": "Address",
+    #                     "link_doctype": linked_doctype,
+    #                     "link_name": _business,
+    #                 },
+    #                 pluck="parent",
+    #             )
+    #         )
 
-        return self.addresses[_business]
+    #     return self.addresses[_business]
 
     def _get_default_company_address(self):
         return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
