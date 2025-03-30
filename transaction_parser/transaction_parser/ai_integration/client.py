@@ -12,6 +12,8 @@ from transaction_parser.transaction_parser.utils.integration_request import (
 
 
 class AIClient:
+    # TODO: Some error message indicating balance expired
+
     def __init__(self, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 

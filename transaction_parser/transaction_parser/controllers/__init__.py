@@ -26,6 +26,7 @@ def _get_controller(country, doctype):
     _module = frappe.scrub(country)
     _class = _get_class_name(country, doctype)
 
+    # TODO: support directory structure also
     return _get_attr(f"{BASE_PATH}.{REGIONAL_OVERRIDES_MODULE}.{_module}.{_class}")
 
 
