@@ -29,11 +29,6 @@ class Transaction:
 
         self.set_details()
         self.set_flags()
-
-        # test
-        if getattr(self.doc, "set_missing_values", None):
-            self.doc.set_missing_values()
-
         self.doc.insert()
         self.attach_file()
 
@@ -135,6 +130,14 @@ class Transaction:
                 "total_tax_amount": "float | null",
                 "grand_total": "float",
             },
+            "payment_terms": [
+                {
+                    "no_of_days_credit": "int",
+                    "credit_from": "string | null",
+                    "due_date": "date | null",
+                    "percent_of_invoice": "float | null",
+                }
+            ],
             "local_terms": {
                 "incoterms": "string (e.g., EXW, DDP, etc.)",
                 "description": "string",
@@ -160,10 +163,9 @@ class Transaction:
 
     def get_default_item_schema(self):
         return {
-            "serial_number": "int | null",
-            "party_item_code": "string | null",
+            "serial_number": "string | null",
+            "party_item_code": "string | null (Dont confuse this with serial number)",
             "description": "string",
-            "hsn_code": "string",
             "quantity": "float",
             "unit": "string (e.g., KG, MTR, PC, etc.)",
             "rate": "float",
@@ -172,6 +174,7 @@ class Transaction:
             "total_tax_percentage": "float | null",
             "total_tax_amount": "float | null",
             "is_price_inclusive_of_taxes": "boolean",
+            "delivery_date": "date | null",
         }
 
     def get_custom_item_schema(self):

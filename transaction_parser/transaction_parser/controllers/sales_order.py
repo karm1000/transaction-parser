@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
@@ -15,7 +16,6 @@ class SalesOrder(Transaction):
         return {
             **super().get_default_schema(),
             "delivery_date": "date | null",
-            "payment_terms": "string (e.g., '30 days from invoice')",
             "project_reference": "string | null",
             "buyer": {
                 "shipping": self.get_business_schema(),
@@ -42,7 +42,11 @@ class SalesOrder(Transaction):
         if so_name := frappe.db.exists(
             "Sales Order", {"po_no": self.doc.po_no, "docstatus": 1}
         ):
-            frappe.throw("Duplicate Sales Order found: {}".format(so_name))
+            frappe.throw(
+                _(
+                    f"Duplicate Sales Order {so_name} found with PO number {self.doc.po_no}"
+                )
+            )
 
         self.set_po_date()
         self.set_delivery_date()
@@ -51,6 +55,8 @@ class SalesOrder(Transaction):
         self.set_billing_address()
         self.set_shipping_address()
         self.set_items()
+
+        self.doc.set_missing_values()
 
         # TODO: set a flag in SO (created from transaction parser)
         # TODO: validation of Sales Order on save.

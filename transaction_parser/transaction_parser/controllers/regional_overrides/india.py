@@ -22,6 +22,12 @@ class IndiaTransaction(Transaction):
     ########## Output Schema ##########
     ###################################
 
+    def get_default_item_schema(self):
+        return {
+            **super().get_default_item_schema(),
+            "hsn_code": "string",
+        }
+
     def get_default_business_schema(self):
         return {
             **super().get_default_business_schema(),
