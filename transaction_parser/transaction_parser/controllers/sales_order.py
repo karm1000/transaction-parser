@@ -18,10 +18,10 @@ class SalesOrder(Transaction):
             "delivery_date": "date | null",
             "project_reference": "string | null",
             "buyer": {
-                "shipping": self.get_business_schema(),
-                "billing": self.get_business_schema(),
+                "shipping": self.get_party_schema(),
+                "billing": self.get_party_schema(),
             },
-            "vendor": self.get_business_schema(),
+            "vendor": self.get_party_schema(),
         }
 
     ##################################

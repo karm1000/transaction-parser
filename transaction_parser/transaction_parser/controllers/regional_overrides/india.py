@@ -28,9 +28,9 @@ class IndiaTransaction(Transaction):
             "hsn_code": "string",
         }
 
-    def get_default_business_schema(self):
+    def get_default_party_schema(self):
         return {
-            **super().get_default_business_schema(),
+            **super().get_default_party_schema(),
             "gstin": "string (GST Identification Number)",
             "pan": "string (Permanent Account Number)",
         }
