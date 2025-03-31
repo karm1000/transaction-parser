@@ -7,12 +7,6 @@ TAX_ID_SCORE_CUTOFF = 90
 
 
 class OtherTransaction(Transaction):
-    def initialize(self, parsed_data):
-        super().initialize(parsed_data)
-
-        self.company_tax_ids = None
-        self.party_tax_ids = None
-
     ###################################
     ########## Output Schema ##########
     ###################################

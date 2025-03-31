@@ -2,13 +2,9 @@ import frappe
 from erpnext.stock.get_item_details import get_item_details
 from rapidfuzz import process
 
-from transaction_parser.transaction_parser.ai_integration.parser import (
-    AIParser,
-    get_content,
-)
+from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.utils import to_dict
 from transaction_parser.transaction_parser.utils.file_processor import FileProcessor
-from transaction_parser.transaction_parser.utils.integration_request import SERVICE_NAME
 
 
 class Transaction:
@@ -388,26 +384,25 @@ class Transaction:
     ### Item
 
     def get_item(self, item, company, currency):
+        item_details = {}
+
+        if item.item_code and company and currency:
+            item_details = get_item_details(
+                {
+                    "item_code": item.item_code,
+                    "qty": item.quantity,
+                    "rate": item.rate,
+                    "company": company,
+                    "currency": currency,
+                    "doctype": self.DOCTYPE,
+                }
+            )
+
         return frappe._dict(
             {
-                **self._get_item_details(item, company, currency),
+                **item_details,
                 **item,
                 "qty": item.quantity,
-            }
-        )
-
-    def _get_item_details(self, item, company, currency):
-        if not (item.item_code and company and currency):
-            return {}
-
-        return get_item_details(
-            {
-                "item_code": item.item_code,
-                "qty": item.quantity,
-                "rate": item.rate,
-                "company": company,
-                "currency": currency,
-                "doctype": self.DOCTYPE,
             }
         )
 
