@@ -61,7 +61,7 @@ class IndiaTransaction(Transaction):
         try:
             return validate_gstin(gstin)
 
-        except Exception:
+        except frappe.ValidationError:
             return False
 
     def get_business_for_gstin(self, gstin, doctype):
@@ -177,27 +177,17 @@ class IndiaTransaction(Transaction):
         if not item.hsn_code:
             return _item
 
-        return {
-            **_item,
-            "gst_hsn_code": self.get_hsn_code(item.hsn_code),
-        }
+        if found := self.search_hsn_code(item.hsn_code):
+            _item["gst_hsn_code"] = found
+
+        return _item
 
     def get_hsn_code(self, hsn_code):
         if found := self.search_hsn_code(hsn_code):
             return found
 
-        return self.guess_hsn_code(hsn_code)
-
     def search_hsn_code(self, hsn_code):
         return frappe.db.exists("GST HSN Code", {"name": hsn_code})
-
-    def guess_hsn_code(self, hsn_code):
-        return self.guess_value(
-            hsn_code, self._get_all_hsn_codes(), score_cutoff=HSN_SCORE_CUTOFF
-        )
-
-    def _get_all_hsn_codes(self):
-        return frappe.get_all("GST HSN Code", pluck="name")
 
 
 class IndiaSalesOrder(SalesOrder, IndiaTransaction):

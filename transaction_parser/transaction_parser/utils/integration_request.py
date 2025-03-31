@@ -9,10 +9,7 @@ SERVICE_NAME = "Transaction Parser API"
 
 
 def enqueue_integration_request(**kwargs):
-    frappe.enqueue(
-        "transaction_parser.transaction_parser.utils.integration_request.create_integration_request",
-        **kwargs,
-    )
+    frappe.enqueue(create_integration_request, **kwargs)
 
 
 def create_integration_request(

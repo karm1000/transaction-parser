@@ -42,7 +42,7 @@ def _get_controller_from_hooks(country, doctype):
             "Sales Order": [
                 "path.to.controller.ClassName",
             ]
-        }
+        },
         "Other": {
             "Transaction": [
                 "path.to.controller.ClassName",
@@ -50,7 +50,7 @@ def _get_controller_from_hooks(country, doctype):
             "Sales Order": [
                 "path.to.controller.ClassName",
             ]
-        }
+        },
         "Base": {
             "Transaction": [
                 "path.to.controller.ClassName",

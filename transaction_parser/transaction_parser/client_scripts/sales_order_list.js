@@ -13,7 +13,7 @@ frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 			title: __("Upload Purchase Order"),
 			fields: [
 				{
-					fieldname: "file",
+					fieldname: "file_url",
 					label: __("File"),
 					fieldtype: "Attach",
 					reqd: 1,
@@ -38,9 +38,7 @@ frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 					method: "transaction_parser.transaction_parser.parse",
 					args: {
 						doctype: DOCTYPE,
-						country: values.country,
-						file_url: values.file,
-						page_limit: values.page_limit,
+						...values,
 					},
 					callback: function () {
 						frappe.msgprint({

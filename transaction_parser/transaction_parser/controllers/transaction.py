@@ -29,6 +29,11 @@ class Transaction:
 
         self.set_details()
         self.set_flags()
+
+        # test
+        if getattr(self.doc, "set_missing_values", None):
+            self.doc.set_missing_values()
+
         self.doc.insert()
         self.attach_file()
 
@@ -326,6 +331,8 @@ class Transaction:
         # TODO: fuzzy match address
 
     def search_address(self, business, address, address_type, doctype):
+        # TODO: get all address for party and find best match
+        # Best match by postal / address_line1 / return default address
         address_table = frappe.qb.DocType("Address")
         link_table = frappe.qb.DocType("Dynamic Link")
 
@@ -390,7 +397,7 @@ class Transaction:
             item_details = get_item_details(
                 {
                     "item_code": item.item_code,
-                    "qty": item.quantity,
+                    "qty": item.quantity,  # TODO: needed?
                     "rate": item.rate,
                     "company": company,
                     "currency": currency,
@@ -400,6 +407,7 @@ class Transaction:
 
         return frappe._dict(
             {
+                # TODO: delivery_date
                 **item_details,
                 **item,
                 "qty": item.quantity,

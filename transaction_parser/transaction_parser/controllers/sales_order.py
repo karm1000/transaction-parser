@@ -29,16 +29,31 @@ class SalesOrder(Transaction):
     ##################################
 
     def set_details(self):
+        self.set_company()
+        if not self.doc.company:
+            frappe.throw("Company not found")
+
+        self.set_customer()
+        # if not self.doc.customer:
+        # self.create_party() # as a part of settings / only for india
+
         self.set_po_number()
+
+        if so_name := frappe.db.exists(
+            "Sales Order", {"po_no": self.doc.po_no, "docstatus": 1}
+        ):
+            frappe.throw("Duplicate Sales Order found: {}".format(so_name))
+
         self.set_po_date()
         self.set_delivery_date()
         self.set_currency()
-        self.set_company()
-        self.set_customer()
         self.set_company_address()
         self.set_billing_address()
         self.set_shipping_address()
         self.set_items()
+
+        # TODO: set a flag in SO (created from transaction parser)
+        # TODO: validation of Sales Order on save.
 
     def set_po_number(self):
         self.doc.po_no = self.get_document_number()
@@ -53,7 +68,8 @@ class SalesOrder(Transaction):
         return self.data.delivery_date
 
     def set_currency(self):
-        self.doc.currency = self.get_currency()
+        if currency := self.get_currency():
+            self.doc.currency = currency
 
     ### Company
 

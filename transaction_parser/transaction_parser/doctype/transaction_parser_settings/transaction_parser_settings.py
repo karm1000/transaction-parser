@@ -10,6 +10,7 @@ from transaction_parser.transaction_parser.utils import to_dict
 
 
 class TransactionParserSettings(Document):
+    # TODO: can we check API creds?
     def validate(self):
         self._validate_json_fields()
 
