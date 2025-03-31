@@ -6,6 +6,7 @@ from transaction_parser.transaction_parser.controllers.transaction import Transa
 
 GSTIN_SCORE_CUTOFF = 93
 PAN_SCORE_CUTOFF = 90
+HSN_SCORE_CUTOFF = 90
 
 
 class IndiaTransaction(Transaction):
@@ -17,21 +18,13 @@ class IndiaTransaction(Transaction):
 
         super().__init__()
 
-    def initialize(self):
-        super().initialize()
-
-        self.company_gstins = None
-        self.company_pans = None
-        self.party_gstins = None
-        self.party_pans = None
-
     ###################################
     ########## Output Schema ##########
     ###################################
 
-    def get_default_party_schema(self):
+    def get_default_business_schema(self):
         return {
-            **super().get_default_party_schema(),
+            **super().get_default_business_schema(),
             "gstin": "string (GST Identification Number)",
             "pan": "string (Permanent Account Number)",
         }
@@ -40,26 +33,27 @@ class IndiaTransaction(Transaction):
     ########## Data Mapping ##########
     ##################################
 
-    ### Company
+    ### Company and Party
 
-    def search_company(self, company):
-        if found := self.search_company_by_gstin(company.gstin):
+    def search_business(self, business, doctype):
+        if found := super().search_business(business, doctype):
             return found
 
-        if found := self.search_company_by_pan(company.pan):
+        if (business.gstin) and (
+            found := self.search_business_by_gstin(business.gstin, doctype)
+        ):
             return found
 
-        return super().search_company(company)
-
-    def search_company_by_gstin(self, gstin):
-        return self.search_business_by_gstin(gstin, "Company")
+        if (business.pan) and (
+            found := self.search_business_by_pan(business.pan, doctype)
+        ):
+            return found
 
     def search_business_by_gstin(self, gstin, doctype):
-        if not gstin:
+        if not self.is_valid_gstin(gstin):
             return
 
-        if self.is_valid_gstin(gstin):
-            return self.get_business_for_gstin(gstin, doctype)
+        return self.get_business_for_gstin(gstin, doctype)
 
     def is_valid_gstin(self, gstin):
         from india_compliance.gst_india.utils import validate_gstin
@@ -75,15 +69,11 @@ class IndiaTransaction(Transaction):
 
         return get_party_for_gstin(gstin, doctype)
 
-    def search_company_by_pan(self, pan):
-        return self.search_business_by_pan(pan, "Company")
-
     def search_business_by_pan(self, pan, doctype):
-        if not pan:
+        if not self.is_valid_pan(pan):
             return
 
-        if self.is_valid_pan(pan):
-            return self.get_business_for_pan(pan, doctype)
+        return self.get_business_for_pan(pan, doctype)
 
     def is_valid_pan(self, pan):
         from india_compliance.gst_india.utils import is_valid_pan
@@ -93,28 +83,39 @@ class IndiaTransaction(Transaction):
     def get_business_for_pan(self, pan, doctype):
         return frappe.db.get_value(doctype, {"pan": pan}, fieldname="name")
 
-    def guess_company(self, company):
-        if found := self.guess_company_by_gstin(company.gstin):
+    def guess_business(self, business, doctype):
+        if found := super().guess_business(business, doctype):
             return found
 
-        if found := self.guess_company_by_pan(company.pan):
-            return found
-
-        return super().guess_company(company)
-
-    def guess_company_by_gstin(self, gstin):
-        if found := self.guess_value(
-            gstin, self._get_all_company_gstins(), score_cutoff=GSTIN_SCORE_CUTOFF
+        if (business.gstin) and (
+            found := self.guess_business_by_gstin(business.gstin, doctype)
         ):
-            return self._get_all_company_gstins().get(found)
+            return found
 
-    def _get_all_company_gstins(self):
-        if not self.company_gstins:
-            self.company_gstins = self._get_all_gstins("Company")
+        if (business.pan) and (
+            found := self.guess_business_by_pan(business.pan, doctype)
+        ):
+            return found
 
-        return self.company_gstins
+    def guess_business_by_gstin(self, gstin, doctype):
+        gstins = self._get_all_business_gstins(doctype)
 
-    def _get_all_gstins(self, doctype):
+        if found := self.guess_value(
+            gstin, gstins.keys(), score_cutoff=GSTIN_SCORE_CUTOFF
+        ):
+            return gstins.get(found)
+
+    def _get_all_business_gstins(self, doctype):
+        """
+        Get all GSTINs from the given doctype.
+
+        Example:
+        {
+            "GSTIN_1": "business_1",
+            "GSTIN_2": "business_2",
+            ...
+        }
+        """
         return frappe._dict(
             frappe.db.get_all(
                 doctype,
@@ -124,19 +125,23 @@ class IndiaTransaction(Transaction):
             )
         )
 
-    def guess_company_by_pan(self, pan):
-        if found := self.guess_value(
-            pan, self._get_all_company_pans(), score_cutoff=PAN_SCORE_CUTOFF
-        ):
-            return self._get_all_company_pans().get(found)
+    def guess_business_by_pan(self, pan, doctype):
+        pans = self._get_all_business_pans(doctype)
 
-    def _get_all_company_pans(self):
-        if not self.company_pans:
-            self.company_pans = self._get_all_pans("Company")
+        if found := self.guess_value(pan, pans.keys(), score_cutoff=PAN_SCORE_CUTOFF):
+            return pans.get(found)
 
-        return self.company_pans
+    def _get_all_business_pans(self, doctype):
+        """
+        Get all PANs from the given doctype.
 
-    def _get_all_pans(self, doctype):
+        Example:
+        {
+            "PAN_1": "business_1",
+            "PAN_2": "business_2",
+            ...
+        }
+        """
         return frappe._dict(
             frappe.db.get_all(
                 doctype,
@@ -146,73 +151,53 @@ class IndiaTransaction(Transaction):
             )
         )
 
-    ### Party
-
-    def search_party(self, party):
-        if found := self.search_party_by_gstin(party.gstin):
-            return found
-
-        if found := self.search_party_by_pan(party.pan):
-            return found
-
-        return super().search_party(party)
-
-    def search_party_by_gstin(self, gstin):
-        return self.search_business_by_gstin(gstin, self.PARTY_DOCTYPE)
-
-    def search_party_by_pan(self, pan):
-        return self.search_business_by_pan(pan, self.PARTY_DOCTYPE)
-
-    def guess_party(self, party):
-        if found := self.guess_party_by_gstin(party.gstin):
-            return found
-
-        if found := self.guess_party_by_pan(party.pan):
-            return found
-
-        return super().guess_party(party)
-
-    def guess_party_by_gstin(self, gstin):
-        if found := self.guess_value(
-            gstin, self._get_all_party_gstins(), score_cutoff=GSTIN_SCORE_CUTOFF
-        ):
-            return self._get_all_party_gstins().get(found)
-
-    def _get_all_party_gstins(self):
-        if not self.party_gstins:
-            self.party_gstins = self._get_all_gstins(self.PARTY_DOCTYPE)
-
-        return self.party_gstins
-
-    def guess_party_by_pan(self, pan):
-        if found := self.guess_value(
-            pan, self._get_all_party_pans(), score_cutoff=PAN_SCORE_CUTOFF
-        ):
-            return self._get_all_party_pans().get(found)
-
-    def _get_all_party_pans(self):
-        if not self.party_pans:
-            self.party_pans = self._get_all_pans(self.PARTY_DOCTYPE)
-
-        return self.party_pans
-
     ### Address
 
     def search_address(self, business, address, address_type, doctype):
-        if found := self.search_address_by_gstin(business.gstin):
+        if found := super().search_address(business, address, address_type, doctype):
             return found
 
-        return super().search_address(business, address, address_type, doctype)
+        if (business.gstin) and (found := self.search_address_by_gstin(business.gstin)):
+            return found
 
     def search_address_by_gstin(self, gstin):
-        if not gstin:
+        if not self.is_valid_gstin(gstin):
             return
 
-        if self.is_valid_gstin(gstin):
-            return self.get_address_for_gstin(gstin)
+        return self.get_address_for_gstin(gstin)
 
     def get_address_for_gstin(self, gstin):
         return frappe.db.get_value("Address", {"gstin": gstin})
+
+    ### Item
+
+    def get_item(self, item, company, currency):
+        _item = super().get_item(item, company, currency)
+
+        if not item.hsn_code:
+            return _item
+
+        return {
+            **_item,
+            "gst_hsn_code": self.get_hsn_code(item.hsn_code),
+        }
+
+    def get_hsn_code(self, hsn_code):
+        if found := self.search_hsn_code(hsn_code):
+            return found
+
+        return self.guess_hsn_code(hsn_code)
+
+    def search_hsn_code(self, hsn_code):
+        return frappe.db.exists("GST HSN Code", {"name": hsn_code})
+
+    def guess_hsn_code(self, hsn_code):
+        return self.guess_value(
+            hsn_code, self._get_all_hsn_codes(), score_cutoff=HSN_SCORE_CUTOFF
+        )
+
+    def _get_all_hsn_codes(self):
+        return frappe.get_all("GST HSN Code", pluck="name")
 
 
 class IndiaSalesOrder(SalesOrder, IndiaTransaction):

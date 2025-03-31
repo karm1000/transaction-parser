@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from frappe.utils import cint
+from frappe.utils import cint, cstr
 
 from transaction_parser.transaction_parser.controllers import get_controller
 from transaction_parser.transaction_parser.utils import is_enabled
@@ -17,30 +17,42 @@ def parse(doctype, country, file_url, page_limit=None):
 
     frappe.enqueue(
         _parse,
-        country=country,
-        doctype=doctype,
-        file_url=file_url,
+        country=cstr(country),
+        doctype=cstr(doctype),
+        file_url=cstr(file_url),
         page_limit=cint(page_limit),
     )
 
 
 def _parse(country, doctype, file_url, page_limit=None):
-    controller = get_controller(country, doctype)()
-    doc = controller.generate(file_url, page_limit)
+    try:
+        file = None
+        filename = file_url.split("/")[-1]
 
-    attach_file(doc, file_url)
+        file = frappe.get_last_doc("File", filters={"file_url": file_url})
+        filename = file.file_name
 
-    enqueue_notification(
-        document_type=doctype,
-        document_name=doc.name,
-        subject=_(f"{doctype} {doc.name} has been created"),
-    )
+        controller = get_controller(country, doctype)()
+        doc = controller.generate(file, page_limit)
 
+        notification = {
+            "document_type": doctype,
+            "document_name": doc.name,
+            "subject": _(f"{doctype} {doc.name} generated from {filename}"),
+        }
 
-def attach_file(doc, file_url):
-    file = frappe.get_last_doc("File", {"file_url": file_url})
+    except Exception:
+        error_log = frappe.log_error(
+            "Transaction Parser API Error",
+            reference_doctype="File",
+            reference_name=file.name if file else filename,
+        )
 
-    file.attached_to_doctype = doc.doctype
-    file.attached_to_name = doc.name
+        notification = {
+            "document_type": error_log.doctype,
+            "document_name": error_log.name,
+            "subject": _(f"Failed to generate {doctype} from {filename}"),
+        }
 
-    file.save()
+    finally:
+        enqueue_notification(**notification)

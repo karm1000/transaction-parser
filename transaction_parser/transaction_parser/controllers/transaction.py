@@ -2,11 +2,9 @@ import frappe
 from erpnext.stock.get_item_details import get_item_details
 from rapidfuzz import process
 
-from transaction_parser.transaction_parser.ai_integration.client import get_content
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.utils import to_dict
 from transaction_parser.transaction_parser.utils.file_processor import FileProcessor
-from transaction_parser.transaction_parser.utils.integration_request import SERVICE_NAME
 
 
 class Transaction:
@@ -22,34 +20,34 @@ class Transaction:
 
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
-    def generate(self, file_url, page_limit=None):
+    def generate(self, file, page_limit=None):
         self.initialize()
 
-        self.data = self.get_file_content(file_url, page_limit)
-        self.doc = frappe.new_doc(self.DOCTYPE)
+        self.file = file
+        self.data = self.get_file_content(page_limit)
+        self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
 
         self.set_details()
         self.set_flags()
+        self.doc.insert()
+        self.attach_file()
 
-        return self.doc.save()
+        return self.doc
 
     def initialize(self):
         # file processing
-        self.file_details = None
+        self.file = None
 
         # output schema
         self.schema = None
         self.document_schema = None
         self.tax_schema = None
         self.address_schema = None
-        self.party_schema = None
+        self.business_schema = None
         self.item_schema = None
 
         # data mapping
         self.data = None
-        self.companies = None
-        self.parties = None
-        self.addresses = {}
 
         # draft document
         self.doc = None
@@ -58,54 +56,50 @@ class Transaction:
     ########## File Processing ##########
     #####################################
 
-    def get_file_content(self, file_url, page_limit=None):
-        # if self.settings.reuse_previously_parsed_data and (
-        #     content := self.get_saved_content(file_url)
-        # ):
-        #     return content
+    # def get_file_content(self, file_url, page_limit=None):
+    #     if self.settings.reuse_previously_parsed_data and (
+    #         content := self.get_saved_content(file_url)
+    #     ):
+    #         return content
 
-        return self.parse_file_content(file_url, page_limit)
+    #     return self.parse_file_content(file_url, page_limit)
 
-    def get_saved_content(self, file_url):
-        duplicate_names = frappe.get_all(
-            "File", filters={"file_url": file_url}, pluck="name"
-        )
+    # def get_saved_content(self, file_url):
+    #     duplicate_names = frappe.get_all(
+    #         "File", filters={"file_url": file_url}, pluck="name"
+    #     )
 
-        filters = {
-            "integration_request_service": SERVICE_NAME,
-            "status": "Completed",
-            "reference_doctype": "File",
-            "reference_docname": ["in", duplicate_names],
-        }
+    #     filters = {
+    #         "integration_request_service": SERVICE_NAME,
+    #         "status": "Completed",
+    #         "reference_doctype": "File",
+    #         "reference_docname": ["in", duplicate_names],
+    #     }
 
-        response = frappe.db.get_value(
-            "Integration Request", filters=filters, fieldname="output"
-        )
+    #     response = frappe.db.get_value(
+    #         "Integration Request", filters=filters, fieldname="output"
+    #     )
 
-        if not response:
-            return
+    #     if not response:
+    #         return
 
-        response = to_dict(response, throw=False)
+    #     response = to_dict(response, throw=False)
 
-        return get_content(response)
+    #     return get_content(response)
 
-    def parse_file_content(self, file_url, page_limit=None):
+    def get_file_content(self, page_limit=None):
         processor = FileProcessor()
-        file_details = processor.get_details(file_url, page_limit)
+        content = processor.get_content(self.file, page_limit)
 
         schema = self.get_schema()
 
         parser = AIParser(self.settings)
-        response = parser.parse(
+        return parser.parse(
             doctype=self.DOCTYPE,
             schema=schema,
-            file_doc_name=file_details.docname,
-            data=file_details.content,
+            file_doc_name=self.file.name,
+            data=content,
         )
-
-        self.file_details = file_details
-
-        return get_content(response)
 
     ###################################
     ########## Output Schema ##########
@@ -125,8 +119,10 @@ class Transaction:
 
     def get_default_schema(self):
         return {
-            "document_details": self.get_document_schema(),
-            "document_items": [self.get_item_schema()],
+            "document_number": "string (unique identifier)",
+            "document_date": "date | null",
+            "currency": "ISO currency code (e.g., INR, USD, etc.)",
+            "item_list": [self.get_item_schema()],
             "totals": {
                 "subtotal": "float",
                 "taxes": [self.get_tax_schema()],
@@ -142,30 +138,6 @@ class Transaction:
 
     def get_custom_schema(self):
         return to_dict(self.settings.base_schema, throw=False)
-
-    ### Document
-
-    def get_document_schema(self):
-        if not self.document_schema:
-            self.document_schema = self._get_document_schema()
-
-        return self.document_schema
-
-    def _get_document_schema(self):
-        return {
-            **self.get_default_document_schema(),
-            **self.get_custom_document_schema(),
-        }
-
-    def get_default_document_schema(self):
-        return {
-            "number": "string (unique identifier)",
-            "date": "date | null",
-            "currency": "ISO currency code (e.g., INR, USD, etc.)",
-        }
-
-    def get_custom_document_schema(self):
-        return to_dict(self.settings.document_schema, throw=False)
 
     ### Item
 
@@ -226,19 +198,19 @@ class Transaction:
 
     ### Party
 
-    def get_party_schema(self):
-        if not self.party_schema:
-            self.party_schema = self._get_party_schema()
+    def get_business_schema(self):
+        if not self.business_schema:
+            self.business_schema = self._get_business_schema()
 
-        return self.party_schema
+        return self.business_schema
 
-    def _get_party_schema(self):
+    def _get_business_schema(self):
         return {
-            **self.get_default_party_schema(),
-            **self.get_custom_party_schema(),
+            **self.get_default_business_schema(),
+            **self.get_custom_business_schema(),
         }
 
-    def get_default_party_schema(self):
+    def get_default_business_schema(self):
         return {
             "name": "string",
             "address": self.get_address_schema(),
@@ -248,8 +220,8 @@ class Transaction:
             },
         }
 
-    def get_custom_party_schema(self):
-        return to_dict(self.settings.party_schema, throw=False)
+    def get_custom_business_schema(self):
+        return to_dict(self.settings.business_schema, throw=False)
 
     ### Address
 
@@ -293,6 +265,11 @@ class Transaction:
         self.doc.flags.ignore_validate = True
         self.doc.flags.ignore_links = True
 
+    def attach_file(self):
+        self.file.attached_to_doctype = self.DOCTYPE
+        self.file.attached_to_name = self.doc.name
+        self.file.save()
+
     ### Company
 
     def get_company(self, company):
@@ -302,18 +279,19 @@ class Transaction:
         return self.guess_company(company)
 
     def search_company(self, company):
-        _company = company.name
+        return self.search_business(company, "Company")
 
-        return _company if _company in self._get_all_companies() else None
-
-    def _get_all_companies(self):
-        if not self.companies:
-            self.companies = set(frappe.db.get_all("Company", pluck="name"))
-
-        return self.companies
+    def search_business(self, business, doctype):
+        return frappe.db.exists(doctype, business.name)
 
     def guess_company(self, company):
-        return self.guess_value(company.name, self._get_all_companies())
+        return self.guess_business(company, "Company")
+
+    def guess_business(self, business, doctype):
+        return self.guess_value(business.name, self._get_all_businesses(doctype))
+
+    def _get_all_businesses(self, doctype):
+        return frappe.db.get_all(doctype, pluck="name")
 
     def guess_value(self, value, options, score_cutoff=80):
         if result := process.extractOne(value, options, score_cutoff=score_cutoff):
@@ -328,18 +306,10 @@ class Transaction:
         return self.guess_party(party)
 
     def search_party(self, party):
-        _party = party.name
-
-        return _party if _party in self._get_all_parties() else None
-
-    def _get_all_parties(self):
-        if not self.parties:
-            self.parties = set(frappe.db.get_all(self.PARTY_DOCTYPE, pluck="name"))
-
-        return self.parties
+        return self.search_business(party, self.PARTY_DOCTYPE)
 
     def guess_party(self, party):
-        return self.guess_value(party.name, self._get_all_parties())
+        return self.guess_business(party, self.PARTY_DOCTYPE)
 
     ### Address
 
@@ -356,36 +326,54 @@ class Transaction:
         # TODO: fuzzy match address
 
     def search_address(self, business, address, address_type, doctype):
-        addresses = self._get_all_addresses(business, doctype)
+        address_table = frappe.qb.DocType("Address")
+        link_table = frappe.qb.DocType("Dynamic Link")
 
-        filters = {
-            "pincode": address.postal_code,
-            "name": ["in", addresses],
-        }
+        query = (
+            frappe.qb.from_(address_table)
+            .join(link_table)
+            .on(address_table.name == link_table.parent)
+            .select(address_table.name)
+            .limit(1)
+            .where(link_table.link_doctype == doctype)
+            .where(link_table.link_name == business.name)
+            .where(address_table.pincode == address.postal_code)
+        )
 
         if address_type:
-            filters["address_type"] = address_type
+            query = query.where(address_table.pincode == address.postal_code)
 
-        return frappe.db.exists("Address", filters)
+        if found := query.run():
+            return found[0][0]
 
-    def _get_all_addresses(self, business, linked_doctype):
-        # TODO: make key as a combination of business and linked_doctype
-        _business = business.name
+    # def _get_all_addresses(self, business, linked_doctype):
+    #     """
+    #     Returns a list addresses for a given business.
 
-        if self.addresses.get(_business) is None:
-            self.addresses[_business] = set(
-                frappe.get_all(
-                    "Dynamic Link",
-                    filters={
-                        "parenttype": "Address",
-                        "link_doctype": linked_doctype,
-                        "link_name": _business,
-                    },
-                    pluck="parent",
-                )
-            )
+    #     Example:
+    #     self.addresses = {
+    #         "business_1": [ "address_1", "address_2", ... ],
+    #         "business_2": [ "address_1", "address_2", ... ],
+    #         ...
+    #     }
+    #     """
+    #     # TODO: make key as a combination of business and linked_doctype
+    #     _business = business.name
 
-        return self.addresses[_business]
+    #     if self.addresses.get(_business) is None:
+    #         self.addresses[_business] = set(
+    #             frappe.get_all(
+    #                 "Dynamic Link",
+    #                 filters={
+    #                     "parenttype": "Address",
+    #                     "link_doctype": linked_doctype,
+    #                     "link_name": _business,
+    #                 },
+    #                 pluck="parent",
+    #             )
+    #         )
+
+    #     return self.addresses[_business]
 
     def _get_default_company_address(self):
         return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
@@ -396,47 +384,35 @@ class Transaction:
     ### Item
 
     def get_item(self, item, company, currency):
-        _item = frappe._dict()
+        item_details = {}
 
-        _item.qty = item.quantity
-        _item.rate = item.rate
-        _item.amount = item.amount
-        _item.party_item_code = item.party_item_code
-        _item.item_code = self.get_item_code(_item)
+        if item.item_code and company and currency:
+            item_details = get_item_details(
+                {
+                    "item_code": item.item_code,
+                    "qty": item.quantity,
+                    "rate": item.rate,
+                    "company": company,
+                    "currency": currency,
+                    "doctype": self.DOCTYPE,
+                }
+            )
 
         return frappe._dict(
             {
-                **self._get_item_details(_item, company, currency),
-                **_item,
-            }
-        )
-
-    def get_item_code(self, item):
-        # TODO: Implement
-        pass
-
-    def _get_item_details(self, item, company, currency):
-        if not (item.item_code and company and currency):
-            return {}
-
-        return get_item_details(
-            {
-                "item_code": item.item_code,
-                "qty": item.qty,
-                "rate": item.rate,
-                "company": company,
-                "currency": currency,
-                "doctype": self.DOCTYPE,
+                **item_details,
+                **item,
+                "qty": item.quantity,
             }
         )
 
     ### Document
 
     def get_document_number(self):
-        return self.data.document_details.number
+        return self.data.document_number
 
     def get_document_date(self):
-        return self.data.document_details.date
+        return self.data.document_date
 
     def get_currency(self):
-        return self.data.document_details.currency
+        return self.data.currency
