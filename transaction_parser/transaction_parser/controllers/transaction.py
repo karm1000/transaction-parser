@@ -2,8 +2,10 @@ import frappe
 from erpnext.stock.get_item_details import get_item_details
 from rapidfuzz import process
 
-from transaction_parser.transaction_parser.ai_integration.client import get_content
-from transaction_parser.transaction_parser.ai_integration.parser import AIParser
+from transaction_parser.transaction_parser.ai_integration.parser import (
+    AIParser,
+    get_content,
+)
 from transaction_parser.transaction_parser.utils import to_dict
 from transaction_parser.transaction_parser.utils.file_processor import FileProcessor
 from transaction_parser.transaction_parser.utils.integration_request import SERVICE_NAME
@@ -96,14 +98,12 @@ class Transaction:
         schema = self.get_schema()
 
         parser = AIParser(self.settings)
-        response = parser.parse(
+        return parser.parse(
             doctype=self.DOCTYPE,
             schema=schema,
             file_doc_name=self.file.name,
             data=content,
         )
-
-        return get_content(response)
 
     ###################################
     ########## Output Schema ##########
