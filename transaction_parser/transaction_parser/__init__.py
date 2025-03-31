@@ -26,6 +26,7 @@ def parse(doctype, country, file_url, page_limit=None):
 
 def _parse(country, doctype, file_url, page_limit=None):
     try:
+        file = None
         filename = file_url.split("/")[-1]
 
         file = frappe.get_last_doc("File", filters={"file_url": file_url})
@@ -44,7 +45,7 @@ def _parse(country, doctype, file_url, page_limit=None):
         error_log = frappe.log_error(
             "Transaction Parser API Error",
             reference_doctype="File",
-            reference_name=filename,
+            reference_name=file.name if file else filename,
         )
 
         notification = {
