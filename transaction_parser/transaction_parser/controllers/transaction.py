@@ -312,7 +312,7 @@ class Transaction:
         ).run(as_dict=True)
 
         for _address in addresses:
-            if found := self.search_address(party, address, _address):
+            if found := self.search_address(address, _address):
                 return found
 
         return self.guess_address(party, address, addresses)

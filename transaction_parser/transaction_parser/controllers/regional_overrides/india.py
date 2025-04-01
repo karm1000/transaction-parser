@@ -42,14 +42,14 @@ class IndiaTransaction(Transaction):
     ### Party
 
     def search_party(self, party, party_type):
-        from india_compliance.gst_india.utils import get_party_for_gstin, is_valid_pan
+        from india_compliance.gst_india.utils import get_party_for_gstin
 
         if self.is_valid_gstin(party.gstin) and (
             found := get_party_for_gstin(party.gstin, party_type)
         ):
             return found
 
-        if is_valid_pan(party.pan) and (
+        if self.is_valid_pan(party.pan) and (
             found := frappe.db.get_value(party_type, {"pan": party.pan})
         ):
             return found
@@ -64,6 +64,14 @@ class IndiaTransaction(Transaction):
 
         except frappe.ValidationError:
             return False
+
+    def is_valid_pan(self, pan):
+        from india_compliance.gst_india.utils import is_valid_pan
+
+        if not pan:
+            return False
+
+        return is_valid_pan(pan)
 
     def guess_party(self, party, party_type):
         if party.gstin:
