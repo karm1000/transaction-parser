@@ -4,7 +4,7 @@ from tempfile import TemporaryFile
 import frappe
 import ocrmypdf
 from frappe import _
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 
 
 class FileProcessor:
@@ -59,7 +59,6 @@ class FileProcessor:
             progress_bar=False,
             rotate_pages=True,
             force_ocr=True,
-            deskew=True,
         )
 
         self.file = temp_file
