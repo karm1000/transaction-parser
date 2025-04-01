@@ -73,7 +73,7 @@ class IndiaTransaction(Transaction):
 
         return is_valid_pan(pan)
 
-    def guess_party(self, party, party_type):
+    def guess_party(self, party, party_type, party_names=None):
         if party.gstin:
             party_gstins = frappe._dict(
                 frappe.db.get_all(
@@ -104,7 +104,7 @@ class IndiaTransaction(Transaction):
             ):
                 return party_pans.get(found)
 
-        return super().guess_party(party, party_type)
+        return super().guess_party(party, party_type, party_names)
 
     ### Address
 

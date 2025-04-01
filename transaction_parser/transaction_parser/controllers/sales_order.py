@@ -84,14 +84,14 @@ class SalesOrder(Transaction):
 
         party_names = frappe.get_all(party_type, pluck="name")
 
-        if found := self.guess_party(self.data.vendor, party_names):
+        if found := self.guess_party(self.data.vendor, party_type, party_names):
             return found
 
-        if found := self.guess_party(self.data.buyer.billing, party_names):
+        if found := self.guess_party(self.data.buyer.billing, party_type, party_names):
             # TODO: some flag to remember inversion state
             return found
 
-        if found := self.guess_party(self.data.buyer.shipping, party_names):
+        if found := self.guess_party(self.data.buyer.shipping, party_type, party_names):
             # TODO: some flag to remember inversion state
             return found
 
@@ -116,13 +116,13 @@ class SalesOrder(Transaction):
 
         party_names = frappe.get_all(party_type, pluck="name")
 
-        if found := self.guess_party(self.data.buyer.billing, party_names):
+        if found := self.guess_party(self.data.buyer.billing, party_type, party_names):
             return found
 
-        if found := self.guess_party(self.data.buyer.shipping, party_names):
+        if found := self.guess_party(self.data.buyer.shipping, party_type, party_names):
             return found
 
-        if found := self.guess_party(self.data.vendor, party_names):
+        if found := self.guess_party(self.data.vendor, party_type, party_names):
             # TODO: some flag to remember inversion state
             return found
 

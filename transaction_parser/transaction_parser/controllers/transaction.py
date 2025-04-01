@@ -20,11 +20,11 @@ class Transaction:
 
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
-    def generate(self, file, page_limit=None):
+    def generate(self, file, ai_model=None, page_limit=None):
         self.initialize()
 
         self.file = file
-        self.data = self.get_file_content(page_limit)
+        self.data = self.get_file_content(ai_model, page_limit)
         self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
 
         self.set_details()
@@ -87,7 +87,7 @@ class Transaction:
 
     #     return get_content(response)
 
-    def get_file_content(self, page_limit=None):
+    def get_file_content(self, ai_model=None, page_limit=None):
         processor = FileProcessor()
         content = processor.get_content(self.file, page_limit)
 
@@ -99,6 +99,7 @@ class Transaction:
             document_schema=schema,
             document_data=content,
             file_doc_name=self.file.name,
+            model=ai_model,
         )
 
     ###################################
@@ -289,7 +290,10 @@ class Transaction:
     def search_party(self, party, party_type):
         return frappe.db.exists(party_type, party.name)
 
-    def guess_party(self, party, party_names):
+    def guess_party(self, party, party_type, party_names=None):
+        if not party_names:
+            party_names = frappe.get_all(party_type, pluck="name")
+
         return self.guess_value(party.name, party_names)
 
     def guess_value(self, value, options, score_cutoff=80):
@@ -306,7 +310,11 @@ class Transaction:
             frappe.qb.from_(address_doctype)
             .join(link_doctype)
             .on(address_doctype.name == link_doctype.parent)
-            .select("*")
+            .select(
+                address_doctype.name,
+                address_doctype.address_line1,
+                address_doctype.pincode,
+            )
             .where(link_doctype.link_doctype == party_type)
             .where(link_doctype.link_name == party.name)
         ).run(as_dict=True)
