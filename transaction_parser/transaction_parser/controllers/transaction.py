@@ -278,118 +278,59 @@ class Transaction:
         self.file.attached_to_name = self.doc.name
         self.file.save()
 
-    ### Company
+    ### Party
 
-    def get_company(self, company):
-        if found := self.search_company(company):
+    def get_party(self, party, party_type):
+        if found := self.search_party(party, party_type):
             return found
 
-        return self.guess_company(company)
+        return self.guess_party(party, party_type)
 
-    def search_company(self, company):
-        return self.search_business(company, "Company")
+    def search_party(self, party, party_type):
+        return frappe.db.exists(party_type, party.name)
 
-    def search_business(self, business, doctype):
-        return frappe.db.exists(doctype, business.name)
-
-    def guess_company(self, company):
-        return self.guess_business(company, "Company")
-
-    def guess_business(self, business, doctype):
-        return self.guess_value(business.name, self._get_all_businesses(doctype))
-
-    def _get_all_businesses(self, doctype):
-        return frappe.db.get_all(doctype, pluck="name")
+    def guess_party(self, party, party_names):
+        return self.guess_value(party.name, party_names)
 
     def guess_value(self, value, options, score_cutoff=80):
         if result := process.extractOne(value, options, score_cutoff=score_cutoff):
             return result[0]
 
-    ### Party
-
-    def get_party(self, party):
-        if found := self.search_party(party):
-            return found
-
-        return self.guess_party(party)
-
-    def search_party(self, party):
-        return self.search_business(party, self.PARTY_DOCTYPE)
-
-    def guess_party(self, party):
-        return self.guess_business(party, self.PARTY_DOCTYPE)
-
     ### Address
 
-    def get_company_address(self, company, address, address_type=None):
-        if found := self.get_address(company, address, address_type, "Company"):
-            return found
+    def get_address(self, party, party_type, address):
+        address_doctype = frappe.qb.DocType("Address")
+        link_doctype = frappe.qb.DocType("Dynamic Link")
 
-        return self._get_default_company_address()
+        addresses = (
+            frappe.qb.from_(address_doctype)
+            .join(link_doctype)
+            .on(address_doctype.name == link_doctype.parent)
+            .select("*")
+            .where(link_doctype.link_doctype == party_type)
+            .where(link_doctype.link_name == party.name)
+        ).run(as_dict=True)
 
-    def get_address(self, business, address, address_type, doctype):
-        if found := self.search_address(business, address, address_type, doctype):
-            return found
+        for _address in addresses:
+            if found := self.search_address(party, address, _address):
+                return found
 
-        # TODO: fuzzy match address
+        return self.guess_address(party, address, addresses)
 
-    def search_address(self, business, address, address_type, doctype):
-        # TODO: get all address for party and find best match
-        # Best match by postal / address_line1 / return default address
-        address_table = frappe.qb.DocType("Address")
-        link_table = frappe.qb.DocType("Dynamic Link")
+    def search_address(self, address, erp_address):
+        if erp_address.get("pincode") == address.postal_code:
+            return erp_address.get("name")
 
-        query = (
-            frappe.qb.from_(address_table)
-            .join(link_table)
-            .on(address_table.name == link_table.parent)
-            .select(address_table.name)
-            .limit(1)
-            .where(link_table.link_doctype == doctype)
-            .where(link_table.link_name == business.name)
-            .where(address_table.pincode == address.postal_code)
-        )
+        if erp_address.get("address_line1") == address.address_line_1:
+            return erp_address.get("name")
 
-        if address_type:
-            query = query.where(address_table.pincode == address.postal_code)
+    def guess_address(self, address, addresses):
+        address_line_1_map = {
+            addr.get("address_line1"): addr.get("name") for addr in addresses
+        }
 
-        if found := query.run():
-            return found[0][0]
-
-    # def _get_all_addresses(self, business, linked_doctype):
-    #     """
-    #     Returns a list addresses for a given business.
-
-    #     Example:
-    #     self.addresses = {
-    #         "business_1": [ "address_1", "address_2", ... ],
-    #         "business_2": [ "address_1", "address_2", ... ],
-    #         ...
-    #     }
-    #     """
-    #     # TODO: make key as a combination of business and linked_doctype
-    #     _business = business.name
-
-    #     if self.addresses.get(_business) is None:
-    #         self.addresses[_business] = set(
-    #             frappe.get_all(
-    #                 "Dynamic Link",
-    #                 filters={
-    #                     "parenttype": "Address",
-    #                     "link_doctype": linked_doctype,
-    #                     "link_name": _business,
-    #                 },
-    #                 pluck="parent",
-    #             )
-    #         )
-
-    #     return self.addresses[_business]
-
-    def _get_default_company_address(self):
-        return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
-
-    def get_party_address(self, party, address, address_type=None):
-        return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
+        if found := self.guess_value(address.address_line_1, address_line_1_map.keys()):
+            return address_line_1_map.get(found)
 
     ### Item
 
@@ -400,8 +341,6 @@ class Transaction:
             item_details = get_item_details(
                 {
                     "item_code": item.item_code,
-                    "qty": item.quantity,  # TODO: needed?
-                    "rate": item.rate,
                     "company": company,
                     "currency": currency,
                     "doctype": self.DOCTYPE,
@@ -410,20 +349,9 @@ class Transaction:
 
         return frappe._dict(
             {
-                # TODO: delivery_date
                 **item_details,
                 **item,
                 "qty": item.quantity,
+                "rate": item.rate,
             }
         )
-
-    ### Document
-
-    def get_document_number(self):
-        return self.data.document_number
-
-    def get_document_date(self):
-        return self.data.document_date
-
-    def get_currency(self):
-        return self.data.currency
