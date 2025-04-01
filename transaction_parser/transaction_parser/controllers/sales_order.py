@@ -15,6 +15,7 @@ class SalesOrder(Transaction):
     def get_default_schema(self):
         return {
             **super().get_default_schema(),
+            "purchase_order_date": "date | null (Can be different than document_date)",
             "delivery_date": "date | null",
             "project_reference": "string | null",
             "buyer": {
@@ -47,7 +48,7 @@ class SalesOrder(Transaction):
                 )
             )
 
-        self.doc.po_date = self.data.document_date
+        self.doc.po_date = self.data.purchase_order_date
         self.doc.delivery_date = self.data.delivery_date
         self.doc.currency = self.data.currency or None
 
