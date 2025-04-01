@@ -19,8 +19,15 @@ class AIParser:
     def __init__(self, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
-    def parse(self, document_type, document_schema, document_data, file_doc_name):
-        client = AIClient(self.settings)
+    def parse(
+        self,
+        document_type,
+        document_schema,
+        document_data,
+        file_doc_name,
+        model=None,
+    ):
+        client = AIClient(model, self.settings)
 
         client.set_default_log_values(
             reference_doctype="File",
@@ -46,12 +53,12 @@ class AIParser:
 class AIClient:
     # TODO: Some error message indicating balance expired
 
-    def __init__(self, settings=None):
+    def __init__(self, model, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
         is_enabled(self.settings)
 
-        self.model = MODELS.get(self.settings.default_ai_model)
+        self.model = MODELS.get(model) or MODELS.get(self.settings.default_ai_model)
         self._default_log_values = {}
 
     def set_default_log_values(self, **kwargs):

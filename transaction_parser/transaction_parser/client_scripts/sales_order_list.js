@@ -1,5 +1,7 @@
 const DOCTYPE = "Sales Order";
 const SUPPORTED_COUNTRIES = ["India", "Other"];
+// TODO: remove redundancy
+const SUPPORTED_MODELS = ["DeepSeek Chat", "DeepSeek Reasoner", "OpenAI gpt-4o", "OpenAI gpt-4o-mini"];
 
 frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 	list_view.page.add_menu_item(__("Parse Purchase Order"), function () {
@@ -30,6 +32,20 @@ frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 					options: SUPPORTED_COUNTRIES.join("\n"),
 					default: default_country,
 					reqd: 1,
+				},
+				{
+					fieldname: "use_default_ai_model",
+					label: __("Use Default AI Model"),
+					fieldtype: "Check",
+					default: 1,
+				},
+				{
+					fieldname: "ai_model",
+					label: __("AI Model"),
+					fieldtype: "Select",
+					options: SUPPORTED_MODELS.join("\n"),
+					depends_on: "eval:!doc.use_default_ai_model",
+					mandatory_depends_on: "eval:!doc.use_default_ai_model",
 				},
 			],
 			primary_action_label: __("Submit"),

@@ -10,7 +10,7 @@ from transaction_parser.transaction_parser.utils.notification import (
 
 
 @frappe.whitelist()
-def parse(doctype, country, file_url, page_limit=None):
+def parse(doctype, country, file_url, ai_model=None, page_limit=None):
     is_enabled()
 
     frappe.has_permission(doctype, "create", throw=True)
@@ -20,11 +20,12 @@ def parse(doctype, country, file_url, page_limit=None):
         country=cstr(country),
         doctype=cstr(doctype),
         file_url=cstr(file_url),
+        ai_model=cstr(ai_model),
         page_limit=cint(page_limit),
     )
 
 
-def _parse(country, doctype, file_url, page_limit=None):
+def _parse(country, doctype, file_url, ai_model=None, page_limit=None):
     try:
         file = None
         filename = file_url.split("/")[-1]
@@ -33,7 +34,7 @@ def _parse(country, doctype, file_url, page_limit=None):
         filename = file.file_name
 
         controller = get_controller(country, doctype)()
-        doc = controller.generate(file, page_limit)
+        doc = controller.generate(file, ai_model, page_limit)
 
         notification = {
             "document_type": doctype,
