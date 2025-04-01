@@ -40,8 +40,12 @@ class OpenAI(Model):
     response_format = ResponseFormat.JSON.value
 
 
-class OpenAIGPT4O(OpenAI):
+class OpenAIGPT4o(OpenAI):
     name = "gpt-4o"
+
+
+class OpenAIGPT4oMini(OpenAI):
+    name = "gpt-4o-mini"
 
 
 ### model-class mapping
@@ -49,5 +53,6 @@ class OpenAIGPT4O(OpenAI):
 MODELS = {
     "DeepSeek Chat": DeepSeekChat,
     "DeepSeek Reasoner": DeepSeekReasoner,
-    "OpenAI gpt-4o": OpenAIGPT4O,
+    "OpenAI gpt-4o": OpenAIGPT4o,
+    "OpenAI gpt-4o-mini": OpenAIGPT4oMini,
 }
