@@ -57,7 +57,7 @@ class AIClient:
 
         is_enabled(self.settings)
 
-        self.model = MODELS.get(self.settings.ai_model)
+        self.model = MODELS.get(self.settings.default_ai_model)
         self._default_log_values = {}
 
     def set_default_log_values(self, **kwargs):
@@ -85,9 +85,7 @@ class AIClient:
 
         try:
             with OpenAI(
-                api_key=(
-                    self.settings.api_key and self.settings.get_password("api_key")
-                ),
+                api_key=self.get_api_key(),
                 base_url=self.model.base_url,
             ) as client:
                 response = client.chat.completions.create(**request_args)
@@ -108,6 +106,11 @@ class AIClient:
 
         finally:
             enqueue_integration_request(**log)
+
+    def get_api_key(self):
+        for key in self.settings.api_keys:
+            if key.service_provider == self.model.service_provider:
+                return key.get_password("api_key")
 
 
 def get_response(response):

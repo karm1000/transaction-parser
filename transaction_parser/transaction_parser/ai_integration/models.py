@@ -8,11 +8,13 @@ class ResponseFormat(Enum):
 
 class Model:
     name = None
+    service_provider = None
     base_url = None
     response_format = None
 
 
 class DeepSeek(Model):
+    service_provider = "DeepSeek"
     base_url = "https://api.deepseek.com"
     response_format = ResponseFormat.JSON.value
 
