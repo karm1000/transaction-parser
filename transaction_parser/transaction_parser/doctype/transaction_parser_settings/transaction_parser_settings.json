@@ -88,7 +88,7 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o"
   },
   {
    "fieldname": "section_break_ruid",
@@ -105,7 +105,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-04-01 13:04:45.821440",
+ "modified": "2025-04-01 13:13:03.986759",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
