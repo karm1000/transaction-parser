@@ -13,7 +13,7 @@ from transaction_parser.transaction_parser.utils.notification import (
 def parse(doctype, country, file_url, page_limit=None):
     is_enabled()
 
-    frappe.has_permission(doctype, "write", throw=True)
+    frappe.has_permission(doctype, "create", throw=True)
 
     frappe.enqueue(
         _parse,
