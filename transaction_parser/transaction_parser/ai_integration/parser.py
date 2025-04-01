@@ -19,7 +19,7 @@ class AIParser:
     def __init__(self, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
-    def parse(self, doctype, schema, file_doc_name, data):
+    def parse(self, document_type, document_schema, document_data, file_doc_name):
         client = AIClient(self.settings)
 
         client.set_default_log_values(
@@ -28,25 +28,19 @@ class AIParser:
         )
 
         messages = (
-            self._get_system_prompt(doctype, schema),
-            self._get_user_prompt(data),
+            {
+                "role": "system",
+                "content": get_system_prompt(document_schema),
+            },
+            {
+                "role": "user",
+                "content": get_user_prompt(document_type, document_data),
+            },
         )
 
         response = client.send_message(messages=messages)
 
         return get_content(response)
-
-    def _get_system_prompt(self, doctype, schema):
-        return {
-            "role": "system",
-            "content": get_system_prompt(doctype, schema),
-        }
-
-    def _get_user_prompt(self, file_data):
-        return {
-            "role": "user",
-            "content": get_user_prompt(file_data),
-        }
 
 
 class AIClient:
@@ -78,6 +72,7 @@ class AIClient:
             **kwargs,
             "model": self.model.name,
             "stream": False,
+            "temperature": 0.5,
             "response_format": {
                 "type": self.model.response_format,
             },

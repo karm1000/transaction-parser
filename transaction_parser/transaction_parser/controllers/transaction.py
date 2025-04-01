@@ -95,10 +95,10 @@ class Transaction:
 
         parser = AIParser(self.settings)
         return parser.parse(
-            doctype=self.DOCTYPE,
-            schema=schema,
+            document_type=self.DOCTYPE,
+            document_schema=schema,
+            document_data=content,
             file_doc_name=self.file.name,
-            data=content,
         )
 
     ###################################
