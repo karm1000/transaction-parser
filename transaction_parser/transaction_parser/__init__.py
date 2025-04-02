@@ -22,6 +22,7 @@ def parse(doctype, country, file_url, ai_model=None, page_limit=None):
         file_url=cstr(file_url),
         ai_model=cstr(ai_model),
         page_limit=cint(page_limit),
+        queue="long",
     )
 
 
