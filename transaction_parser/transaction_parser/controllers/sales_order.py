@@ -15,7 +15,7 @@ class SalesOrder(Transaction):
     def get_default_schema(self):
         return {
             **super().get_default_schema(),
-            "purchase_order_date": "date | null (Can be different than document_date)",
+            "purchase_order_date": "date | null (Also called `Order Date`. It can be different than Document Date)",
             "delivery_date": "date | null",
             "project_reference": "string | null",
             "buyer": {
