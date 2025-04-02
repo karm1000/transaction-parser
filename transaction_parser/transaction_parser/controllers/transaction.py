@@ -88,18 +88,14 @@ class Transaction:
     #     return get_content(response)
 
     def get_file_content(self, ai_model=None, page_limit=None):
-        processor = FileProcessor()
-        content = processor.get_content(self.file, page_limit)
-
+        content = FileProcessor().get_content(self.file, page_limit)
         schema = self.get_schema()
 
-        parser = AIParser(self.settings)
-        return parser.parse(
+        return AIParser(ai_model, self.settings).parse(
             document_type=self.DOCTYPE,
             document_schema=schema,
             document_data=content,
             file_doc_name=self.file.name,
-            model=ai_model,
         )
 
     ###################################

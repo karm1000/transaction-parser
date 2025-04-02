@@ -16,88 +16,61 @@ from transaction_parser.transaction_parser.utils.integration_request import (
 
 
 class AIParser:
-    def __init__(self, settings=None):
-        self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
-
-    def parse(
-        self,
-        document_type,
-        document_schema,
-        document_data,
-        file_doc_name,
-        model=None,
-    ):
-        client = AIClient(model, self.settings)
-
-        client.set_default_log_values(
-            reference_doctype="File",
-            reference_name=file_doc_name,
-        )
-
-        messages = (
-            {
-                "role": "system",
-                "content": get_system_prompt(document_schema),
-            },
-            {
-                "role": "user",
-                "content": get_user_prompt(document_type, document_data),
-            },
-        )
-
-        response = client.send_message(messages=messages)
-
-        return get_content(response)
-
-
-class AIClient:
-    # TODO: Some error message indicating balance expired
-
-    def __init__(self, model, settings=None):
+    def __init__(self, model=None, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
         is_enabled(self.settings)
 
         self.model = MODELS.get(model) or MODELS.get(self.settings.default_ai_model)
-        self._default_log_values = {}
+        if not self.model:
+            frappe.throw(_(f"AI Model: {model} not found"))
 
-    def set_default_log_values(self, **kwargs):
-        self._default_log_values = {**kwargs}
+    def parse(self, document_type, document_schema, document_data, file_doc_name):
+        system_prompt = get_system_prompt(document_schema)
+        user_prompt = get_user_prompt(document_type, document_data)
+        messages = (
+            {
+                "role": "system",
+                "content": system_prompt,
+            },
+            {
+                "role": "user",
+                "content": user_prompt,
+            },
+        )
 
-    def send_message(self, **kwargs):
-        return self._make_request(**kwargs)
+        return self.get_content(
+            self.send_message(messages=messages, file_doc_name=file_doc_name)
+        )
 
-    def _make_request(self, **kwargs):
+    def send_message(self, messages, file_doc_name):
         log = frappe._dict(
             {
-                **self._default_log_values,
+                "reference_doctype": "File",
+                "reference_name": file_doc_name,
                 "url": self.model.base_url,
             }
         )
-
-        request_args = {
-            **kwargs,
-            "model": self.model.name,
-            "stream": False,
-            "temperature": 0.5,
-            "response_format": {
-                "type": self.model.response_format,
-            },
-        }
 
         try:
             with OpenAI(
                 api_key=self.get_api_key(),
                 base_url=self.model.base_url,
             ) as client:
-                response = client.chat.completions.create(**request_args)
+                response = client.chat.completions.create(
+                    model=self.model.name,
+                    messages=messages,
+                    response_format={"type": self.model.response_format},
+                    stream=False,
+                    temperature=0.7,
+                )
 
             log.request_id = response.id
 
             response = response.to_dict()
             log.output = response
 
-            response = get_response(response)
+            response = self.get_response(response)
             log.output = response
 
             return response
@@ -114,36 +87,35 @@ class AIClient:
             if key.service_provider == self.model.service_provider:
                 return key.get_password("api_key")
 
+    def get_response(self, response):
+        if not response:
+            frappe.throw(_("No response received"))
 
-def get_response(response):
-    if not response:
-        frappe.throw(_("No response received"))
+        response["choices"][0]["message"]["content"] = self.get_content(response)
 
-    response["choices"][0]["message"]["content"] = get_content(response)
+        return response
 
-    return response
+    def get_content(self, response):
+        content = response["choices"][0]["message"]["content"]
 
+        if not isinstance(content, str):
+            return content
 
-def get_content(response):
-    content = response["choices"][0]["message"]["content"]
+        return self._get_content(content)
 
-    if not isinstance(content, str):
-        return content
+    def _get_content(self, content):
+        # TODO: robust json decoder
+        if not content:
+            frappe.throw(_("No response content received"))
 
-    return _get_content(content)
-
-
-def _get_content(content):
-    # TODO: robust json decoder
-    if not content:
-        frappe.throw(_("No response content received"))
-
-    try:
-        return to_dict(content)
-
-    except Exception:
         try:
-            return to_dict(re.search(r"```json(.*)```", content, re.DOTALL).group(1))
+            return to_dict(content)
 
-        except Exception as e:
-            frappe.throw(_(f"Failed to parse response content: {content} {e}"))
+        except Exception:
+            try:
+                return to_dict(
+                    re.search(r"```json(.*)```", content, re.DOTALL).group(1)
+                )
+
+            except Exception as e:
+                frappe.throw(_(f"Failed to parse response content: {e}"))
