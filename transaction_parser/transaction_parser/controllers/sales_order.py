@@ -57,6 +57,7 @@ class SalesOrder(Transaction):
         self.doc.shipping_address_name = self.get_shipping_address()
 
         self.doc.items = self.get_items()
+        self.doc.payment_schedule = self.get_payment_schedule()
 
         self.doc.set_missing_values()
 

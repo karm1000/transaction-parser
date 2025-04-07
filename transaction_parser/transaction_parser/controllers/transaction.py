@@ -359,3 +359,28 @@ class Transaction:
                 "rate": item.rate,
             }
         )
+
+    ### Payment Schedule
+
+    def get_payment_schedule(self):
+        return [self.get_payment_schedule_doc(term) for term in self.data.payment_terms]
+
+    def get_payment_schedule_doc(self, term):
+        return frappe.get_doc(
+            {
+                "doctype": "Payment Schedule",
+                "parentfield": "payment_schedule",
+                **term,
+                "description": (
+                    f"{term.credit_days} days from {term.credit_from}"
+                    if term.credit_days and term.credit_from
+                    else None
+                ),
+                "payment_amount": (
+                    total * portion / 100
+                    if (total := self.data.totals.grand_total)
+                    and (portion := term.invoice_portion)
+                    else None
+                ),
+            }
+        )
