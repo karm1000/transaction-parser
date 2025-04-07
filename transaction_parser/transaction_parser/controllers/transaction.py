@@ -29,6 +29,7 @@ class Transaction:
         self.doc.is_created_by_transaction_parser = 1
 
         self.set_details()
+        self.set_missing_values()
         self.set_flags()
         self.doc.insert()
         self.attach_file()
@@ -263,6 +264,11 @@ class Transaction:
     def set_details(self):
         raise NotImplementedError(
             "set_details() method must be implemented by subclass"
+        )
+
+    def set_missing_values(self):
+        raise NotImplementedError(
+            "set_missing_values() method must be implemented by subclass"
         )
 
     def set_flags(self):

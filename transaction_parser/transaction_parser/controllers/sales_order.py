@@ -68,10 +68,11 @@ class SalesOrder(Transaction):
             else today
         )
 
-        self.doc.set_missing_values()
-
         # TODO: set a flag in SO (created from transaction parser)
         # TODO: validation of Sales Order on save.
+
+    def set_missing_values(self):
+        self.doc.set_missing_values()
 
     ### Company
 
