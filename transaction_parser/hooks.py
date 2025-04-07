@@ -8,6 +8,8 @@ required_apps = ["frappe/erpnext"]
 
 after_install = "transaction_parser.install.after_install"
 
+app_include_js = "transaction_parser.bundle.js"
+
 doctype_list_js = {
     "Sales Order": "transaction_parser/client_scripts/sales_order_list.js",
 }
