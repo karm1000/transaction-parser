@@ -316,21 +316,21 @@ class Transaction:
         ).run(as_dict=True)
 
         for erp_address in erp_addresses:
-            if found := self.search_address(address, erp_address):
+            if found := self.search_address(party, address, erp_address):
                 return found
 
         return self.guess_address(party, address, erp_addresses)
 
-    def search_address(self, address, erp_address):
-        if erp_address.get("pincode") == address.postal_code:
-            return erp_address.get("name")
+    def search_address(self, party, address, erp_address):
+        if erp_address.pincode == address.postal_code:
+            return erp_address.name
 
-        if erp_address.get("address_line1") == address.address_line_1:
-            return erp_address.get("name")
+        if erp_address.address_line1 == address.address_line_1:
+            return erp_address.name
 
     def guess_address(self, party, address, erp_addresses):
         address_line_1_map = {
-            addr.get("address_line1"): addr.get("name") for addr in erp_addresses
+            erp_address.address_line1: erp_address.name for erp_address in erp_addresses
         }
 
         if found := self.guess_value(address.address_line_1, address_line_1_map.keys()):

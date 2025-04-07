@@ -108,18 +108,15 @@ class IndiaTransaction(Transaction):
 
     ### Address
 
-    def get_address(self, party, party_type, address):
-        if self.is_valid_gstin(party.gstin) and (
-            found := frappe.db.get_value("Address", filters={"gstin": party.gstin})
-        ):
-            return found
+    def search_address(self, party, address, erp_address):
+        if self.is_valid_gstin(party.gstin) and (party.gstin == erp_address.gstin):
+            return erp_address.name
 
-        return super().get_address(party, party_type, address)
+        return super().search_address(party, address, erp_address)
 
     def guess_address(self, party, address, erp_addresses):
         gstin_map = {
-            erp_address.get("gstin"): erp_address.get("name")
-            for erp_address in erp_addresses
+            erp_address.gstin: erp_address.name for erp_address in erp_addresses
         }
 
         if found := self.guess_value(
