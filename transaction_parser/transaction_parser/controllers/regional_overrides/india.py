@@ -116,15 +116,18 @@ class IndiaTransaction(Transaction):
 
         return super().get_address(party, party_type, address)
 
-    def guess_address(self, address, addresses):
-        gstin_map = {addr.get("gstin"): addr.get("name") for addr in addresses}
+    def guess_address(self, party, address, erp_addresses):
+        gstin_map = {
+            erp_address.get("gstin"): erp_address.get("name")
+            for erp_address in erp_addresses
+        }
 
         if found := self.guess_value(
-            address.gstin, gstin_map.keys(), score_cutoff=GSTIN_SCORE_CUTOFF
+            party.gstin, gstin_map.keys(), score_cutoff=GSTIN_SCORE_CUTOFF
         ):
             return gstin_map.get(found)
 
-        return super().guess_address(address, addresses)
+        return super().guess_address(party, address, erp_addresses)
 
     ### Item
 

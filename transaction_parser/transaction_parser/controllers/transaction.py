@@ -129,10 +129,10 @@ class Transaction:
             },
             "payment_terms": [
                 {
-                    "no_of_days_credit": "int",
+                    "credit_days": "int | null",
                     "credit_from": "string | null",
                     "due_date": "date | null",
-                    "percent_of_invoice": "float | null",
+                    "invoice_portion": "float | null (percentage of invoice)",
                 }
             ],
             "local_terms": {
@@ -302,7 +302,7 @@ class Transaction:
         address_doctype = frappe.qb.DocType("Address")
         link_doctype = frappe.qb.DocType("Dynamic Link")
 
-        addresses = (
+        erp_addresses = (
             frappe.qb.from_(address_doctype)
             .join(link_doctype)
             .on(address_doctype.name == link_doctype.parent)
@@ -315,11 +315,11 @@ class Transaction:
             .where(link_doctype.link_name == party.name)
         ).run(as_dict=True)
 
-        for _address in addresses:
-            if found := self.search_address(address, _address):
+        for erp_address in erp_addresses:
+            if found := self.search_address(address, erp_address):
                 return found
 
-        return self.guess_address(party, address, addresses)
+        return self.guess_address(party, address, erp_addresses)
 
     def search_address(self, address, erp_address):
         if erp_address.get("pincode") == address.postal_code:
@@ -328,9 +328,9 @@ class Transaction:
         if erp_address.get("address_line1") == address.address_line_1:
             return erp_address.get("name")
 
-    def guess_address(self, address, addresses):
+    def guess_address(self, party, address, erp_addresses):
         address_line_1_map = {
-            addr.get("address_line1"): addr.get("name") for addr in addresses
+            addr.get("address_line1"): addr.get("name") for addr in erp_addresses
         }
 
         if found := self.guess_value(address.address_line_1, address_line_1_map.keys()):
