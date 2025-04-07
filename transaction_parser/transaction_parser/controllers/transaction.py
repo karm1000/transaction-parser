@@ -26,6 +26,7 @@ class Transaction:
         self.file = file
         self.data = self.get_file_content(ai_model, page_limit)
         self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
+        self.doc.is_created_by_transaction_parser = 1
 
         self.set_details()
         self.set_flags()
