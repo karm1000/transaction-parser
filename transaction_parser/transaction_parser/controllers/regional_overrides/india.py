@@ -129,14 +129,12 @@ class IndiaTransaction(Transaction):
     ### Item
 
     def get_item(self, item, company, currency):
-        _item = super().get_item(item, company, currency)
-
-        if self.is_valid_hsn_code(item.hsn_code) and (
-            found := frappe.db.exists("GST HSN Code", {"name": item.hsn_code})
-        ):
-            _item["gst_hsn_code"] = found
-
-        return _item
+        return {
+            **super().get_item(item, company, currency),
+            "gst_hsn_code": (
+                item.hsn_code if self.is_valid_hsn_code(item.hsn_code) else None
+            ),
+        }
 
     def is_valid_hsn_code(self, hsn_code):
         from india_compliance.gst_india.doctype.gst_hsn_code.gst_hsn_code import (
