@@ -44,10 +44,8 @@ class IndiaTransaction(Transaction):
     def search_party(self, party, party_type):
         from india_compliance.gst_india.utils import get_party_for_gstin
 
-        if self.is_valid_gstin(party.gstin) and (
-            found := get_party_for_gstin(party.gstin, party_type)
-        ):
-            return found
+        if self.is_valid_gstin(party.gstin):
+            return get_party_for_gstin(party.gstin, party_type)
 
         if self.is_valid_pan(party.pan) and (
             found := frappe.db.get_value(party_type, {"pan": party.pan})
