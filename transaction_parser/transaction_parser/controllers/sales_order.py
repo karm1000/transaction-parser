@@ -1,4 +1,5 @@
 import frappe
+import frappe.utils
 from frappe import _
 
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
@@ -57,8 +58,15 @@ class SalesOrder(Transaction):
         self.doc.shipping_address_name = self.get_shipping_address()
 
         self.doc.items = self.get_items()
-        self.doc.payment_schedule = self.get_payment_schedule()
+        # self.doc.payment_schedule = self.get_payment_schedule()
         self.doc.terms = self.get_terms()
+
+        today = frappe.utils.today()
+        self.doc.transaction_date = (
+            delivery_date
+            if (delivery_date := self.doc.delivery_date) and (delivery_date < today)
+            else today
+        )
 
         self.doc.set_missing_values()
 
