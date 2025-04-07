@@ -185,23 +185,18 @@ class SalesOrder(Transaction):
         )
 
         return [
-            self.get_item_doc(self.get_item(item, item_codes))
+            self.get_item(item, item_codes.get(item.party_item_code))
             for item in self.data.item_list
         ]
 
-    def get_item(self, item, item_codes):
-        item.item_code = item_codes.get(item.party_item_code)
+    def get_item(self, item, item_code, **kwargs):
+        kwargs["customer"] = self.doc.customer
 
-        return {
-            **super().get_item(item, self.doc.company, self.doc.currency),
-            "customer_item_code": item.party_item_code,
-        }
-
-    def get_item_doc(self, item):
         return frappe.get_doc(
             {
+                **super().get_item(item, item_code, **kwargs),
                 "doctype": "Sales Order Item",
                 "parentfield": "items",
-                **item,
+                "customer_item_code": item.party_item_code,
             }
         )

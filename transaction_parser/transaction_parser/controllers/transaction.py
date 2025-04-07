@@ -338,15 +338,16 @@ class Transaction:
 
     ### Item
 
-    def get_item(self, item, company, currency):
+    def get_item(self, item, item_code, **kwargs):
         item_details = {}
 
-        if item.item_code and company and currency:
+        if item_code and self.doc.company and self.doc.currency:
             item_details = get_item_details(
                 {
-                    "item_code": item.item_code,
-                    "company": company,
-                    "currency": currency,
+                    **kwargs,
+                    "item_code": item_code,
+                    "company": self.doc.company,
+                    "currency": self.doc.currency,
                     "doctype": self.DOCTYPE,
                 }
             )

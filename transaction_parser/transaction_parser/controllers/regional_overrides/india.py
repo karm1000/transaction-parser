@@ -128,9 +128,9 @@ class IndiaTransaction(Transaction):
 
     ### Item
 
-    def get_item(self, item, company, currency):
+    def get_item(self, item, item_code, **kwargs):
         return {
-            **super().get_item(item, company, currency),
+            **super().get_item(item, item_code, **kwargs),
             "gst_hsn_code": (
                 item.hsn_code if self.is_valid_hsn_code(item.hsn_code) else None
             ),
