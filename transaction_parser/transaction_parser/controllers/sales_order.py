@@ -58,6 +58,7 @@ class SalesOrder(Transaction):
 
         self.doc.items = self.get_items()
         self.doc.payment_schedule = self.get_payment_schedule()
+        self.doc.terms = self.get_terms()
 
         self.doc.set_missing_values()
 

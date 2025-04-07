@@ -384,3 +384,15 @@ class Transaction:
                 ),
             }
         )
+
+    ### Terms and Conditions
+
+    def get_terms(self):
+        terms = (
+            description if (description := self.data.local_terms.description) else ""
+        )
+
+        if incoterms := self.data.local_terms.incoterms:
+            terms += f"\nIncoterms: {incoterms}"
+
+        return terms
