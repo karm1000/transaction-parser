@@ -1,14 +1,10 @@
 const DOCTYPE = "Sales Order";
 const SUPPORTED_COUNTRIES = ["India", "Other"];
 
-frappe.listview_settings[DOCTYPE].onload = function (list_view) {
+frappe.listview_settings[DOCTYPE].onload = async function (list_view) {
+	const { default_model, supported_models } = await get_ai_models();
+
 	list_view.page.add_menu_item(__("Parse Purchase Order"), function () {
-		let default_country = frappe.defaults.get_default("country") || "Other";
-
-		if (!SUPPORTED_COUNTRIES.includes(default_country)) {
-			default_country = "Other";
-		}
-
 		const dialog = new frappe.ui.Dialog({
 			title: __("Upload Purchase Order"),
 			fields: [
@@ -19,16 +15,33 @@ frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 					reqd: 1,
 				},
 				{
+					fieldtype: "Column Break",
+				},
+				{
 					fieldname: "page_limit",
 					label: __("Page Limit"),
 					fieldtype: "Int",
+				},
+				{
+					fieldtype: "Section Break",
+				},
+				{
+					fieldname: "ai_model",
+					label: __("AI Model"),
+					fieldtype: "Select",
+					options: supported_models,
+					default: default_model,
+					reqd: 1,
+				},
+				{
+					fieldtype: "Column Break",
 				},
 				{
 					fieldname: "country",
 					label: __("Country"),
 					fieldtype: "Select",
 					options: SUPPORTED_COUNTRIES.join("\n"),
-					default: default_country,
+					default: get_default_country(),
 					reqd: 1,
 				},
 			],
@@ -54,3 +67,16 @@ frappe.listview_settings[DOCTYPE].onload = function (list_view) {
 		dialog.show();
 	});
 };
+
+async function get_ai_models() {
+	// returns an object with two attributes: 1. default_ai_model, 2. supported_ai_models
+	const res = await frappe.call({
+		method: "transaction_parser.transaction_parser.doctype.transaction_parser_settings.transaction_parser_settings.get_ai_models",
+	});
+	return res.message;
+}
+
+function get_default_country() {
+	const country = frappe.defaults.get_default("Country");
+	return SUPPORTED_COUNTRIES.includes(country) ? country : "Other";
+}

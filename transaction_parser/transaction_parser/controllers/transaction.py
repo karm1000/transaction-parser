@@ -20,20 +20,17 @@ class Transaction:
 
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
-    def generate(self, file, page_limit=None):
+    def generate(self, file, ai_model=None, page_limit=None):
         self.initialize()
 
         self.file = file
-        self.data = self.get_file_content(page_limit)
+        self.data = self.get_file_content(ai_model, page_limit)
         self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
+        self.doc.is_created_by_transaction_parser = 1
 
         self.set_details()
+        self.set_missing_values()
         self.set_flags()
-
-        # test
-        if getattr(self.doc, "set_missing_values", None):
-            self.doc.set_missing_values()
-
         self.doc.insert()
         self.attach_file()
 
@@ -48,7 +45,7 @@ class Transaction:
         self.document_schema = None
         self.tax_schema = None
         self.address_schema = None
-        self.business_schema = None
+        self.party_schema = None
         self.item_schema = None
 
         # data mapping
@@ -92,18 +89,15 @@ class Transaction:
 
     #     return get_content(response)
 
-    def get_file_content(self, page_limit=None):
-        processor = FileProcessor()
-        content = processor.get_content(self.file, page_limit)
-
+    def get_file_content(self, ai_model=None, page_limit=None):
+        content = FileProcessor().get_content(self.file, page_limit)
         schema = self.get_schema()
 
-        parser = AIParser(self.settings)
-        return parser.parse(
-            doctype=self.DOCTYPE,
-            schema=schema,
+        return AIParser(ai_model, self.settings).parse(
+            document_type=self.DOCTYPE,
+            document_schema=schema,
+            document_data=content,
             file_doc_name=self.file.name,
-            data=content,
         )
 
     ###################################
@@ -135,6 +129,14 @@ class Transaction:
                 "total_tax_amount": "float | null",
                 "grand_total": "float",
             },
+            "payment_terms": [
+                {
+                    "credit_days": "int | null",
+                    "credit_from": "string | null",
+                    "due_date": "date | null",
+                    "invoice_portion": "float | null (percentage of invoice)",
+                }
+            ],
             "local_terms": {
                 "incoterms": "string (e.g., EXW, DDP, etc.)",
                 "description": "string",
@@ -160,10 +162,9 @@ class Transaction:
 
     def get_default_item_schema(self):
         return {
-            "serial_number": "int | null",
-            "party_item_code": "string | null",
+            "serial_number": "string | null",
+            "party_item_code": "string | null (Dont confuse this with serial number)",
             "description": "string",
-            "hsn_code": "string",
             "quantity": "float",
             "unit": "string (e.g., KG, MTR, PC, etc.)",
             "rate": "float",
@@ -172,6 +173,7 @@ class Transaction:
             "total_tax_percentage": "float | null",
             "total_tax_amount": "float | null",
             "is_price_inclusive_of_taxes": "boolean",
+            "delivery_date": "date | null",
         }
 
     def get_custom_item_schema(self):
@@ -203,19 +205,19 @@ class Transaction:
 
     ### Party
 
-    def get_business_schema(self):
-        if not self.business_schema:
-            self.business_schema = self._get_business_schema()
+    def get_party_schema(self):
+        if not self.party_schema:
+            self.party_schema = self._get_party_schema()
 
-        return self.business_schema
+        return self.party_schema
 
-    def _get_business_schema(self):
+    def _get_party_schema(self):
         return {
-            **self.get_default_business_schema(),
-            **self.get_custom_business_schema(),
+            **self.get_default_party_schema(),
+            **self.get_custom_party_schema(),
         }
 
-    def get_default_business_schema(self):
+    def get_default_party_schema(self):
         return {
             "name": "string",
             "address": self.get_address_schema(),
@@ -225,8 +227,8 @@ class Transaction:
             },
         }
 
-    def get_custom_business_schema(self):
-        return to_dict(self.settings.business_schema, throw=False)
+    def get_custom_party_schema(self):
+        return to_dict(self.settings.party_schema, throw=False)
 
     ### Address
 
@@ -264,6 +266,11 @@ class Transaction:
             "set_details() method must be implemented by subclass"
         )
 
+    def set_missing_values(self):
+        raise NotImplementedError(
+            "set_missing_values() method must be implemented by subclass"
+        )
+
     def set_flags(self):
         self.doc.flags.ignore_permissions = True
         self.doc.flags.ignore_mandatory = True
@@ -275,152 +282,125 @@ class Transaction:
         self.file.attached_to_name = self.doc.name
         self.file.save()
 
-    ### Company
+    ### Party
 
-    def get_company(self, company):
-        if found := self.search_company(company):
+    def get_party(self, party, party_type):
+        if found := self.search_party(party, party_type):
             return found
 
-        return self.guess_company(company)
+        return self.guess_party(party, party_type)
 
-    def search_company(self, company):
-        return self.search_business(company, "Company")
+    def search_party(self, party, party_type):
+        return frappe.db.exists(party_type, party.name)
 
-    def search_business(self, business, doctype):
-        return frappe.db.exists(doctype, business.name)
+    def guess_party(self, party, party_type, party_names=None):
+        if not party_names:
+            party_names = frappe.get_all(party_type, pluck="name")
 
-    def guess_company(self, company):
-        return self.guess_business(company, "Company")
-
-    def guess_business(self, business, doctype):
-        return self.guess_value(business.name, self._get_all_businesses(doctype))
-
-    def _get_all_businesses(self, doctype):
-        return frappe.db.get_all(doctype, pluck="name")
+        return self.guess_value(party.name, party_names)
 
     def guess_value(self, value, options, score_cutoff=80):
         if result := process.extractOne(value, options, score_cutoff=score_cutoff):
             return result[0]
 
-    ### Party
-
-    def get_party(self, party):
-        if found := self.search_party(party):
-            return found
-
-        return self.guess_party(party)
-
-    def search_party(self, party):
-        return self.search_business(party, self.PARTY_DOCTYPE)
-
-    def guess_party(self, party):
-        return self.guess_business(party, self.PARTY_DOCTYPE)
-
     ### Address
 
-    def get_company_address(self, company, address, address_type=None):
-        if found := self.get_address(company, address, address_type, "Company"):
-            return found
+    def get_address(self, party, party_type, address):
+        address_doctype = frappe.qb.DocType("Address")
+        link_doctype = frappe.qb.DocType("Dynamic Link")
 
-        return self._get_default_company_address()
+        erp_addresses = (
+            frappe.qb.from_(address_doctype)
+            .join(link_doctype)
+            .on(address_doctype.name == link_doctype.parent)
+            .select(
+                address_doctype.name,
+                address_doctype.address_line1,
+                address_doctype.pincode,
+            )
+            .where(link_doctype.link_doctype == party_type)
+            .where(link_doctype.link_name == party.name)
+        ).run(as_dict=True)
 
-    def get_address(self, business, address, address_type, doctype):
-        if found := self.search_address(business, address, address_type, doctype):
-            return found
+        for erp_address in erp_addresses:
+            if found := self.search_address(party, address, erp_address):
+                return found
 
-        # TODO: fuzzy match address
+        return self.guess_address(party, address, erp_addresses)
 
-    def search_address(self, business, address, address_type, doctype):
-        # TODO: get all address for party and find best match
-        # Best match by postal / address_line1 / return default address
-        address_table = frappe.qb.DocType("Address")
-        link_table = frappe.qb.DocType("Dynamic Link")
+    def search_address(self, party, address, erp_address):
+        if erp_address.pincode == address.postal_code:
+            return erp_address.name
 
-        query = (
-            frappe.qb.from_(address_table)
-            .join(link_table)
-            .on(address_table.name == link_table.parent)
-            .select(address_table.name)
-            .limit(1)
-            .where(link_table.link_doctype == doctype)
-            .where(link_table.link_name == business.name)
-            .where(address_table.pincode == address.postal_code)
-        )
+        if erp_address.address_line1 == address.address_line_1:
+            return erp_address.name
 
-        if address_type:
-            query = query.where(address_table.pincode == address.postal_code)
+    def guess_address(self, party, address, erp_addresses):
+        address_line_1_map = {
+            erp_address.address_line1: erp_address.name for erp_address in erp_addresses
+        }
 
-        if found := query.run():
-            return found[0][0]
-
-    # def _get_all_addresses(self, business, linked_doctype):
-    #     """
-    #     Returns a list addresses for a given business.
-
-    #     Example:
-    #     self.addresses = {
-    #         "business_1": [ "address_1", "address_2", ... ],
-    #         "business_2": [ "address_1", "address_2", ... ],
-    #         ...
-    #     }
-    #     """
-    #     # TODO: make key as a combination of business and linked_doctype
-    #     _business = business.name
-
-    #     if self.addresses.get(_business) is None:
-    #         self.addresses[_business] = set(
-    #             frappe.get_all(
-    #                 "Dynamic Link",
-    #                 filters={
-    #                     "parenttype": "Address",
-    #                     "link_doctype": linked_doctype,
-    #                     "link_name": _business,
-    #                 },
-    #                 pluck="parent",
-    #             )
-    #         )
-
-    #     return self.addresses[_business]
-
-    def _get_default_company_address(self):
-        return frappe.db.get_value("Address", filters={"is_your_company_address": 1})
-
-    def get_party_address(self, party, address, address_type=None):
-        return self.get_address(party, address, address_type, self.PARTY_DOCTYPE)
+        if found := self.guess_value(address.address_line_1, address_line_1_map.keys()):
+            return address_line_1_map.get(found)
 
     ### Item
 
-    def get_item(self, item, company, currency):
+    def get_item(self, item, item_code, **kwargs):
         item_details = {}
 
-        if item.item_code and company and currency:
+        if item_code and self.doc.company and self.doc.currency:
             item_details = get_item_details(
                 {
-                    "item_code": item.item_code,
-                    "qty": item.quantity,  # TODO: needed?
-                    "rate": item.rate,
-                    "company": company,
-                    "currency": currency,
+                    **kwargs,
+                    "item_code": item_code,
+                    "company": self.doc.company,
+                    "currency": self.doc.currency,
                     "doctype": self.DOCTYPE,
                 }
             )
 
         return frappe._dict(
             {
-                # TODO: delivery_date
                 **item_details,
                 **item,
                 "qty": item.quantity,
+                "rate": item.rate,
             }
         )
 
-    ### Document
+    ### Payment Schedule
 
-    def get_document_number(self):
-        return self.data.document_number
+    def get_payment_schedule(self):
+        return [self.get_payment_schedule_doc(term) for term in self.data.payment_terms]
 
-    def get_document_date(self):
-        return self.data.document_date
+    def get_payment_schedule_doc(self, term):
+        return frappe.get_doc(
+            {
+                "doctype": "Payment Schedule",
+                "parentfield": "payment_schedule",
+                **term,
+                "description": (
+                    f"{term.credit_days} days from {term.credit_from}"
+                    if term.credit_days and term.credit_from
+                    else None
+                ),
+                "payment_amount": (
+                    total * portion / 100
+                    if (total := self.data.totals.grand_total)
+                    and (portion := term.invoice_portion)
+                    else None
+                ),
+            }
+        )
 
-    def get_currency(self):
-        return self.data.currency
+    ### Terms and Conditions
+
+    def get_terms(self):
+        terms = (
+            description if (description := self.data.local_terms.description) else ""
+        )
+
+        if incoterms := self.data.local_terms.incoterms:
+            terms += f"\nIncoterms: {incoterms}"
+
+        return terms

@@ -7,19 +7,17 @@
  "field_order": [
   "api_tab",
   "enabled",
-  "column_break_lxui",
-  "reuse_previously_parsed_data",
   "section_break_jzhp",
-  "ai_model",
-  "column_break_tnxr",
-  "api_key",
+  "default_ai_model",
+  "section_break_ruid",
+  "api_keys",
   "custom_fields_tab",
   "custom_fields_section",
   "column_break_kdtw",
   "base_schema",
   "tax_schema",
   "address_schema",
-  "business_schema",
+  "party_schema",
   "item_schema"
  ],
  "fields": [
@@ -39,29 +37,10 @@
    "fieldtype": "Section Break"
   },
   {
-   "depends_on": "eval:doc.enabled",
-   "fieldname": "api_key",
-   "fieldtype": "Password",
-   "label": "API Key",
-   "mandatory_depends_on": "eval: doc.enabled"
-  },
-  {
-   "fieldname": "column_break_tnxr",
-   "fieldtype": "Column Break"
-  },
-  {
    "depends_on": "eval: doc.enabled",
    "fieldname": "custom_fields_tab",
    "fieldtype": "Tab Break",
    "label": "Customizations"
-  },
-  {
-   "default": "1",
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "reuse_previously_parsed_data",
-   "fieldtype": "Check",
-   "hidden": 1,
-   "label": "Reuse Previously Parsed Data"
   },
   {
    "fieldname": "custom_fields_section",
@@ -72,18 +51,6 @@
    "depends_on": "eval: doc.enabled",
    "fieldname": "column_break_kdtw",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_lxui",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "ai_model",
-   "fieldtype": "Select",
-   "label": "AI Model",
-   "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -105,21 +72,40 @@
   },
   {
    "depends_on": "eval: doc.enabled",
+   "fieldname": "party_schema",
+   "fieldtype": "JSON",
+   "label": "Party Schema"
+  },
+  {
+   "depends_on": "eval: doc.enabled",
    "fieldname": "item_schema",
    "fieldtype": "JSON",
    "label": "Item Schema"
   },
   {
    "depends_on": "eval: doc.enabled",
-   "fieldname": "business_schema",
-   "fieldtype": "JSON",
-   "label": "Business Schema"
+   "fieldname": "default_ai_model",
+   "fieldtype": "Select",
+   "label": "Default AI Model",
+   "mandatory_depends_on": "eval: doc.enabled",
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini"
+  },
+  {
+   "fieldname": "section_break_ruid",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval: doc.enabled",
+   "fieldname": "api_keys",
+   "fieldtype": "Table",
+   "label": "API Keys",
+   "options": "Transaction Parser API Key Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-03-30 18:18:53.228246",
+ "modified": "2025-04-01 15:05:50.838292",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

@@ -4,7 +4,7 @@ from tempfile import TemporaryFile
 import frappe
 import ocrmypdf
 from frappe import _
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 
 
 class FileProcessor:
@@ -38,17 +38,27 @@ class FileProcessor:
         self.file = temp_file
 
     def _apply_ocr(self):
+        reader = PdfReader(self.file)
+        pages = ""
+
+        for index, page in enumerate(reader.pages):
+            # TODO: keep minimum text length ?
+            if not page.extract_text():
+                pages += f"{index + 1},"
+
+        self.file.seek(0)
+
+        if not pages:
+            return
+
         temp_file = TemporaryFile()
-
-        # TODO: fix text encoding issues after OCR
-
         ocrmypdf.ocr(
             input_file=self.file,
             output_file=temp_file,
+            pages=pages,
             progress_bar=False,
             rotate_pages=True,
             force_ocr=True,
-            deskew=True,  # TODO: study its impact
         )
 
         self.file = temp_file
