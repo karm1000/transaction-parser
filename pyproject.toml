@@ -7,6 +7,11 @@ description = "AI-powered add-on for ERPNext that extracts data from PDFs and cr
 requires-python = ">=3.10"
 readme = "README.md"
 dynamic = ["version"]
+dependencies = [
+    "pre_commit~=4.1.0",
+    "ocrmypdf~=16.10.0",
+    "rapidfuzz~=2.15.2",
+]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]
