@@ -36,8 +36,6 @@ class TransactionParserSettings(Document):
 
 @frappe.whitelist()
 def get_ai_models():
-    frappe.has_permission(DOCTYPE)
-
     default_model = frappe.get_cached_value(DOCTYPE, None, "default_ai_model")
     supported_models = frappe.get_meta(DOCTYPE).get_field("default_ai_model").options
 
