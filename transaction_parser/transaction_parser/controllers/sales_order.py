@@ -193,10 +193,15 @@ class SalesOrder(Transaction):
             )
         )
 
-        return [
+        items = [
             self.get_item(item, item_codes.get(item.party_item_code))
             for item in self.data.item_list
         ]
+
+        for idx, item in enumerate(items):
+            item.idx = idx + 1
+
+        return items
 
     def get_item(self, item, item_code, **kwargs):
         kwargs["customer"] = self.doc.customer
