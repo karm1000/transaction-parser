@@ -8,6 +8,7 @@ erpnext.TransactionController = class CustomTransactionController extends erpnex
 		let row = locals[cdt][cdn];
 		const old_values = {
 			rate: row.rate,
+			customer_item_code: row.customer_item_code,
 		};
 
 		await super.item_code(doc, cdt, cdn);
