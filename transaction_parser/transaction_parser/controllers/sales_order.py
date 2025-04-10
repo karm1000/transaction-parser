@@ -57,6 +57,17 @@ class SalesOrder(Transaction):
         self.doc.customer_address = self.get_billing_address()
         self.doc.shipping_address_name = self.get_shipping_address()
 
+        self.doc.contact_person = self.get_contact(
+            emails=(
+                self.data.buyer.billing.contact.email
+                + self.data.buyer.shipping.contact.email
+            ),
+            phones=(
+                self.data.buyer.billing.contact.phone
+                + self.data.buyer.shipping.contact.phone
+            ),
+        )
+
         self.doc.items = self.get_items()
         # self.doc.payment_schedule = self.get_payment_schedule()
         self.doc.terms = self.get_terms()
