@@ -404,3 +404,20 @@ class Transaction:
             terms += f"\nIncoterms: {incoterms}"
 
         return terms
+
+    ### Contact
+
+    def get_contact(self, emails, phones):
+        if emails and (
+            found := frappe.db.get_value(
+                "Contact Email", {"email_id": ["in", emails]}, "parent"
+            )
+        ):
+            return found
+
+        if phones and (
+            found := frappe.db.get_value(
+                "Contact Phone", {"phone": ["in", phones]}, "parent"
+            )
+        ):
+            return found
