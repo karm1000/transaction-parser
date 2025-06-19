@@ -5,6 +5,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import get_link_to_form
 
 from transaction_parser.transaction_parser.utils import to_dict
 
@@ -14,7 +15,21 @@ DOCTYPE = "Transaction Parser Settings"
 class TransactionParserSettings(Document):
     # TODO: can we check API creds?
     def validate(self):
+        self._validate_incoming_email_accounts()
         self._validate_json_fields()
+
+    def _validate_incoming_email_accounts(self):
+        for account in self.incoming_email_accounts_for_orders:
+            self._validate_incoming_email_account(account.email_account)
+
+    def _validate_incoming_email_account(self, account_name: str):
+        if not frappe.db.get_value("Email Account", account_name, "enable_incoming"):
+            frappe.throw(
+                _(
+                    f"Email Account {get_link_to_form('Email Account', account_name)} must have incoming emails enabled."
+                ),
+                title=_("Invalid Incoming Email Account"),
+            )
 
     def _validate_json_fields(self):
         for field in self.meta.fields:
