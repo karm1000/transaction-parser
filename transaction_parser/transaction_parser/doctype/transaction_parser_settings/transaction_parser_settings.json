@@ -12,7 +12,7 @@
   "api_keys",
   "email_configuration_section",
   "parse_incoming_emails",
-  "incoming_email_accounts_for_orders",
+  "incoming_email_accounts",
   "custom_fields_tab",
   "custom_fields_section",
   "column_break_kdtw",
@@ -102,27 +102,27 @@
    "label": "Parse Incoming Emails"
   },
   {
-   "depends_on": "eval: doc.parse_incoming_emails",
-   "description": "If an email is received on any of these Email Accounts, an attempt will be made to generate Sales Order from its attachments.",
-   "fieldname": "incoming_email_accounts_for_orders",
-   "fieldtype": "Table",
-   "label": "Incoming Email Accounts for Orders",
-   "mandatory_depends_on": "eval: doc.parse_incoming_emails",
-   "options": "Transaction Parser Email Account"
-  },
-  {
    "fieldname": "email_configuration_section",
    "fieldtype": "Section Break"
   },
   {
    "fieldname": "ai_model_section",
    "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval: doc.parse_incoming_emails",
+   "description": "If an email is received on any of these Email Accounts, an attempt will be made to generate the specified Transaction from its attachments.",
+   "fieldname": "incoming_email_accounts",
+   "fieldtype": "Table",
+   "label": "Incoming Email Accounts",
+   "mandatory_depends_on": "eval: doc.parse_incoming_emails",
+   "options": "Transaction Parser Email Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-06-19 16:07:52.407067",
+ "modified": "2025-06-20 12:07:07.210480",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

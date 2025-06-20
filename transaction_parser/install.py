@@ -11,7 +11,16 @@ custom_fields = {
             "read_only": 1,
             "insert_after": "is_internal_customer",
         }
-    ]
+    ],
+    "Communication": [
+        {
+            "fieldname": "is_processed_by_transaction_parser",
+            "fieldtype": "Check",
+            "label": "Is Processed By Transaction Parser",
+            "read_only": 1,
+            "insert_after": "seen",
+        }
+    ],
 }
 
 

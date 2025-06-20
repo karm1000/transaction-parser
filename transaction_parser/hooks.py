@@ -13,3 +13,9 @@ app_include_js = "transaction_parser.bundle.js"
 doctype_list_js = {
     "Sales Order": "transaction_parser/client_scripts/sales_order_list.js",
 }
+
+doc_events = {
+    "Communication": {
+        "on_update": "transaction_parser.transaction_parser.overrides.communication.on_update",
+    }
+}

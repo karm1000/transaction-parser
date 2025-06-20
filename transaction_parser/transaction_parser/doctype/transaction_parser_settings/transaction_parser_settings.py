@@ -19,7 +19,18 @@ class TransactionParserSettings(Document):
         self._validate_json_fields()
 
     def _validate_incoming_email_accounts(self):
-        for account in self.incoming_email_accounts_for_orders:
+        if len(self.incoming_email_accounts) != len(
+            set(
+                incoming_email_account.email_account
+                for incoming_email_account in self.incoming_email_accounts
+            )
+        ):
+            frappe.throw(
+                _("Incoming Email Accounts must be unique."),
+                title=_("Duplicate Incoming Email Accounts"),
+            )
+
+        for account in self.incoming_email_accounts:
             self._validate_incoming_email_account(account.email_account)
 
     def _validate_incoming_email_account(self, account_name: str):
