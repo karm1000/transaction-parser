@@ -30,6 +30,7 @@ class Transaction:
 
         self.set_details()
         self.set_missing_values()
+        self.doc.calculate_taxes_and_totals()
         self.set_flags()
         self.doc.insert()
         self.attach_file()
@@ -284,14 +285,8 @@ class Transaction:
 
     ### Party
 
-    def get_party(self, party, party_type):
-        if found := self.search_party(party, party_type):
-            return found
-
-        return self.guess_party(party, party_type)
-
-    def search_party(self, party, party_type):
-        return frappe.db.exists(party_type, party.name)
+    def search_party(self, party, party_type, fieldname="name"):
+        return frappe.db.exists(party_type, {fieldname: party.name})
 
     def guess_party(self, party, party_type, party_names=None):
         if not party_names:
@@ -301,6 +296,8 @@ class Transaction:
 
     def guess_value(self, value, options, score_cutoff=80):
         if result := process.extractOne(value, options, score_cutoff=score_cutoff):
+            if isinstance(options, dict):
+                return result[2]
             return result[0]
 
     ### Address
@@ -364,7 +361,9 @@ class Transaction:
                 **item_details,
                 **item,
                 "qty": item.quantity,
-                "rate": item.rate,
+                "rate": item.rate
+                if item.rate != 0
+                else item_details.get("price_list_rate", 0),
             }
         )
 
