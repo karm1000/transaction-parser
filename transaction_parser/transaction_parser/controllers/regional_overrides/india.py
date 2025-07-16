@@ -41,7 +41,7 @@ class IndiaTransaction(Transaction):
 
     ### Party
 
-    def search_party(self, party, party_type):
+    def search_party(self, party, party_type, fieldname="name"):
         from india_compliance.gst_india.utils import get_party_for_gstin
 
         if self.is_valid_gstin(party.gstin):
@@ -52,7 +52,7 @@ class IndiaTransaction(Transaction):
         ):
             return found
 
-        return super().search_party(party, party_type)
+        return super().search_party(party, party_type, fieldname)
 
     def is_valid_gstin(self, gstin):
         from india_compliance.gst_india.utils import validate_gstin

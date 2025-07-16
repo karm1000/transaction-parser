@@ -21,13 +21,13 @@ class OtherTransaction(Transaction):
     ########## Data Mapping ##########
     ##################################
 
-    def search_party(self, party, party_type):
+    def search_party(self, party, party_type, fieldname="name"):
         if self.is_valid_tax_id(party.tax_id) and (
             found := frappe.db.get_value(party_type, {"tax_id": party.tax_id})
         ):
             return found
 
-        return super().search_party(party, party_type)
+        return super().search_party(party, party_type, fieldname)
 
     def is_valid_tax_id(self, tax_id):
         if not tax_id:
@@ -37,7 +37,7 @@ class OtherTransaction(Transaction):
 
         return True
 
-    def guess_party(self, party, party_type):
+    def guess_party(self, party, party_type, party_names=None):
         if party.tax_id:
             party_tax_ids = frappe._dict(
                 frappe.db.get_all(
@@ -53,7 +53,7 @@ class OtherTransaction(Transaction):
             ):
                 return party_tax_ids.get(found)
 
-        return super().guess_party(party, party_type)
+        return super().guess_party(party, party_type, party_names)
 
 
 class OtherSalesOrder(SalesOrder, OtherTransaction):
