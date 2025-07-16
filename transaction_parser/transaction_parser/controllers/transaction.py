@@ -361,9 +361,7 @@ class Transaction:
                 **item_details,
                 **item,
                 "qty": item.quantity,
-                "rate": item.rate
-                if item.rate != 0
-                else item_details.get("price_list_rate", 0),
+                "rate": item.rate or item_details.get("price_list_rate", 0),
             }
         )
 
