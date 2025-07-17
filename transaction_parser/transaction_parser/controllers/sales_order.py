@@ -78,6 +78,7 @@ class SalesOrder(Transaction):
             if (delivery_date := self.doc.delivery_date) and (delivery_date < today)
             else today
         )
+        self.doc.calculate_taxes_and_totals()
 
         # TODO: set a flag in SO (created from transaction parser)
         # TODO: validation of Sales Order on save.

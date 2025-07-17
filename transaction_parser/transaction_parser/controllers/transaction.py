@@ -30,7 +30,6 @@ class Transaction:
 
         self.set_details()
         self.set_missing_values()
-        self.doc.calculate_taxes_and_totals()
         self.set_flags()
         self.doc.insert()
         self.attach_file()
