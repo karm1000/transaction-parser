@@ -25,7 +25,7 @@ class FileProcessor:
 
         input_pdf = pymupdf.open(stream=self.file, filetype="pdf")
         output_pdf = pymupdf.open()
-        output_pdf.insert_pdf(input_pdf, to_page=page_limit-1)
+        output_pdf.insert_pdf(input_pdf, to_page=page_limit - 1)
 
         temp_file = io.BytesIO()
         output_pdf.save(temp_file)
