@@ -1,13 +1,14 @@
 import io
-from tempfile import TemporaryFile
 
 import frappe
 import ocrmypdf
+import pymupdf
 from frappe import _
-from pypdf import PdfReader, PdfWriter
 
 
 class FileProcessor:
+    """Process PDF file: trim pages, apply OCR if needed, extract text."""
+
     def get_content(self, doc, page_limit=None):
         if doc.file_type != "PDF":
             frappe.throw(_("Only PDF files are supported"))
@@ -22,36 +23,33 @@ class FileProcessor:
         if not page_limit:
             return
 
-        reader = PdfReader(self.file)
-        writer = PdfWriter()
+        input_pdf = pymupdf.open(stream=self.file, filetype="pdf")
+        output_pdf = pymupdf.open()
+        output_pdf.insert_pdf(input_pdf, to_page=page_limit-1)
 
-        for index, page in enumerate(reader.pages):
-            if index >= page_limit:
-                break
+        temp_file = io.BytesIO()
+        output_pdf.save(temp_file)
 
-            writer.add_page(page)
-
-        temp_file = TemporaryFile()
-        writer.write(temp_file)
-        temp_file.seek(0)
+        output_pdf.close()
+        input_pdf.close()
 
         self.file = temp_file
-
-    def _apply_ocr(self):
-        reader = PdfReader(self.file)
-        pages = ""
-
-        for index, page in enumerate(reader.pages):
-            # TODO: keep minimum text length ?
-            if not page.extract_text():
-                pages += f"{index + 1},"
-
         self.file.seek(0)
 
-        if not pages:
+    def _apply_ocr(self):
+        doc = pymupdf.open(stream=self.file, filetype="pdf")
+        pages_to_ocr = [
+            str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
+        ]
+
+        if not pages_to_ocr:
             return
 
-        temp_file = TemporaryFile()
+        pages = ",".join(pages_to_ocr)
+
+        temp_file = io.BytesIO()
+        self.file.seek(0)
+
         ocrmypdf.ocr(
             input_file=self.file,
             output_file=temp_file,
@@ -62,12 +60,14 @@ class FileProcessor:
         )
 
         self.file = temp_file
+        self.file.seek(0)
 
     def _get_text(self):
-        reader = PdfReader(self.file)
-
         text = ""
-        for page in reader.pages:
-            text += page.extract_text()
+        doc = pymupdf.open(stream=self.file, filetype="pdf")
+        for page in doc:
+            text += page.get_text("text")
+
+        doc.close()
 
         return text
