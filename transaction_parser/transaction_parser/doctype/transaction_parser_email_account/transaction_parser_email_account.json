@@ -7,17 +7,11 @@
  "engine": "InnoDB",
  "field_order": [
   "transaction",
-  "email_account"
+  "to_email",
+  "user",
+  "company"
  ],
  "fields": [
-  {
-   "fieldname": "email_account",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Email Account",
-   "options": "Email Account",
-   "reqd": 1
-  },
   {
    "fieldname": "transaction",
    "fieldtype": "Select",
@@ -25,13 +19,35 @@
    "label": "Transaction",
    "options": "Sales Order",
    "reqd": 1
+  },
+  {
+   "fieldname": "to_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "To Email",
+   "options": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-06-20 12:03:53.519270",
+ "modified": "2025-07-18 17:54:29.445586",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Email Account",
