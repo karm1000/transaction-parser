@@ -26,7 +26,16 @@ def parse(doctype, country, file_url, ai_model=None, page_limit=None):
     )
 
 
-def _parse(country, doctype, file_url, ai_model=None, page_limit=None):
+def _parse(
+    country,
+    doctype,
+    file_url,
+    ai_model=None,
+    page_limit=None,
+    user=None,
+    party=None,
+    default_company=None,
+):
     try:
         file = None
         filename = file_url.split("/")[-1]
@@ -34,13 +43,17 @@ def _parse(country, doctype, file_url, ai_model=None, page_limit=None):
         file = frappe.get_last_doc("File", filters={"file_url": file_url})
         filename = file.file_name
 
-        controller = get_controller(country, doctype)()
+        controller = get_controller(country, doctype)(user, party, default_company)
         doc = controller.generate(file, ai_model, page_limit)
 
         notification = {
             "document_type": doctype,
             "document_name": doc.name,
-            "subject": _(f"{doctype} {doc.name} generated from {filename}"),
+            "subject": _("{0} {1} generated from {2}").format(
+                _(doctype),
+                doc.name,
+                filename,
+            ),
         }
 
     except Exception:
@@ -49,12 +62,29 @@ def _parse(country, doctype, file_url, ai_model=None, page_limit=None):
             reference_doctype="File",
             reference_name=file.name if file else filename,
         )
+        message = _("Failed to generate {0} from {1}").format(_(doctype), filename)
 
         notification = {
             "document_type": error_log.doctype,
             "document_name": error_log.name,
-            "subject": _(f"Failed to generate {doctype} from {filename}"),
+            "subject": message,
         }
+
+        email_failure(user, message)
 
     finally:
         enqueue_notification(**notification)
+
+
+def email_failure(user, message):
+    if not user:
+        return
+
+    recipient = frappe.db.get_value("User", user, "email")
+
+    # TODO: better msg and subject
+    frappe.sendmail(
+        recipients=recipient,
+        subject=_("Transaction Parser Error"),
+        message=message,
+    )

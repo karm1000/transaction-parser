@@ -11,7 +11,7 @@ class Transaction:
     DOCTYPE = None
     PARTY_DOCTYPE = None
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None, user=None, party=None, default_company=None):
         if not self.DOCTYPE:
             raise NotImplementedError("DOCTYPE is not defined")
 
@@ -19,6 +19,9 @@ class Transaction:
             raise NotImplementedError("PARTY_DOCTYPE is not defined")
 
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
+        self.user = user
+        self.party = party
+        self.default_company = default_company
 
     def generate(self, file, ai_model=None, page_limit=None):
         self.initialize()
@@ -30,7 +33,6 @@ class Transaction:
 
         self.set_details()
         self.set_missing_values()
-        self.doc.calculate_taxes_and_totals()
         self.set_flags()
         self.doc.insert()
         self.attach_file()
