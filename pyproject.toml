@@ -1,8 +1,6 @@
 [project]
 name = "transaction_parser"
-authors = [
-    { name = "Resilient Tech", email = "info@resilient.tech"}
-]
+authors = [{ name = "Resilient Tech", email = "info@resilient.tech" }]
 description = "AI-powered add-on for ERPNext that extracts data from PDFs and creates draft records automatically."
 requires-python = ">=3.10"
 readme = "README.md"
@@ -11,6 +9,7 @@ dependencies = [
     "pre_commit~=4.1.0",
     "ocrmypdf~=16.10.0",
     "rapidfuzz~=2.15.2",
+    "pymupdf~=1.26.3",
 ]
 
 [build-system]
@@ -18,15 +17,7 @@ requires = ["flit_core >=3.4,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.ruff.lint]
-select = [
-    "F",
-    "E",
-    "W",
-    "I",
-    "UP",
-    "B",
-    "RUF",
-]
+select = ["F", "E", "W", "I", "UP", "B", "RUF"]
 
 ignore = [
     "E501", # line too long
