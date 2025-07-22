@@ -94,8 +94,8 @@ class SalesOrder(Transaction):
 
         company_identification_order = (
             ("vendor", self.data.vendor),
-            ("billing", self.data.buyer.billing),
-            ("shipping", self.data.buyer.shipping),
+            ("buyer", self.data.buyer.billing),
+            ("buyer", self.data.buyer.shipping),
         )
 
         # search
@@ -119,8 +119,8 @@ class SalesOrder(Transaction):
         # search
 
         customer_identification_order = (
-            ("billing", self.data.buyer.billing),
-            ("shipping", self.data.buyer.shipping),
+            ("buyer", self.data.buyer.billing),
+            ("buyer", self.data.buyer.shipping),
             ("vendor", self.data.vendor),
         )
 
@@ -129,11 +129,7 @@ class SalesOrder(Transaction):
             if key == self.company_found_against:
                 continue
 
-            if (
-                found := self.search_party(party, party_type, fieldname)
-            ) and frappe.db.get_value(
-                "Customer", found, "customer_name"
-            ) != self.doc.company:
+            if found := self.search_party(party, party_type, fieldname):
                 return found
 
         # guess
