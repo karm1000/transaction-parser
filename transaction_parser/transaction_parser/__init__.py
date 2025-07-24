@@ -72,13 +72,13 @@ def _parse(
             "subject": message,
         }
 
-        email_failure(user, message, str(e), file)
+        email_failure(user, message, str(e), file_url)
 
     finally:
         enqueue_notification(**notification)
 
 
-def email_failure(user, subject, error_message, attachment):
+def email_failure(user, subject, error_message, file_url):
     if not user:
         return
 
@@ -90,5 +90,9 @@ def email_failure(user, subject, error_message, attachment):
         message=_(
             "Hello,<br><br>We were unable to process your email attachment for transaction parsing.<br><br>Error: {0}<br><br>Please check the attachment format and try again."
         ).format(error_message),
-        attachments=attachment,
+        attachments=[
+            {
+                "file_url": file_url,
+            }
+        ],
     )
