@@ -89,65 +89,63 @@ class SalesOrder(Transaction):
 
     def get_company(self):
         party_type = "Company"
+        fieldname = "name"
+        self.company_found_against = None
+
+        company_identification_order = (
+            ("vendor", self.data.vendor),
+            ("buyer", self.data.buyer.billing),
+            ("buyer", self.data.buyer.shipping),
+        )
 
         # search
-
-        if found := self.search_party(self.data.vendor, party_type):
-            return found
-
-        if found := self.search_party(self.data.buyer.billing, party_type):
-            # TODO: some flag to remember inversion state
-            return found
-
-        if found := self.search_party(self.data.buyer.shipping, party_type):
-            # TODO: some flag to remember inversion state
-            return found
+        for key, party in company_identification_order:
+            if found := self.search_party(party, party_type, fieldname):
+                self.company_found_against = key
+                return found
 
         # guess
-
         party_names = frappe.get_all(party_type, pluck="name")
-
-        if found := self.guess_party(self.data.vendor, party_type, party_names):
-            return found
-
-        if found := self.guess_party(self.data.buyer.billing, party_type, party_names):
-            # TODO: some flag to remember inversion state
-            return found
-
-        if found := self.guess_party(self.data.buyer.shipping, party_type, party_names):
-            # TODO: some flag to remember inversion state
-            return found
+        for key, party in company_identification_order:
+            if found := self.guess_party(party, party_type, party_names):
+                self.company_found_against = key
+                return found
 
     ### Customer
 
     def get_customer(self):
         party_type = "Customer"
-
+        fieldname = "customer_name"
         # search
 
-        if found := self.search_party(self.data.buyer.billing, party_type):
-            return found
+        customer_identification_order = (
+            ("buyer", self.data.buyer.billing),
+            ("buyer", self.data.buyer.shipping),
+            ("vendor", self.data.vendor),
+        )
 
-        if found := self.search_party(self.data.buyer.shipping, party_type):
-            return found
+        # search
+        for key, party in customer_identification_order:
+            if key == self.company_found_against:
+                continue
 
-        if found := self.search_party(self.data.vendor, party_type):
-            # TODO: some flag to remember inversion state
-            return found
+            if found := self.search_party(party, party_type, fieldname):
+                return found
 
         # guess
+        party_names = dict(
+            frappe.get_all(party_type, fields=["name", "customer_name"], as_list=True)
+        )
+        for key, party in customer_identification_order:
+            if key == self.company_found_against:
+                continue
 
-        party_names = frappe.get_all(party_type, pluck="name")
-
-        if found := self.guess_party(self.data.buyer.billing, party_type, party_names):
-            return found
-
-        if found := self.guess_party(self.data.buyer.shipping, party_type, party_names):
-            return found
-
-        if found := self.guess_party(self.data.vendor, party_type, party_names):
-            # TODO: some flag to remember inversion state
-            return found
+            if (
+                found := self.guess_party(party, party_type, party_names)
+            ) and frappe.db.get_value(
+                "Customer", found, "customer_name"
+            ) != self.doc.company:
+                return found
 
     # def create_party(self):
     #     # TODO: Implement

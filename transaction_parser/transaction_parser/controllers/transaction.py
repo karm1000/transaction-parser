@@ -1,6 +1,6 @@
 import frappe
 from erpnext.stock.get_item_details import get_item_details
-from rapidfuzz import process
+from rapidfuzz import fuzz, process
 
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.utils import to_dict
@@ -284,14 +284,8 @@ class Transaction:
 
     ### Party
 
-    def get_party(self, party, party_type):
-        if found := self.search_party(party, party_type):
-            return found
-
-        return self.guess_party(party, party_type)
-
-    def search_party(self, party, party_type):
-        return frappe.db.exists(party_type, party.name)
+    def search_party(self, party, party_type, fieldname="name"):
+        return frappe.db.exists(party_type, {fieldname: party.name})
 
     def guess_party(self, party, party_type, party_names=None):
         if not party_names:
@@ -300,7 +294,18 @@ class Transaction:
         return self.guess_value(party.name, party_names)
 
     def guess_value(self, value, options, score_cutoff=80):
-        if result := process.extractOne(value, options, score_cutoff=score_cutoff):
+        # When `options` is a list:
+        #   extractOne("abcd", ["value1", "value2"])
+        #   Output: ("value1", 1, 0)
+
+        # When `options` is a dictionary:
+        #   extractOne("abcd", {"key": "value"})
+        #   Output: ("value", 75.0, "key")
+        if result := process.extractOne(
+            value, options, score_cutoff=score_cutoff, scorer=fuzz.token_set_ratio
+        ):
+            if isinstance(options, dict):
+                return result[2]
             return result[0]
 
     ### Address
@@ -364,7 +369,7 @@ class Transaction:
                 **item_details,
                 **item,
                 "qty": item.quantity,
-                "rate": item.rate,
+                "rate": item.rate or item_details.get("price_list_rate", 0),
             }
         )
 
