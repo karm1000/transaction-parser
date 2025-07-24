@@ -88,12 +88,12 @@ class SalesOrder(Transaction):
     ### Company
 
     def get_company(self):
+        self.company_found_against = None
         if self.company:
             return self.company
 
         party_type = "Company"
         fieldname = "name"
-        self.company_found_against = None
 
         company_identification_order = (
             ("vendor", self.data.vendor),

@@ -16,6 +16,6 @@ doctype_list_js = {
 
 doc_events = {
     "Communication": {
-        "on_update": "transaction_parser.transaction_parser.overrides.communication.on_communication_update",
+        "on_update": "transaction_parser.transaction_parser.overrides.communication.on_update",
     }
 }

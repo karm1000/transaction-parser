@@ -8,7 +8,7 @@ PARTY_TYPE_MAP = {
 }
 
 
-def on_communication_update(doc, method=None):
+def on_update(doc, method=None):
     if doc.sent_or_received != "Received":
         return
 
