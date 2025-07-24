@@ -1,6 +1,6 @@
 import frappe
 from erpnext.stock.get_item_details import get_item_details
-from rapidfuzz import process
+from rapidfuzz import fuzz, process
 
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.utils import to_dict
@@ -297,7 +297,16 @@ class Transaction:
         return self.guess_value(party.name, party_names)
 
     def guess_value(self, value, options, score_cutoff=80):
-        if result := process.extractOne(value, options, score_cutoff=score_cutoff):
+        # When `options` is a list:
+        #   extractOne("abcd", ["value1", "value2"])
+        #   Output: ("value1", 1, 0)
+
+        # When `options` is a dictionary:
+        #   extractOne("abcd", {"key": "value"})
+        #   Output: ("value", 75.0, "key")
+        if result := process.extractOne(
+            value, options, score_cutoff=score_cutoff, scorer=fuzz.token_set_ratio
+        ):
             if isinstance(options, dict):
                 return result[2]
             return result[0]
@@ -363,9 +372,7 @@ class Transaction:
                 **item_details,
                 **item,
                 "qty": item.quantity,
-                "rate": item.rate
-                if item.rate != 0
-                else item_details.get("price_list_rate", 0),
+                "rate": item.rate or item_details.get("price_list_rate", 0),
             }
         )
 
