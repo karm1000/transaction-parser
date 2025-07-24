@@ -22,15 +22,8 @@ class TransactionParserSettings(Document):
         if not self.parse_incoming_emails:
             return
 
-        transactions = set()
         email_accounts = set()
         for row in self.incoming_email_accounts:
-            if row.transaction in transactions:
-                frappe.throw(
-                    _(
-                        "Row #{0}: Duplicate transaction {1} in incoming email accounts."
-                    ).format(row.idx, row.transaction)
-                )
             if row.to_email in email_accounts:
                 frappe.throw(
                     _(
@@ -38,7 +31,6 @@ class TransactionParserSettings(Document):
                     ).format(row.idx, row.to_email)
                 )
 
-            transactions.add(row.transaction)
             email_accounts.add(row.to_email)
 
     def validate_party_email(self):

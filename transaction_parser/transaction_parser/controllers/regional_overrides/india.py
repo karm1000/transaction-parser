@@ -10,7 +10,7 @@ HSN_SCORE_CUTOFF = 90
 
 
 class IndiaTransaction(Transaction):
-    def __init__(self, user=None, party=None, default_company=None):
+    def __init__(self, party=None, default_company=None):
         if "india_compliance" not in frappe.get_installed_apps():
             frappe.throw(
                 _("Please install India Compliance app for India transactions")
@@ -18,9 +18,8 @@ class IndiaTransaction(Transaction):
 
         # Call the parent constructor (Transaction)
         super().__init__(
-            user=user,
             party=party,
-            default_company=default_company,
+            company=default_company,
         )
 
     ###################################

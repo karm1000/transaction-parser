@@ -34,7 +34,7 @@ def _parse(
     page_limit=None,
     user=None,
     party=None,
-    default_company=None,
+    company=None,
 ):
     try:
         file = None
@@ -44,7 +44,7 @@ def _parse(
         filename = file.file_name
 
         controller = get_controller(country, doctype)(
-            user=user, party=party, default_company=default_company
+            party=party, default_company=company
         )
         doc = controller.generate(file, ai_model, page_limit)
 
@@ -58,7 +58,7 @@ def _parse(
             ),
         }
 
-    except Exception:
+    except Exception as e:
         error_log = frappe.log_error(
             "Transaction Parser API Error",
             reference_doctype="File",
@@ -72,21 +72,23 @@ def _parse(
             "subject": message,
         }
 
-        email_failure(user, message)
+        email_failure(user, message, str(e), file)
 
     finally:
         enqueue_notification(**notification)
 
 
-def email_failure(user, message):
+def email_failure(user, subject, error_message, attachment):
     if not user:
         return
 
     recipient = frappe.db.get_value("User", user, "email")
 
-    # TODO: better msg and subject
     frappe.sendmail(
         recipients=recipient,
-        subject=_("Transaction Parser Error"),
-        message=message,
+        subject=subject,
+        message=_(
+            "Hello,<br><br>We were unable to process your email attachment for transaction parsing.<br><br>Error: {0}<br><br>Please check the attachment format and try again."
+        ).format(error_message),
+        attachments=attachment,
     )
