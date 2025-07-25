@@ -8,7 +8,7 @@ PARTY_TYPE_MAP = {
 
 
 def on_update(doc, method=None):
-    if doc.sent_or_received != "Received":
+    if doc.communication_type != "Communication" or doc.sent_or_received != "Received":
         return
 
     settings = frappe.get_cached_doc("Transaction Parser Settings")

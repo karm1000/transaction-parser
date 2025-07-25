@@ -77,9 +77,6 @@ def _parse(
 
 
 def email_failure(user, subject, error_message, file_url):
-    if not user:
-        return
-
     recipient = frappe.db.get_value("User", user, "email")
 
     frappe.sendmail(
@@ -88,9 +85,5 @@ def email_failure(user, subject, error_message, file_url):
         message=_(
             "Hello,<br><br>We were unable to process your email attachment for transaction parsing.<br><br>Error: {0}<br><br>Please check the attachment format and try again."
         ).format(error_message),
-        attachments=[
-            {
-                "file_url": file_url,
-            }
-        ],
+        attachments=[{"file_url": file_url}],
     )

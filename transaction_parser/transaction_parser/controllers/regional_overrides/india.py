@@ -16,11 +16,7 @@ class IndiaTransaction(Transaction):
                 _("Please install India Compliance app for India transactions")
             )
 
-        # Call the parent constructor (Transaction)
-        super().__init__(
-            party=party,
-            company=company,
-        )
+        super().__init__(party=party, company=company)
 
     ###################################
     ########## Output Schema ##########
