@@ -114,8 +114,6 @@ class SalesOrder(Transaction):
                 self.company_found_against = key
                 return found
 
-        return self.default_company
-
     ### Customer
 
     def get_customer(self):

@@ -1,5 +1,4 @@
 import frappe
-from frappe import _
 
 from transaction_parser.transaction_parser import _parse
 

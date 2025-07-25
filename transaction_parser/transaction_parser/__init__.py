@@ -43,9 +43,7 @@ def _parse(
         file = frappe.get_last_doc("File", filters={"file_url": file_url})
         filename = file.file_name
 
-        controller = get_controller(country, doctype)(
-            party=party, default_company=company
-        )
+        controller = get_controller(country, doctype)(party=party, company=company)
         doc = controller.generate(file, ai_model, page_limit)
 
         notification = {
