@@ -83,7 +83,7 @@ def email_failure(user, subject, error_message, file_url):
         recipients=recipient,
         subject=subject,
         message=_(
-            "Hello,<br><br>We were unable to process your email attachment for transaction parsing.<br><br>Error: {0}<br><br>Please check the attachment and try again."
+            "Hello,<br><br>We were unable to process your email attachment for transaction parsing.<br><br>Error: {0}<br><br>Please check the attachment and process it manually if required."
         ).format(error_message),
         attachments=[{"file_url": file_url}],
     )
