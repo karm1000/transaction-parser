@@ -78,19 +78,21 @@ class SalesOrder(Transaction):
             if (delivery_date := self.doc.delivery_date) and (delivery_date < today)
             else today
         )
-
-        # TODO: set a flag in SO (created from transaction parser)
         # TODO: validation of Sales Order on save.
 
     def set_missing_values(self):
         self.doc.set_missing_values()
+        self.doc.calculate_taxes_and_totals()
 
     ### Company
 
     def get_company(self):
+        self.company_found_against = None
+        if self.company:
+            return self.company
+
         party_type = "Company"
         fieldname = "name"
-        self.company_found_against = None
 
         company_identification_order = (
             ("vendor", self.data.vendor),
@@ -114,6 +116,9 @@ class SalesOrder(Transaction):
     ### Customer
 
     def get_customer(self):
+        if self.party:
+            return self.party
+
         party_type = "Customer"
         fieldname = "customer_name"
         # search

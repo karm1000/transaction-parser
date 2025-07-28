@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "creation": "2025-06-19 15:41:09.512592",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "transaction",
+  "to_email",
+  "company",
+  "user"
+ ],
+ "fields": [
+  {
+   "fieldname": "transaction",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Transaction",
+   "options": "Sales Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "to_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "To Email",
+   "options": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-07-24 15:29:48.487294",
+ "modified_by": "Administrator",
+ "module": "Transaction Parser",
+ "name": "Transaction Parser Email Account",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

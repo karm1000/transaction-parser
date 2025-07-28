@@ -7,10 +7,13 @@
  "field_order": [
   "api_tab",
   "enabled",
-  "section_break_jzhp",
+  "ai_model_section",
   "default_ai_model",
-  "section_break_ruid",
   "api_keys",
+  "email_configuration_section",
+  "parse_incoming_emails",
+  "incoming_email_accounts",
+  "party_emails",
   "custom_fields_tab",
   "custom_fields_section",
   "column_break_kdtw",
@@ -31,10 +34,6 @@
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
-  },
-  {
-   "fieldname": "section_break_jzhp",
-   "fieldtype": "Section Break"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -91,21 +90,48 @@
    "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini"
   },
   {
-   "fieldname": "section_break_ruid",
-   "fieldtype": "Section Break"
-  },
-  {
    "depends_on": "eval: doc.enabled",
    "fieldname": "api_keys",
    "fieldtype": "Table",
    "label": "API Keys",
    "options": "Transaction Parser API Key Item"
+  },
+  {
+   "default": "0",
+   "fieldname": "parse_incoming_emails",
+   "fieldtype": "Check",
+   "label": "Parse Incoming Emails"
+  },
+  {
+   "fieldname": "email_configuration_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "ai_model_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval: doc.parse_incoming_emails",
+   "description": "If an email is received on any of these Email Accounts, an attempt will be made to generate the specified Transaction from its attachments.",
+   "fieldname": "incoming_email_accounts",
+   "fieldtype": "Table",
+   "label": "Incoming Email Accounts",
+   "mandatory_depends_on": "eval: doc.parse_incoming_emails",
+   "options": "Transaction Parser Email Account"
+  },
+  {
+   "depends_on": "eval: doc.parse_incoming_emails",
+   "description": "Mapping Party based on Email Address",
+   "fieldname": "party_emails",
+   "fieldtype": "Table",
+   "label": "Party Emails",
+   "options": "Transaction Parser Party Email"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-04-01 15:05:50.838292",
+ "modified": "2025-07-24 16:28:22.196208",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
@@ -122,6 +148,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

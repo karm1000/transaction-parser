@@ -14,9 +14,47 @@ DOCTYPE = "Transaction Parser Settings"
 class TransactionParserSettings(Document):
     # TODO: can we check API creds?
     def validate(self):
-        self._validate_json_fields()
+        self.validate_incoming_email_accounts()
+        self.validate_party_email()
+        self.validate_json_fields()
 
-    def _validate_json_fields(self):
+    def validate_incoming_email_accounts(self):
+        if not self.parse_incoming_emails:
+            return
+
+        email_accounts = set()
+        for row in self.incoming_email_accounts:
+            if row.to_email in email_accounts:
+                frappe.throw(
+                    _(
+                        "Row #{0}: Duplicate email account {1} in incoming email accounts."
+                    ).format(row.idx, row.to_email)
+                )
+
+            email_accounts.add(row.to_email)
+
+    def validate_party_email(self):
+        if not self.parse_incoming_emails:
+            return
+
+        party_email_map = {}
+
+        for row in self.party_emails:
+            if row.party_type not in party_email_map:
+                party_email_map[row.party_type] = set()
+
+            if row.party_email in party_email_map[row.party_type]:
+                frappe.throw(
+                    _("Row #{0}: Duplicate email {1} for party type {2}.").format(
+                        row.idx,
+                        frappe.bold(row.party_email),
+                        frappe.bold(row.party_type),
+                    )
+                )
+
+            party_email_map[row.party_type].add(row.party_email)
+
+    def validate_json_fields(self):
         for field in self.meta.fields:
             self._validate_json_field(field)
 
@@ -31,7 +69,12 @@ class TransactionParserSettings(Document):
         try:
             to_dict(value)
         except Exception:
-            frappe.throw(_(f"Please provide a valid JSON value for {field.label}"))
+            frappe.clear_last_message()
+            frappe.throw(
+                _("Please provide a valid JSON value for {0}").format(
+                    frappe.bold(field.label)
+                )
+            )
 
 
 @frappe.whitelist()

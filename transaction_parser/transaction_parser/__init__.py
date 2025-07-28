@@ -26,7 +26,16 @@ def parse(doctype, country, file_url, ai_model=None, page_limit=None):
     )
 
 
-def _parse(country, doctype, file_url, ai_model=None, page_limit=None):
+def _parse(
+    country,
+    doctype,
+    file_url,
+    ai_model=None,
+    page_limit=None,
+    user=None,
+    party=None,
+    company=None,
+):
     try:
         file = None
         filename = file_url.split("/")[-1]
@@ -34,27 +43,47 @@ def _parse(country, doctype, file_url, ai_model=None, page_limit=None):
         file = frappe.get_last_doc("File", filters={"file_url": file_url})
         filename = file.file_name
 
-        controller = get_controller(country, doctype)()
+        controller = get_controller(country, doctype)(party=party, company=company)
         doc = controller.generate(file, ai_model, page_limit)
 
         notification = {
             "document_type": doctype,
             "document_name": doc.name,
-            "subject": _(f"{doctype} {doc.name} generated from {filename}"),
+            "subject": _("{0} {1} generated from {2}").format(
+                _(doctype),
+                doc.name,
+                filename,
+            ),
         }
 
-    except Exception:
+    except Exception as e:
         error_log = frappe.log_error(
             "Transaction Parser API Error",
             reference_doctype="File",
             reference_name=file.name if file else filename,
         )
+        message = _("Failed to generate {0} from {1}").format(_(doctype), filename)
 
         notification = {
             "document_type": error_log.doctype,
             "document_name": error_log.name,
-            "subject": _(f"Failed to generate {doctype} from {filename}"),
+            "subject": message,
         }
+
+        email_failure(user, message, str(e), file_url)
 
     finally:
         enqueue_notification(**notification)
+
+
+def email_failure(user, subject, error_message, file_url):
+    recipient = frappe.db.get_value("User", user, "email")
+
+    frappe.sendmail(
+        recipients=recipient,
+        subject=subject,
+        message=_(
+            "Hello,<br><br>We were unable to process your email attachment for transaction parsing.<br><br>Error: {0}<br><br>Please check the attachment and process it manually if required."
+        ).format(error_message),
+        attachments=[{"file_url": file_url}],
+    )
