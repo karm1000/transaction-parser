@@ -10,6 +10,10 @@
   "ai_model_section",
   "default_ai_model",
   "api_keys",
+  "configurations_section",
+  "transaction_configurations_column",
+  "auto_create_items",
+  "invoice_lookback_count",
   "email_configuration_section",
   "parse_incoming_emails",
   "incoming_email_accounts",
@@ -104,11 +108,13 @@
   },
   {
    "fieldname": "email_configuration_section",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Incoming Email Configurations"
   },
   {
    "fieldname": "ai_model_section",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "AI Model Configurations"
   },
   {
    "depends_on": "eval: doc.parse_incoming_emails",
@@ -126,12 +132,35 @@
    "fieldtype": "Table",
    "label": "Party Emails",
    "options": "Transaction Parser Party Email"
+  },
+  {
+   "fieldname": "configurations_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "invoice_lookback_count",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Number of Past Invoices to Consider for Item Code Selection",
+   "options": "3\n5",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_create_items",
+   "fieldtype": "Check",
+   "label": "Auto Create Item(s)"
+  },
+  {
+   "fieldname": "transaction_configurations_column",
+   "fieldtype": "Column Break",
+   "label": "Transaction Configurations"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-07-24 16:28:22.196208",
+ "modified": "2025-07-28 14:35:55.135117",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
