@@ -145,11 +145,7 @@ class SalesOrder(Transaction):
             if key == self.company_found_against:
                 continue
 
-            if (
-                found := self.guess_party(party, party_type, party_names)
-            ) and frappe.db.get_value(
-                "Customer", found, "customer_name"
-            ) != self.doc.company:
+            if found := self.guess_party(party, party_type, party_names):
                 return found
 
     # def create_party(self):
