@@ -50,7 +50,7 @@ frappe.listview_settings[DOCTYPE].onload = async function (list_view) {
 				frappe.call({
 					method: "transaction_parser.transaction_parser.parse",
 					args: {
-						doctype: DOCTYPE,
+						transaction: DOCTYPE,
 						...values,
 					},
 					callback: function () {

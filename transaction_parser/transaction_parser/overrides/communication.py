@@ -52,7 +52,7 @@ def process_attachments(doc, settings, matched_account, attachments):
         frappe.enqueue(
             _parse,
             country=frappe.db.get_value("Company", matched_account.company, "country"),
-            doctype=matched_account.transaction,
+            transaction=matched_account.transaction,
             file_url=attachment.file_url,
             ai_model=settings.default_ai_model,
             user=matched_account.user,
