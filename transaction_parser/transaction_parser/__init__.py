@@ -68,6 +68,7 @@ def _parse(
             "document_type": error_log.doctype,
             "document_name": error_log.name,
             "subject": message,
+            "message": str(e),
         }
 
         email_failure(user, message, str(e), file_url)
