@@ -1,5 +1,6 @@
 import frappe
 
+from transaction_parser.transaction_parser.controllers.expense import Expense
 from transaction_parser.transaction_parser.controllers.sales_order import SalesOrder
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
@@ -57,4 +58,8 @@ class OtherTransaction(Transaction):
 
 
 class OtherSalesOrder(SalesOrder, OtherTransaction):
+    pass
+
+
+class OtherExpense(Expense, OtherTransaction):
     pass
