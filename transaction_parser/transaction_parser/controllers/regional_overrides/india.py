@@ -1,5 +1,7 @@
 import frappe
 from frappe import _
+from india_compliance.gst_india.overrides.party import create_primary_address
+from india_compliance.gst_india.utils.gstin_info import _get_gstin_info
 
 from transaction_parser.transaction_parser.controllers.expense import Expense
 from transaction_parser.transaction_parser.controllers.sales_order import SalesOrder
@@ -153,4 +155,45 @@ class IndiaSalesOrder(SalesOrder, IndiaTransaction):
 
 
 class IndiaExpense(Expense, IndiaTransaction):
-    pass
+    def get_supplier(self):
+        if found := super().get_supplier():
+            return found
+
+        if not self.settings.in_auto_create_supplier:
+            return
+
+        return self.create_supplier()
+
+    def create_supplier(self):
+        gstin = self.data.supplier.gstin
+        if not gstin:
+            return
+
+        try:
+            gstin_info = _get_gstin_info(gstin)
+            address = gstin_info.permanent_address
+            if not address:
+                return
+
+            address = frappe._dict(address)
+
+            supplier = frappe.new_doc("Supplier")
+            supplier.update(
+                {
+                    "supplier_name": gstin_info.business_name,
+                    "gstin": gstin_info.gstin,
+                    "_address_line1": address.address_line1,
+                    "address_line2": address.address_line2,
+                    "city": address.city,
+                    "state": address.state,
+                    "country": address.country,
+                    "pincode": address.pincode,
+                }
+            )
+            supplier.save(ignore_permissions=True)
+            create_primary_address(supplier)
+
+            return supplier.name
+
+        except Exception as e:
+            frappe.log_error(title="Error creating supplier from GSTIN", message=str(e))

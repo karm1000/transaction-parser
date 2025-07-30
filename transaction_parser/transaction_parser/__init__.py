@@ -8,6 +8,11 @@ from transaction_parser.transaction_parser.utils.notification import (
     enqueue_notification,
 )
 
+TRANSACTION_MAP = {
+    "Sales Order": "Sales Order",
+    "Expense": "Purchase Invoice",
+}
+
 
 @frappe.whitelist()
 def parse(transaction, country, file_url, ai_model=None, page_limit=None):
@@ -47,10 +52,10 @@ def _parse(
         doc = controller.generate(file, ai_model, page_limit)
 
         notification = {
-            "document_type": transaction,
+            "document_type": TRANSACTION_MAP[transaction],
             "document_name": doc.name,
             "subject": _("{0} {1} generated from {2}").format(
-                _(transaction),
+                _(TRANSACTION_MAP[transaction]),
                 doc.name,
                 filename,
             ),
