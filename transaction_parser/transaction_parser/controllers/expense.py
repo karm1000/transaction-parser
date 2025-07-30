@@ -30,7 +30,7 @@ class Expense(Transaction):
     def set_details(self):
         self.doc.company = self.get_company()
         if not self.doc.company:
-            frappe.throw("Company not found")
+            frappe.throw(_("Company not found"))
 
         self.doc.supplier = self.get_supplier()
 
