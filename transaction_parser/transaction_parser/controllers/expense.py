@@ -71,7 +71,7 @@ class Expense(Transaction):
         self.doc.calculate_taxes_and_totals()
 
     def get_company(self):
-        self.company_found_against = None
+        self.company_found_against = "company"
         if self.company:
             return self.company
 
@@ -98,6 +98,7 @@ class Expense(Transaction):
                 return found
 
     def get_supplier(self):
+        self.supplier_found_against = "supplier"
         if self.party:
             return self.party
 
@@ -116,6 +117,7 @@ class Expense(Transaction):
                 continue
 
             if found := self.search_party(party, party_type, fieldname):
+                self.supplier_found_against = key
                 return found
 
         # guess
@@ -127,31 +129,42 @@ class Expense(Transaction):
                 continue
 
             if found := self.guess_party(party, party_type, party_names):
+                self.supplier_found_against = key
                 return found
 
     def get_company_billing_address(self):
-        if found := self.get_address(
-            frappe._dict({**self.data.company.billing, "name": self.doc.company}),
-            "Company",
-            self.data.company.billing,
-        ):
-            return found
+        return self._get_company_address("billing")
 
     def get_company_shipping_address(self):
-        if found := self.get_address(
-            frappe._dict({**self.data.company.shipping, "name": self.doc.company}),
+        return self._get_company_address("shipping")
+
+    def _get_company_address(self, address_type):
+        address_details = (
+            getattr(self.data.company, address_type)
+            if self.company_found_against == "company"
+            else self.data.supplier
+        )
+
+        return self.get_address(
+            frappe._dict({**address_details, "name": self.doc.company}),
             "Company",
-            self.data.company.shipping,
-        ):
-            return found
+            address_details,
+        )
 
     def get_supplier_address(self):
-        if found := self.get_address(
-            frappe._dict({**self.data.supplier, "name": self.doc.supplier}),
-            "Supplier",
-            self.data.supplier,
-        ):
-            return found
+        supplier_address_details = (
+            (self.data.supplier,)
+            if self.supplier_found_against == "supplier"
+            else (self.data.company.billing, self.data.company.shipping)
+        )
+
+        for detail in supplier_address_details:
+            if found := self.get_address(
+                frappe._dict({**detail, "name": self.doc.supplier}),
+                "Supplier",
+                detail,
+            ):
+                return found
 
     def get_items(self):
         # TODO: Complex logic to handle items
@@ -160,7 +173,7 @@ class Expense(Transaction):
 
         # Main logic
 
-        return
+        return []
 
     def get_item(self, item, item_code, **kwargs):
         kwargs["supplier"] = self.doc.supplier
