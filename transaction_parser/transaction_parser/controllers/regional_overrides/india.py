@@ -34,8 +34,8 @@ class IndiaTransaction(Transaction):
     def get_default_party_schema(self):
         return {
             **super().get_default_party_schema(),
-            "gstin": "string (GST Identification Number)",
             "pan": "string (Permanent Account Number)",
+            "gstin": "string (GST Identification Number) (The GST number has 15 digits : - The first 2 numbers are the State code of the registered person. - The next 10 characters are the 'pan'. - The next number is the entity number. - The next character is the character Z by default. - The last number is a check code, used to check for errors.)",
         }
 
     ##################################
