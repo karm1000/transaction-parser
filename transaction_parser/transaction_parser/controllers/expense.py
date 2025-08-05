@@ -15,7 +15,7 @@ class Expense(Transaction):
     def get_default_schema(self):
         return {
             **super().get_default_schema(),
-            "sales_order_date": "date | null (Also called `Order Date`. It can be different than Document Date)",
+            "purchase_order_date": "date | null (Also called `Order Date`. It can be different than Document Date)",
             "company": {
                 "shipping": self.get_party_schema(),
                 "billing": self.get_party_schema(),
@@ -45,7 +45,7 @@ class Expense(Transaction):
                 ).format(existing_invoice=existing_invoice, bill_no=self.doc.bill_no)
             )
 
-        self.doc.bill_date = self.data.sales_order_date
+        self.doc.bill_date = self.data.purchase_order_date
         self.doc.currency = self.data.currency or None
 
         self.doc.billing_address = self.get_company_billing_address()
@@ -120,7 +120,7 @@ class Expense(Transaction):
 
         # guess
         party_names = dict(
-            frappe.get_all(party_type, fields=["name", "supplier_name"], as_list=True)
+            frappe.get_all(party_type, fields=["name", fieldname], as_list=True)
         )
         for key, party in supplier_identification_order:
             if key == self.company_found_against:

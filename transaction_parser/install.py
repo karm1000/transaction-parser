@@ -30,7 +30,7 @@ INDIA_SPECIFIC_CUSTOM_FIELDS = {
             "fieldname": "in_auto_create_supplier",
             "fieldtype": "Check",
             "label": "Auto Create Supplier",
-            "insert_after": "auto_create_items",
+            "insert_after": "invoice_lookback_count",
             "description": "Automatically create a supplier based on GSTIN from the invoice",
         }
     ]

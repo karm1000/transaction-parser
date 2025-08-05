@@ -196,4 +196,5 @@ class IndiaExpense(Expense, IndiaTransaction):
             return supplier.name
 
         except Exception as e:
-            frappe.log_error(title="Error creating supplier from GSTIN", message=str(e))
+            frappe.log_error(title="Error creating supplier from GSTIN")
+            raise e
