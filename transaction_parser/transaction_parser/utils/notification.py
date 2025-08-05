@@ -17,4 +17,4 @@ def create_notification(document_type, document_name, subject, message=None):
             "email_content": message,
         }
     )
-    notification.insert()
+    notification.insert(ignore_permissions=True)

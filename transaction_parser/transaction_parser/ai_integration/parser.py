@@ -87,6 +87,10 @@ class AIParser:
             if key.service_provider == self.model.service_provider:
                 return key.get_password("api_key")
 
+        frappe.throw(
+            _("API Key not found for model {0}").format(self.model.service_provider)
+        )
+
     def get_response(self, response):
         if not response:
             frappe.throw(_("No response received"))
