@@ -324,9 +324,6 @@ class Expense(Transaction):
                 row.expense_account = expense_account_mappings.get(row.description)
 
     def get_expense_account_mapping(self, expense_accounts, item_descriptions):
-        item_descriptions = frappe.get_all(
-            "Item", filters={"is_stock_item": 0}, pluck="description"
-        )
         messages = (
             {
                 "role": "system",
@@ -344,6 +341,5 @@ class Expense(Transaction):
 
         ai_parser = AIParser(self.ai_model)
         response_data = ai_parser.get_content(ai_parser.send_message(messages=messages))
-        print(response_data)
 
         return {row.item_description: row.expense_account for row in response_data}
