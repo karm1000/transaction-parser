@@ -1,10 +1,17 @@
 import frappe
 from frappe import _
 
+from transaction_parser.transaction_parser.ai_integration.parser import AIParser
+from transaction_parser.transaction_parser.ai_integration.prompts import (
+    get_expense_account_system_prompt,
+    get_expense_account_user_prompt,
+)
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
 
 class Expense(Transaction):
+    """Expense transaction processor for Purchase Invoices."""
+
     DOCTYPE = "Purchase Invoice"
     PARTY_DOCTYPE = "Supplier"
 
@@ -12,10 +19,11 @@ class Expense(Transaction):
     ########## Output Schema ##########
     ###################################
 
-    def get_default_schema(self):
+    def get_default_schema(self) -> dict:
         return {
             **super().get_default_schema(),
             "purchase_order_date": "date | null (Also called `Order Date`. It can be different than Document Date)",
+            "purchase_order_number": "string | null (Purchase Order number if available)",
             "company": {
                 "shipping": self.get_party_schema(),
                 "billing": self.get_party_schema(),
@@ -27,7 +35,7 @@ class Expense(Transaction):
     ########## Data Mapping ##########
     ##################################
 
-    def set_details(self):
+    def set_details(self) -> None:
         self.doc.company = self.get_company()
         if not self.doc.company:
             frappe.throw(_("Company not found"))
@@ -64,13 +72,14 @@ class Expense(Transaction):
         )
 
         self.doc.items = self.get_items()
+        self.set_expense_accounts()
         self.doc.terms = self.get_terms()
 
-    def set_missing_values(self):
+    def set_missing_values(self) -> None:
         self.doc.set_missing_values()
         self.doc.calculate_taxes_and_totals()
 
-    def get_company(self):
+    def get_company(self) -> str | None:
         self.company_found_against = "company"
         if self.company:
             return self.company
@@ -97,7 +106,7 @@ class Expense(Transaction):
                 self.company_found_against = key
                 return found
 
-    def get_supplier(self):
+    def get_supplier(self) -> str | None:
         self.supplier_found_against = "supplier"
         if self.party:
             return self.party
@@ -138,7 +147,7 @@ class Expense(Transaction):
     def get_company_shipping_address(self):
         return self._get_company_address("shipping")
 
-    def _get_company_address(self, address_type):
+    def _get_company_address(self, address_type: str):
         address_details = (
             getattr(self.data.company, address_type)
             if self.company_found_against == "company"
@@ -166,14 +175,113 @@ class Expense(Transaction):
             ):
                 return found
 
-    def get_items(self):
-        # TODO: Complex logic to handle items
+    def get_items(self) -> list:
         if not self.data.item_list:
             return []
 
-        # Main logic
+        items = []
+        mapped_indices = set()
 
-        return []
+        # Try mapping using Purchase Order if available
+        po_number = self.data.purchase_order_number
+        if po_number:
+            self.map_purchase_order_items(po_number, items, mapped_indices)
+
+        latest_items = self.get_latest_items(self.doc.supplier)
+
+        # For remaining items, try matching with latest items
+        for index, item in enumerate(self.data.item_list):
+            if index in mapped_indices:
+                continue
+
+            choices = {row.item_code: row.description for row in latest_items}
+            expense_account_map = {
+                row.item_code: row.expense_account for row in latest_items
+            }
+
+            if choices:
+                matched_item_code = self.guess_value(item.description, choices)
+                if matched_item_code:
+                    items.append(
+                        self.get_item(
+                            item,
+                            matched_item_code,
+                            expense_account=expense_account_map.get(
+                                matched_item_code, None
+                            ),
+                        )
+                    )
+                    continue
+
+            # If no match, just use description, rate, qty
+            items.append(
+                self.get_item(
+                    item,
+                    None,
+                    expense_account=None,
+                )
+            )
+
+        return items
+
+    def map_purchase_order_items(
+        self, po_number: str, items: list, mapped_indices: set
+    ) -> None:
+        """Map items from Purchase Order."""
+        if not frappe.db.exists("Purchase Order", po_number):
+            return
+
+        po = frappe.get_doc("Purchase Order", po_number)
+        if po.company != self.doc.company:
+            return
+
+        for index, item in enumerate(self.data.item_list):
+            for po_item in po.items:
+                if po_item.get("mapped"):
+                    continue
+
+                if (
+                    abs(item.rate - po_item.rate) < 0.01
+                    and abs(item.quantity - po_item.qty) < 0.01
+                ):
+                    items.append(
+                        self.get_item(
+                            item,
+                            po_item.item_code,
+                            expense_account=po_item.expense_account,
+                            purchase_order=po.name,
+                        )
+                    )
+                    mapped_indices.add(index)
+                    po_item.mapped = True
+                    break
+
+    def get_latest_items(self, supplier):
+        invoices = frappe.get_all(
+            "Purchase Invoice",
+            filters={"supplier": supplier, "docstatus": 1},
+            limit=self.settings.invoice_lookback_count,
+            pluck="name",
+        )
+        if not invoices:
+            return []
+
+        PURCHASE_INVOICE_ITEM = frappe.qb.DocType("Purchase Invoice Item")
+        ITEM = frappe.qb.DocType("Item")
+
+        return (
+            frappe.qb.from_(PURCHASE_INVOICE_ITEM)
+            .join(ITEM)
+            .on(PURCHASE_INVOICE_ITEM.item_code == ITEM.name)
+            .select(
+                PURCHASE_INVOICE_ITEM.item_code,
+                PURCHASE_INVOICE_ITEM.description,
+                PURCHASE_INVOICE_ITEM.expense_account,
+            )
+            .where(PURCHASE_INVOICE_ITEM.parent.isin(invoices))
+            .where(ITEM.is_stock_item == 0)
+            .run(as_dict=True)
+        )
 
     def get_item(self, item, item_code, **kwargs):
         kwargs["supplier"] = self.doc.supplier
@@ -185,3 +293,57 @@ class Expense(Transaction):
                 "parentfield": "items",
             }
         )
+
+    def set_expense_accounts(self):
+        """Set expense accounts for items using AI mapping."""
+        items = [row for row in self.doc.items if not row.expense_account]
+        if not items:
+            return
+
+        expense_accounts = dict(
+            frappe.get_all(
+                "Account",
+                filters={
+                    "root_type": "Expense",
+                    "is_group": 0,
+                    "company": self.doc.company,
+                },
+                fields=["name", "account_name"],
+                as_list=True,
+            )
+        )
+
+        item_descriptions = [row.description for row in items]
+
+        expense_account_mappings = self.get_expense_account_mapping(
+            expense_accounts, item_descriptions
+        )
+
+        for row in self.doc.items:
+            if not row.expense_account:
+                row.expense_account = expense_account_mappings.get(row.description)
+
+    def get_expense_account_mapping(self, expense_accounts, item_descriptions):
+        item_descriptions = frappe.get_all(
+            "Item", filters={"is_stock_item": 0}, pluck="description"
+        )
+        messages = (
+            {
+                "role": "system",
+                "content": get_expense_account_system_prompt(
+                    self.get_expense_account_schema()
+                ),
+            },
+            {
+                "role": "user",
+                "content": get_expense_account_user_prompt(
+                    expense_accounts, item_descriptions
+                ),
+            },
+        )
+
+        ai_parser = AIParser(self.ai_model)
+        response_data = ai_parser.get_content(ai_parser.send_message(messages=messages))
+        print(response_data)
+
+        return {row.item_description: row.expense_account for row in response_data}
