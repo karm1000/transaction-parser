@@ -28,7 +28,7 @@ class Transaction:
 
     def generate(
         self, file, ai_model: str | None = None, page_limit: int | None = None
-    ) -> frappe.Document:
+    ):
         self.initialize()
 
         self.file = file
@@ -378,7 +378,7 @@ class Transaction:
     def get_payment_schedule(self) -> list:
         return [self.get_payment_schedule_doc(term) for term in self.data.payment_terms]
 
-    def get_payment_schedule_doc(self, term) -> frappe.Document:
+    def get_payment_schedule_doc(self, term):
         return frappe.get_doc(
             {
                 "doctype": "Payment Schedule",
