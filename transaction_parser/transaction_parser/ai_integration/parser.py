@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 import frappe
 from frappe import _
@@ -16,19 +17,37 @@ from transaction_parser.transaction_parser.utils.integration_request import (
 
 
 class AIParser:
-    def __init__(self, model=None, settings=None):
+    def __init__(self, model: str | None = None, settings=None):
         self.settings = settings or frappe.get_cached_doc("Transaction Parser Settings")
 
         is_enabled(self.settings)
 
-        self.model = MODELS.get(model) or MODELS.get(self.settings.default_ai_model)
+        self.model = self._get_model(model)
         if not self.model:
             frappe.throw(_(f"AI Model: {model} not found"))
 
-    def parse(self, document_type, document_schema, document_data, file_doc_name):
+    def _get_model(self, model_name: str | None):
+        return MODELS.get(model_name) or MODELS.get(self.settings.default_ai_model)
+
+    def parse(
+        self,
+        document_type: str,
+        document_schema: dict,
+        document_data: str,
+        file_doc_name: str | None = None,
+    ) -> dict:
+        messages = self._build_messages(document_type, document_schema, document_data)
+        response = self.send_message(messages=messages, file_doc_name=file_doc_name)
+        return self.get_content(response)
+
+    def _build_messages(
+        self, document_type: str, document_schema: dict, document_data: str
+    ) -> tuple:
+        """Build the message structure for AI API call."""
         system_prompt = get_system_prompt(document_schema)
         user_prompt = get_user_prompt(document_type, document_data)
-        messages = (
+
+        return (
             {
                 "role": "system",
                 "content": system_prompt,
@@ -39,41 +58,21 @@ class AIParser:
             },
         )
 
-        return self.get_content(
-            self.send_message(messages=messages, file_doc_name=file_doc_name)
-        )
-
-    def send_message(self, messages, file_doc_name):
-        log = frappe._dict(
-            {
-                "reference_doctype": "File",
-                "reference_name": file_doc_name,
-                "url": self.model.base_url,
-            }
-        )
+    def send_message(self, messages: tuple, file_doc_name: str | None = None) -> dict:
+        """Send messages to AI API and handle the response."""
+        log = self._create_log_entry(file_doc_name)
 
         try:
-            with OpenAI(
-                api_key=self.get_api_key(),
-                base_url=self.model.base_url,
-            ) as client:
-                response = client.chat.completions.create(
-                    model=self.model.name,
-                    messages=messages,
-                    response_format={"type": self.model.response_format},
-                    stream=False,
-                    temperature=0.7,
-                )
-
+            response = self._make_api_call(messages)
             log.request_id = response.id
 
-            response = response.to_dict()
-            log.output = response
+            response_dict = response.to_dict()
+            log.output = response_dict
 
-            response = self.get_response(response)
-            log.output = response
+            processed_response = self._process_response(response_dict)
+            log.output = processed_response
 
-            return response
+            return processed_response
 
         except Exception as e:
             log.error = str(e)
@@ -82,7 +81,43 @@ class AIParser:
         finally:
             enqueue_integration_request(**log)
 
-    def get_api_key(self):
+    def _create_log_entry(self, file_doc_name: str | None) -> frappe._dict:
+        """Create a log entry for the API call."""
+        log = frappe._dict(url=self.model.base_url)
+        if file_doc_name:
+            log.update(
+                {
+                    "reference_doctype": "File",
+                    "reference_name": file_doc_name,
+                }
+            )
+        return log
+
+    def _make_api_call(self, messages: tuple) -> Any:
+        """Make the actual API call to the AI service."""
+        with OpenAI(
+            api_key=self.get_api_key(),
+            base_url=self.model.base_url,
+        ) as client:
+            return client.chat.completions.create(
+                model=self.model.name,
+                messages=messages,
+                response_format={"type": self.model.response_format},
+                stream=False,
+                temperature=0.7,
+            )
+
+    def _process_response(self, response: dict) -> dict:
+        """Process the API response and extract content."""
+        if not response:
+            frappe.throw(_("No response received from AI service"))
+
+        content = self.get_content(response)
+        response["choices"][0]["message"]["content"] = content
+        return response
+
+    def get_api_key(self) -> str:
+        """Get the API key for the configured model service provider."""
         for key in self.settings.api_keys:
             if key.service_provider == self.model.service_provider:
                 return key.get_password("api_key")
@@ -91,24 +126,17 @@ class AIParser:
             _("API Key not found for model {0}").format(self.model.service_provider)
         )
 
-    def get_response(self, response):
-        if not response:
-            frappe.throw(_("No response received"))
-
-        response["choices"][0]["message"]["content"] = self.get_content(response)
-
-        return response
-
-    def get_content(self, response):
+    def get_content(self, response: dict) -> dict | str:
+        """Extract content from API response."""
         content = response["choices"][0]["message"]["content"]
 
         if not isinstance(content, str):
             return content
 
-        return self._get_content(content)
+        return self._parse_content(content)
 
-    def _get_content(self, content):
-        # TODO: robust json decoder
+    def _parse_content(self, content: str) -> dict:
+        """Parse string content to extract JSON data."""
         if not content:
             frappe.throw(_("No response content received"))
 
