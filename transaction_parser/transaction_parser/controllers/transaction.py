@@ -150,7 +150,6 @@ class Transaction:
             "rate": "float",
             "amount": "float (sometimes called `net amount`)",
             "discount": "float | 0",
-            "discount_percentage": "float | 0",
             "taxes": [self.get_tax_schema()],
             "total_tax_percentage": "float | null",
             "total_tax_amount": "float | null",
@@ -362,14 +361,15 @@ class Transaction:
                 }
             )
 
+        if item.discount:
+            self.doc.discount_amount += item.discount
+
         return frappe._dict(
             {
                 **item_details,
                 **item,
                 "qty": item.quantity,
                 "rate": item.rate or item_details.get("price_list_rate", 0),
-                "price_list_rate": item.rate or item_details.get("price_list_rate", 0),
-                "discount_percentage": item.discount_percentage or 0,
             }
         )
 
