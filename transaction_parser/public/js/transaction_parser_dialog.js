@@ -72,6 +72,13 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 	});
 }
 
+frappe.provide("transaction_parser");
+
+// eslint-disable-next-line no-undef
+Object.assign(transaction_parser, {
+	create_transaction_parser_dialog,
+});
+
 async function get_available_ai_models() {
 	const res = await frappe.call({
 		method: "transaction_parser.transaction_parser.doctype.transaction_parser_settings.transaction_parser_settings.get_ai_models",
@@ -83,3 +90,5 @@ function get_default_country() {
 	const user_country = frappe.defaults.get_default("Country");
 	return SUPPORTED_COUNTRIES.includes(user_country) ? user_country : "Other";
 }
+
+window.transaction_parser = transaction_parser; // eslint-disable-line no-undef
