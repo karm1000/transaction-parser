@@ -90,5 +90,3 @@ function get_default_country() {
 	const user_country = frappe.defaults.get_default("Country");
 	return SUPPORTED_COUNTRIES.includes(user_country) ? user_country : "Other";
 }
-
-window.transaction_parser = transaction_parser; // eslint-disable-line no-undef
