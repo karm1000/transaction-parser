@@ -362,7 +362,7 @@ class Transaction:
             )
 
         if item.discount:
-            self.doc.discount_amount += item.discount
+            self.doc.discount_amount = (self.doc.discount_amount or 0) + item.discount
 
         return frappe._dict(
             {
