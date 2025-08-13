@@ -1,5 +1,8 @@
+from collections import defaultdict
+
 import frappe
 from frappe import _
+from frappe.query_builder import Criterion
 
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.ai_integration.prompts import (
@@ -7,6 +10,12 @@ from transaction_parser.transaction_parser.ai_integration.prompts import (
     get_expense_account_user_prompt,
 )
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
+
+ACCOUNT_FIELDNAME_MAP = {
+    "CGST": "cgst_account",
+    "SGST": "sgst_account",
+    "IGST": "igst_account",
+}
 
 
 class Expense(Transaction):
@@ -71,6 +80,7 @@ class Expense(Transaction):
             ),
         )
 
+        self.set_item_tax_template()
         self.doc.items = self.get_items()
         self.set_expense_accounts()
         self.doc.terms = self.get_terms()
@@ -207,6 +217,7 @@ class Expense(Transaction):
                             item,
                             matched_item_code,
                             expense_account=expense_account_map.get(matched_item_code),
+                            item_tax_template=item.item_tax_template,
                         )
                     )
                     continue
@@ -217,6 +228,7 @@ class Expense(Transaction):
                     item,
                     None,
                     expense_account=None,
+                    item_tax_template=item.item_tax_template,
                 )
             )
 
@@ -248,6 +260,7 @@ class Expense(Transaction):
                             po_item.item_code,
                             expense_account=po_item.expense_account,
                             purchase_order=po.name,
+                            item_tax_template=item.item_tax_template,
                         )
                     )
                     mapped_indices.add(index)
@@ -320,6 +333,67 @@ class Expense(Transaction):
         for row in self.doc.items:
             if not row.expense_account:
                 row.expense_account = expense_account_mappings.get(row.description)
+
+    def set_item_tax_template(self):
+        # Step 1: Prepare item -> account/rate mapping
+        item_conditions_map = self.get_item_conditions_map()
+        if not item_conditions_map:
+            return
+
+        # Step 2: Build one big OR condition for all accounts across items
+        ITT = frappe.qb.DocType("Item Tax Template")
+        ITTD = frappe.qb.DocType("Item Tax Template Detail")
+        tax_template_conditions = []
+        for accounts in item_conditions_map.values():
+            for account, rate in accounts.items():
+                tax_template_conditions.append(
+                    (ITTD.tax_type == account) & (ITTD.tax_rate == rate)
+                )
+
+        # Step 3: Query all matching templates in one go
+        results = (
+            frappe.qb.from_(ITT)
+            .join(ITTD)
+            .on(ITT.name == ITTD.parent)
+            .select(ITT.name, ITTD.tax_type, ITTD.tax_rate)
+            .where(ITT.company == self.doc.company)
+            .where(Criterion.any(tax_template_conditions))
+            .run(as_dict=True)
+        )
+
+        # Step 4: Group template rows
+        template_map = defaultdict(set)
+        for r in results:
+            template_map[r.name].add((r.tax_type, r.tax_rate))
+
+        # Step 5: Match templates back to each item
+        for idx, accounts in item_conditions_map.items():
+            for template, pairs in template_map.items():
+                if pairs.issuperset(accounts.items()):
+                    self.data.item_list[idx].item_tax_template = template
+                    break
+
+    def get_input_tax_accounts(self):
+        return frappe.db.get_value(
+            "GST Account",
+            {"company": self.doc.company, "account_type": "Input"},
+            fieldname=["cgst_account", "igst_account", "sgst_account"],
+            as_dict=True,
+        )
+
+    def get_item_conditions_map(self):
+        tax_accounts = self.get_input_tax_accounts()
+        item_conditions_map = {}
+        for idx, row in enumerate(self.data.item_list):
+            accounts = {}
+            for tax in row.taxes:
+                account = tax_accounts.get(ACCOUNT_FIELDNAME_MAP.get(tax.description))
+                if account:
+                    accounts[account] = tax.percentage
+            if accounts:
+                item_conditions_map[idx] = accounts
+
+        return item_conditions_map
 
     def get_expense_account_mapping(self, expense_accounts, item_descriptions):
         messages = (
