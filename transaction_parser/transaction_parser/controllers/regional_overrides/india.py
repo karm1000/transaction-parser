@@ -37,8 +37,8 @@ class IndiaTransaction(Transaction):
     def get_default_party_schema(self) -> dict:
         return {
             **super().get_default_party_schema(),
-            "pan": "string (Permanent Account Number)",
-            "gstin": "string (GST Identification Number) (The GST number has 15 digits : - The first 2 numbers are the State code of the registered person. - The next 10 characters are the 'pan'. - The next number is the entity number. - The next character is the character Z by default. - The last number is a check code, used to check for errors.)",
+            "pan": "string - Permanent Account Number (exactly 10 characters, regex: ^[A-Z]{5}[0-9]{4}[A-Z]{1}$)",
+            "gstin": "string - GST Identification Number (exactly 15 characters containing pan, regex: ^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$)",
         }
 
     def get_default_tax_schema(self) -> dict:

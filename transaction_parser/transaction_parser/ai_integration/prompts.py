@@ -5,14 +5,6 @@ INPUT_DOCUMENTS = {"Sales Order": "Purchase Order", "Purchase Invoice": "Sales I
 
 
 def get_system_prompt(document_schema: dict) -> str:
-    """Generate system prompt for document parsing.
-
-    Args:
-        document_schema: JSON schema for the expected output
-
-    Returns:
-        Formatted system prompt string
-    """
     return f"""You are a JSON data extraction and validation expert for your company's ERP platform.
 You will be provided with text data extracted from a document and a JSON schema for the output.
 
@@ -43,15 +35,6 @@ JSON schema is given below:
 
 
 def get_user_prompt(document_type: str, document_data: str) -> str:
-    """Generate user prompt for document parsing.
-
-    Args:
-        document_type: Type of document to generate
-        document_data: Raw document content
-
-    Returns:
-        Formatted user prompt string
-    """
     input_doc_type = INPUT_DOCUMENTS.get(document_type, "document")
 
     return f"""Generate {document_type} for given {input_doc_type} according to above JSON schema.
@@ -60,44 +43,35 @@ Document data is given below:
 
 
 def get_expense_account_system_prompt(schema: dict) -> str:
-    """Generate system prompt for expense account mapping.
+    return f"""You are an intelligent ERP accounting assistant specialized in expense account classification. Your task is to analyze item descriptions and assign the most appropriate expense account to each item based on its nature, usage, or purpose.
 
-    Args:
-        schema: JSON schema for expense account mapping output
+When provided with item descriptions and a list of available expense accounts, you must:
 
-    Returns:
-        Formatted system prompt string
-    """
-    return f"""You are an intelligent ERP accounting assistant.
+1. Carefully analyze each item description to understand what the item is and its typical business use
+2. Match each item to the most appropriate expense account from the provided list
+3. Consider the business context and standard accounting practices when making classifications
+4. Ensure accuracy and consistency in your classifications
 
-Your task is to assign the most appropriate expense account to every item description provided from the provided data. Choose the best match for each item from the provided Expense Accounts list, based on the nature, usage, or purpose of the item.
+Output Requirements:
+- Return results as a JSON array (list) format only
+- Do not wrap the array in any parent object or use keys like 'mappings' or 'expense_account_mappings'
+- Each array element must contain both the assigned expense account and the original item description
+- Always return an array format even for single items
+- Use the exact expense account names as provided in the input list
+- Use the exact item descriptions as provided in the input
 
-The output must strictly be a **JSON array**, not wrapped in any object. Do not use keys like 'mappings', 'expense_account_mappings', or anything else.
-Always return the output as a JSON **array (list)**, even if there is only one item.
+Be precise and consistent in your classifications, following standard business accounting principles.
 
 JSON schema for the output is given below:
-{schema}"""
+{schema}
+"""
 
 
 def get_expense_account_user_prompt(
     expense_accounts: list, item_descriptions: list
 ) -> str:
-    """Generate user prompt for expense account mapping.
+    return f"""Classify the following item descriptions into appropriate expense accounts from the provided list: {item_descriptions}
 
-    Args:
-        expense_accounts: List of available expense accounts
-        item_descriptions: List of item descriptions to map
-
-    Returns:
-        Formatted user prompt string
+Available expense accounts: {expense_accounts}
+Return only the mapping, no explanation.
     """
-    return f"""Map the following item descriptions to the most appropriate expense accounts from the list provided.
-Ensure that each item description is matched with the most relevant expense account based on its nature, usage, or purpose.
-
-Expense Accounts:
-{expense_accounts}
-
-Item Descriptions:
-{item_descriptions}
-
-Return only the mapping, no explanation."""

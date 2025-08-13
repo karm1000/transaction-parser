@@ -206,9 +206,7 @@ class Expense(Transaction):
                         self.get_item(
                             item,
                             matched_item_code,
-                            expense_account=expense_account_map.get(
-                                matched_item_code, None
-                            ),
+                            expense_account=expense_account_map.get(matched_item_code),
                         )
                     )
                     continue
