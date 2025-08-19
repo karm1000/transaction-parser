@@ -13,6 +13,15 @@ CUSTOM_FIELDS = {
             "insert_after": "is_internal_customer",
         }
     ],
+    "Purchase Invoice": [
+        {
+            "fieldname": "is_created_by_transaction_parser",
+            "fieldtype": "Check",
+            "label": "Is Created By Transaction Parser",
+            "read_only": 1,
+            "insert_after": "is_internal_supplier",
+        }
+    ],
     "Communication": [
         {
             "fieldname": "is_processed_by_transaction_parser",
