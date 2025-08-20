@@ -1,0 +1,44 @@
+{
+    "Company": [
+        {
+            "abbr": "_TC",
+            "company_name": "_Test Company",
+            "country": "India",
+            "default_currency": "INR",
+            "doctype": "Company",
+            "domain": "Manufacturing",
+            "chart_of_accounts": "Standard",
+            "enable_perpetual_inventory": 0
+        }
+    ],
+    "Item": [
+        {
+            "description": "_Test Sample Item",
+            "doctype": "Item",
+            "is_stock_item": 1,
+            "item_code": "_Test Sample Item",
+            "item_name": "_Test Sample Item",
+            "item_group": "All Item Groups",
+            "valuation_rate": 100,
+            "stock_uom": "Nos",
+            "uoms": [
+                {
+                    "conversion_factor": 1,
+                    "uom": "Nos",
+                    "name": "_Test Sample Item"
+                }
+            ],
+            "item_defaults": [
+                {
+                    "name": "_Test Sample Item",
+                    "company": "_Test Company",
+                    "default_warehouse": "Stores - _TC",
+                    "expense_account": "Cost of Goods Sold - _TC",
+                    "buying_cost_center": "Main - _TC",
+                    "selling_cost_center": "Main - _TC",
+                    "income_account": "Sales - _TC"
+                }
+            ]
+        }
+    ]
+}
