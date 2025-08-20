@@ -16,7 +16,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Transaction",
-   "options": "Sales Order",
+   "options": "Sales Order\nExpense",
    "reqd": 1
   },
   {
@@ -48,7 +48,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-07-24 15:29:48.487294",
+ "modified": "2025-07-28 12:07:41.956053",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Email Account",

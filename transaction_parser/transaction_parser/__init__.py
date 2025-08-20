@@ -8,17 +8,22 @@ from transaction_parser.transaction_parser.utils.notification import (
     enqueue_notification,
 )
 
+TRANSACTION_MAP = {
+    "Sales Order": "Sales Order",
+    "Expense": "Purchase Invoice",
+}
+
 
 @frappe.whitelist()
-def parse(doctype, country, file_url, ai_model=None, page_limit=None):
+def parse(transaction, country, file_url, ai_model=None, page_limit=None):
     is_enabled()
 
-    frappe.has_permission(doctype, "create", throw=True)
+    frappe.has_permission(transaction, "create", throw=True)
 
     frappe.enqueue(
         _parse,
         country=cstr(country),
-        doctype=cstr(doctype),
+        transaction=cstr(transaction),
         file_url=cstr(file_url),
         ai_model=cstr(ai_model),
         page_limit=cint(page_limit),
@@ -28,7 +33,7 @@ def parse(doctype, country, file_url, ai_model=None, page_limit=None):
 
 def _parse(
     country,
-    doctype,
+    transaction,
     file_url,
     ai_model=None,
     page_limit=None,
@@ -43,14 +48,14 @@ def _parse(
         file = frappe.get_last_doc("File", filters={"file_url": file_url})
         filename = file.file_name
 
-        controller = get_controller(country, doctype)(party=party, company=company)
+        controller = get_controller(country, transaction)(party=party, company=company)
         doc = controller.generate(file, ai_model, page_limit)
 
         notification = {
-            "document_type": doctype,
+            "document_type": TRANSACTION_MAP[transaction],
             "document_name": doc.name,
             "subject": _("{0} {1} generated from {2}").format(
-                _(doctype),
+                _(TRANSACTION_MAP[transaction]),
                 doc.name,
                 filename,
             ),
@@ -62,7 +67,7 @@ def _parse(
             reference_doctype="File",
             reference_name=file.name if file else filename,
         )
-        message = _("Failed to generate {0} from {1}").format(_(doctype), filename)
+        message = _("Failed to generate {0} from {1}").format(_(transaction), filename)
 
         notification = {
             "document_type": error_log.doctype,

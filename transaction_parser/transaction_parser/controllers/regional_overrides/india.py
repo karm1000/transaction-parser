@@ -1,16 +1,22 @@
 import frappe
 from frappe import _
+from india_compliance.gst_india.overrides.party import create_primary_address
+from india_compliance.gst_india.utils.gstin_info import _get_gstin_info
 
+from transaction_parser.transaction_parser.controllers.expense import Expense
 from transaction_parser.transaction_parser.controllers.sales_order import SalesOrder
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
 
+# Score cutoffs for fuzzy matching of Indian business identifiers
 GSTIN_SCORE_CUTOFF = 93
 PAN_SCORE_CUTOFF = 90
 HSN_SCORE_CUTOFF = 90
 
 
 class IndiaTransaction(Transaction):
-    def __init__(self, party=None, company=None):
+    """Transaction processor with India-specific features."""
+
+    def __init__(self, party: str | None = None, company: str | None = None):
         if "india_compliance" not in frappe.get_installed_apps():
             frappe.throw(
                 _("Please install India Compliance app for India transactions")
@@ -22,17 +28,23 @@ class IndiaTransaction(Transaction):
     ########## Output Schema ##########
     ###################################
 
-    def get_default_item_schema(self):
+    def get_default_item_schema(self) -> dict:
         return {
             **super().get_default_item_schema(),
             "hsn_code": "string",
         }
 
-    def get_default_party_schema(self):
+    def get_default_party_schema(self) -> dict:
         return {
             **super().get_default_party_schema(),
-            "gstin": "string (GST Identification Number)",
-            "pan": "string (Permanent Account Number)",
+            "pan": "string - Permanent Account Number (exactly 10 characters, regex: ^[A-Z]{5}[0-9]{4}[A-Z]{1}$)",
+            "gstin": "string - GST Identification Number (exactly 15 characters containing pan, regex: ^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$)",
+        }
+
+    def get_default_tax_schema(self) -> dict:
+        return {
+            **super().get_default_tax_schema(),
+            "description": "string (e.g., CGST, SGST, IGST, CESS, etc.)",
         }
 
     ##################################
@@ -41,7 +53,9 @@ class IndiaTransaction(Transaction):
 
     ### Party
 
-    def search_party(self, party, party_type, fieldname="name"):
+    def search_party(
+        self, party, party_type: str, fieldname: str = "name"
+    ) -> str | None:
         from india_compliance.gst_india.utils import get_party_for_gstin
 
         if self.is_valid_gstin(party.gstin):
@@ -54,7 +68,7 @@ class IndiaTransaction(Transaction):
 
         return super().search_party(party, party_type, fieldname)
 
-    def is_valid_gstin(self, gstin):
+    def is_valid_gstin(self, gstin: str | None) -> bool:
         from india_compliance.gst_india.utils import validate_gstin
 
         try:
@@ -63,7 +77,7 @@ class IndiaTransaction(Transaction):
         except frappe.ValidationError:
             return False
 
-    def is_valid_pan(self, pan):
+    def is_valid_pan(self, pan: str | None) -> bool:
         from india_compliance.gst_india.utils import is_valid_pan
 
         if not pan:
@@ -71,7 +85,9 @@ class IndiaTransaction(Transaction):
 
         return is_valid_pan(pan)
 
-    def guess_party(self, party, party_type, party_names=None):
+    def guess_party(
+        self, party, party_type: str, party_names: list | None = None
+    ) -> str | None:
         if party.gstin:
             party_gstins = frappe._dict(
                 frappe.db.get_all(
@@ -106,13 +122,13 @@ class IndiaTransaction(Transaction):
 
     ### Address
 
-    def search_address(self, party, address, erp_address):
+    def search_address(self, party, address, erp_address) -> str | None:
         if self.is_valid_gstin(party.gstin) and (party.gstin == erp_address.gstin):
             return erp_address.name
 
         return super().search_address(party, address, erp_address)
 
-    def guess_address(self, party, address, erp_addresses):
+    def guess_address(self, party, address, erp_addresses: list) -> str | None:
         gstin_map = {
             erp_address.gstin: erp_address.name for erp_address in erp_addresses
         }
@@ -126,7 +142,7 @@ class IndiaTransaction(Transaction):
 
     ### Item
 
-    def get_item(self, item, item_code, **kwargs):
+    def get_item(self, item, item_code: str | None, **kwargs) -> dict:
         return {
             **super().get_item(item, item_code, **kwargs),
             "gst_hsn_code": (
@@ -134,7 +150,7 @@ class IndiaTransaction(Transaction):
             ),
         }
 
-    def is_valid_hsn_code(self, hsn_code):
+    def is_valid_hsn_code(self, hsn_code: str | None) -> bool:
         from india_compliance.gst_india.doctype.gst_hsn_code.gst_hsn_code import (
             validate_hsn_code,
         )
@@ -149,3 +165,49 @@ class IndiaTransaction(Transaction):
 
 class IndiaSalesOrder(SalesOrder, IndiaTransaction):
     pass
+
+
+class IndiaExpense(Expense, IndiaTransaction):
+    def get_supplier(self) -> str | None:
+        if found := super().get_supplier():
+            return found
+
+        if not self.settings.in_auto_create_supplier:
+            return
+
+        return self.create_supplier()
+
+    def create_supplier(self) -> str | None:
+        gstin = self.data.supplier.gstin
+        if not gstin:
+            return
+
+        try:
+            gstin_info = _get_gstin_info(gstin)
+            address = gstin_info.permanent_address
+            if not address:
+                return
+
+            address = frappe._dict(address)
+
+            supplier = frappe.new_doc("Supplier")
+            supplier.update(
+                {
+                    "supplier_name": gstin_info.business_name,
+                    "gstin": gstin_info.gstin,
+                    "_address_line1": address.address_line1,
+                    "address_line2": address.address_line2,
+                    "city": address.city,
+                    "state": address.state,
+                    "country": address.country,
+                    "pincode": address.pincode,
+                }
+            )
+            supplier.save(ignore_permissions=True)
+            create_primary_address(supplier)
+
+            return supplier.name
+
+        except Exception as e:
+            frappe.log_error(title="Error creating supplier from GSTIN")
+            raise e

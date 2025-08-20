@@ -1,58 +1,75 @@
+from dataclasses import dataclass
 from enum import Enum
 
 
 class ResponseFormat(Enum):
+    """Enumeration for AI model response formats."""
+
     JSON = "json_object"
     TEXT = "text"
 
 
+@dataclass
 class Model:
-    name = None
-    service_provider = None
-    base_url = None
-    response_format = None
+    """Base model configuration for AI services."""
+
+    name: str
+    service_provider: str
+    base_url: str
+    response_format: str
 
 
-### deepseek
+### DeepSeek Models
 
 
-class DeepSeek(Model):
-    service_provider = "DeepSeek"
-    base_url = "https://api.deepseek.com"
-    response_format = ResponseFormat.JSON.value
+@dataclass
+class DeepSeekChat(Model):
+    """DeepSeek Chat model configuration."""
+
+    name: str = "deepseek-chat"
+    service_provider: str = "DeepSeek"
+    base_url: str = "https://api.deepseek.com"
+    response_format: str = ResponseFormat.JSON.value
 
 
-class DeepSeekChat(DeepSeek):
-    name = "deepseek-chat"
+@dataclass
+class DeepSeekReasoner(Model):
+    """DeepSeek Reasoner model configuration."""
+
+    name: str = "deepseek-reasoner"
+    service_provider: str = "DeepSeek"
+    base_url: str = "https://api.deepseek.com"
+    response_format: str = ResponseFormat.TEXT.value
 
 
-class DeepSeekReasoner(DeepSeek):
-    name = "deepseek-reasoner"
-    response_format = ResponseFormat.TEXT.value
+### OpenAI Models
 
 
-### openai
+@dataclass
+class OpenAIGPT4o(Model):
+    """OpenAI GPT-4o model configuration."""
+
+    name: str = "gpt-4o"
+    service_provider: str = "OpenAI"
+    base_url: str = "https://api.openai.com/v1"
+    response_format: str = ResponseFormat.JSON.value
 
 
-class OpenAI(Model):
-    service_provider = "OpenAI"
-    base_url = "https://api.openai.com/v1"
-    response_format = ResponseFormat.JSON.value
+@dataclass
+class OpenAIGPT4oMini(Model):
+    """OpenAI GPT-4o Mini model configuration."""
+
+    name: str = "gpt-4o-mini"
+    service_provider: str = "OpenAI"
+    base_url: str = "https://api.openai.com/v1"
+    response_format: str = ResponseFormat.JSON.value
 
 
-class OpenAIGPT4o(OpenAI):
-    name = "gpt-4o"
-
-
-class OpenAIGPT4oMini(OpenAI):
-    name = "gpt-4o-mini"
-
-
-### model-class mapping
+### Model Registry
 
 MODELS = {
-    "DeepSeek Chat": DeepSeekChat,
-    "DeepSeek Reasoner": DeepSeekReasoner,
-    "OpenAI gpt-4o": OpenAIGPT4o,
-    "OpenAI gpt-4o-mini": OpenAIGPT4oMini,
+    "DeepSeek Chat": DeepSeekChat(),
+    "DeepSeek Reasoner": DeepSeekReasoner(),
+    "OpenAI gpt-4o": OpenAIGPT4o(),
+    "OpenAI gpt-4o-mini": OpenAIGPT4oMini(),
 }

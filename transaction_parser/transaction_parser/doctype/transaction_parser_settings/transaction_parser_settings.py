@@ -14,9 +14,18 @@ DOCTYPE = "Transaction Parser Settings"
 class TransactionParserSettings(Document):
     # TODO: can we check API creds?
     def validate(self):
+        self.validate_lookback_count()
         self.validate_incoming_email_accounts()
         self.validate_party_email()
         self.validate_json_fields()
+
+    def validate_lookback_count(self):
+        if self.invoice_lookback_count <= 0:
+            frappe.throw(
+                _("{0} must be greater than 0.").format(
+                    frappe.bold(self.meta.get_label("invoice_lookback_count"))
+                )
+            )
 
     def validate_incoming_email_accounts(self):
         if not self.parse_incoming_emails:

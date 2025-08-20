@@ -8,10 +8,14 @@ from transaction_parser.transaction_parser.utils.file_processor import FileProce
 
 
 class Transaction:
+    """Base class for transaction document processing and generation."""
+
     DOCTYPE = None
     PARTY_DOCTYPE = None
 
-    def __init__(self, settings=None, party=None, company=None):
+    def __init__(
+        self, settings=None, party: str | None = None, company: str | None = None
+    ):
         if not self.DOCTYPE:
             raise NotImplementedError("DOCTYPE is not defined")
 
@@ -22,23 +26,26 @@ class Transaction:
         self.party = party
         self.company = company
 
-    def generate(self, file, ai_model=None, page_limit=None):
+    def generate(
+        self, file, ai_model: str | None = None, page_limit: int | None = None
+    ):
         self.initialize()
 
         self.file = file
-        self.data = self.get_file_content(ai_model, page_limit)
+        self.ai_model = ai_model
+        self.data = self._parse_file_content(ai_model, page_limit)
         self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
         self.doc.is_created_by_transaction_parser = 1
 
         self.set_details()
         self.set_missing_values()
-        self.set_flags()
+        self._set_flags()
         self.doc.insert()
-        self.attach_file()
+        self._attach_file()
 
         return self.doc
 
-    def initialize(self):
+    def initialize(self) -> None:
         # file processing
         self.file = None
 
@@ -60,38 +67,9 @@ class Transaction:
     ########## File Processing ##########
     #####################################
 
-    # def get_file_content(self, file_url, page_limit=None):
-    #     if self.settings.reuse_previously_parsed_data and (
-    #         content := self.get_saved_content(file_url)
-    #     ):
-    #         return content
-
-    #     return self.parse_file_content(file_url, page_limit)
-
-    # def get_saved_content(self, file_url):
-    #     duplicate_names = frappe.get_all(
-    #         "File", filters={"file_url": file_url}, pluck="name"
-    #     )
-
-    #     filters = {
-    #         "integration_request_service": SERVICE_NAME,
-    #         "status": "Completed",
-    #         "reference_doctype": "File",
-    #         "reference_docname": ["in", duplicate_names],
-    #     }
-
-    #     response = frappe.db.get_value(
-    #         "Integration Request", filters=filters, fieldname="output"
-    #     )
-
-    #     if not response:
-    #         return
-
-    #     response = to_dict(response, throw=False)
-
-    #     return get_content(response)
-
-    def get_file_content(self, ai_model=None, page_limit=None):
+    def _parse_file_content(
+        self, ai_model: str | None = None, page_limit: int | None = None
+    ) -> dict:
         content = FileProcessor().get_content(self.file, page_limit)
         schema = self.get_schema()
 
@@ -106,19 +84,19 @@ class Transaction:
     ########## Output Schema ##########
     ###################################
 
-    def get_schema(self):
+    def get_schema(self) -> dict:
         if not self.schema:
             self.schema = self._get_schema()
 
         return self.schema
 
-    def _get_schema(self):
+    def _get_schema(self) -> dict:
         return {
             **self.get_default_schema(),
             **self.get_custom_schema(),
         }
 
-    def get_default_schema(self):
+    def get_default_schema(self) -> dict:
         return {
             "document_number": "string (unique identifier)",
             "document_date": "date | null",
@@ -145,24 +123,24 @@ class Transaction:
             },
         }
 
-    def get_custom_schema(self):
+    def get_custom_schema(self) -> dict:
         return to_dict(self.settings.base_schema, throw=False)
 
     ### Item
 
-    def get_item_schema(self):
+    def get_item_schema(self) -> dict:
         if not self.item_schema:
             self.item_schema = self._get_item_schema()
 
         return self.item_schema
 
-    def _get_item_schema(self):
+    def _get_item_schema(self) -> dict:
         return {
             **self.get_default_item_schema(),
             **self.get_custom_item_schema(),
         }
 
-    def get_default_item_schema(self):
+    def get_default_item_schema(self) -> dict:
         return {
             "serial_number": "string | null",
             "party_item_code": "string | null (Dont confuse this with serial number)",
@@ -170,7 +148,8 @@ class Transaction:
             "quantity": "float",
             "unit": "string (e.g., KG, MTR, PC, etc.)",
             "rate": "float",
-            "amount": "float",
+            "amount": "float (sometimes called `net amount`)",
+            "discount": "float | 0",
             "taxes": [self.get_tax_schema()],
             "total_tax_percentage": "float | null",
             "total_tax_amount": "float | null",
@@ -178,48 +157,48 @@ class Transaction:
             "delivery_date": "date | null",
         }
 
-    def get_custom_item_schema(self):
+    def get_custom_item_schema(self) -> dict:
         return to_dict(self.settings.item_schema, throw=False)
 
     ### Tax
 
-    def get_tax_schema(self):
+    def get_tax_schema(self) -> dict:
         if not self.tax_schema:
             self.tax_schema = self._get_tax_schema()
 
         return self.tax_schema
 
-    def _get_tax_schema(self):
+    def _get_tax_schema(self) -> dict:
         return {
             **self.get_default_tax_schema(),
             **self.get_custom_tax_schema(),
         }
 
-    def get_default_tax_schema(self):
+    def get_default_tax_schema(self) -> dict:
         return {
             "description": "string",
             "percentage": "float",
             "amount": "float",
         }
 
-    def get_custom_tax_schema(self):
+    def get_custom_tax_schema(self) -> dict:
         return to_dict(self.settings.tax_schema, throw=False)
 
     ### Party
 
-    def get_party_schema(self):
+    def get_party_schema(self) -> dict:
         if not self.party_schema:
             self.party_schema = self._get_party_schema()
 
         return self.party_schema
 
-    def _get_party_schema(self):
+    def _get_party_schema(self) -> dict:
         return {
             **self.get_default_party_schema(),
             **self.get_custom_party_schema(),
         }
 
-    def get_default_party_schema(self):
+    def get_default_party_schema(self) -> dict:
         return {
             "name": "string",
             "address": self.get_address_schema(),
@@ -229,24 +208,24 @@ class Transaction:
             },
         }
 
-    def get_custom_party_schema(self):
+    def get_custom_party_schema(self) -> dict:
         return to_dict(self.settings.party_schema, throw=False)
 
     ### Address
 
-    def get_address_schema(self):
+    def get_address_schema(self) -> dict:
         if not self.address_schema:
             self.address_schema = self._get_address_schema()
 
         return self.address_schema
 
-    def _get_address_schema(self):
+    def _get_address_schema(self) -> dict:
         return {
             **self.get_default_address_schema(),
             **self.get_custom_address_schema(),
         }
 
-    def get_default_address_schema(self):
+    def get_default_address_schema(self) -> dict:
         return {
             "address_line_1": "string",
             "address_line_2": "string",
@@ -256,8 +235,18 @@ class Transaction:
             "country": "ISO country code (e.g., IN, US, etc.)",
         }
 
-    def get_custom_address_schema(self):
+    def get_custom_address_schema(self) -> dict:
         return to_dict(self.settings.address_schema, throw=False)
+
+    # Item Expense Account Mapping Schema
+
+    def get_expense_account_schema(self) -> list:
+        return [
+            {
+                "expense_account": "string (Expense Account name)",
+                "item_description": "string (Item codes that map to this expense account)",
+            }
+        ]
 
     ##################################
     ########## Data Mapping ##########
@@ -273,29 +262,35 @@ class Transaction:
             "set_missing_values() method must be implemented by subclass"
         )
 
-    def set_flags(self):
+    def _set_flags(self) -> None:
         self.doc.flags.ignore_permissions = True
         self.doc.flags.ignore_mandatory = True
         self.doc.flags.ignore_validate = True
         self.doc.flags.ignore_links = True
 
-    def attach_file(self):
+    def _attach_file(self) -> None:
         self.file.attached_to_doctype = self.DOCTYPE
         self.file.attached_to_name = self.doc.name
         self.file.save()
 
     ### Party
 
-    def search_party(self, party, party_type, fieldname="name"):
+    def search_party(
+        self, party, party_type: str, fieldname: str = "name"
+    ) -> str | None:
         return frappe.db.exists(party_type, {fieldname: party.name})
 
-    def guess_party(self, party, party_type, party_names=None):
+    def guess_party(
+        self, party, party_type: str, party_names: list | None = None
+    ) -> str | None:
         if not party_names:
             party_names = frappe.get_all(party_type, pluck="name")
 
         return self.guess_value(party.name, party_names)
 
-    def guess_value(self, value, options, score_cutoff=80):
+    def guess_value(
+        self, value: str, options: list | dict, score_cutoff: int = 80
+    ) -> str | None:
         # When `options` is a list:
         #   extractOne("abcd", ["value1", "value2"])
         #   Output: ("value1", 1, 0)
@@ -312,7 +307,7 @@ class Transaction:
 
     ### Address
 
-    def get_address(self, party, party_type, address):
+    def get_address(self, party, party_type: str, address) -> str | None:
         address_doctype = frappe.qb.DocType("Address")
         link_doctype = frappe.qb.DocType("Dynamic Link")
 
@@ -335,14 +330,14 @@ class Transaction:
 
         return self.guess_address(party, address, erp_addresses)
 
-    def search_address(self, party, address, erp_address):
+    def search_address(self, party, address, erp_address) -> str | None:
         if erp_address.pincode == address.postal_code:
             return erp_address.name
 
         if erp_address.address_line1 == address.address_line_1:
             return erp_address.name
 
-    def guess_address(self, party, address, erp_addresses):
+    def guess_address(self, party, address, erp_addresses: list) -> str | None:
         address_line_1_map = {
             erp_address.address_line1: erp_address.name for erp_address in erp_addresses
         }
@@ -352,7 +347,7 @@ class Transaction:
 
     ### Item
 
-    def get_item(self, item, item_code, **kwargs):
+    def get_item(self, item, item_code: str | None, **kwargs) -> frappe._dict:
         item_details = {}
 
         if item_code and self.doc.company and self.doc.currency:
@@ -366,6 +361,9 @@ class Transaction:
                 }
             )
 
+        if item.discount:
+            self.doc.discount_amount = (self.doc.discount_amount or 0) + item.discount
+
         return frappe._dict(
             {
                 **item_details,
@@ -377,7 +375,7 @@ class Transaction:
 
     ### Payment Schedule
 
-    def get_payment_schedule(self):
+    def get_payment_schedule(self) -> list:
         return [self.get_payment_schedule_doc(term) for term in self.data.payment_terms]
 
     def get_payment_schedule_doc(self, term):
@@ -402,7 +400,7 @@ class Transaction:
 
     ### Terms and Conditions
 
-    def get_terms(self):
+    def get_terms(self) -> str:
         terms = (
             description if (description := self.data.local_terms.description) else ""
         )
@@ -414,7 +412,7 @@ class Transaction:
 
     ### Contact
 
-    def get_contact(self, emails, phones):
+    def get_contact(self, emails: list, phones: list) -> str | None:
         if emails and (
             found := frappe.db.get_value(
                 "Contact Email", {"email_id": ["in", emails]}, "parent"
