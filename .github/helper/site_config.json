@@ -13,7 +13,8 @@
     "root_password": "travis",
     "host_name": "http://test_site:8000",
     "install_apps": [
-        "erpnext"
+        "erpnext",
+        "india_compliance"
     ],
     "throttle_user_limit": 100
 }
