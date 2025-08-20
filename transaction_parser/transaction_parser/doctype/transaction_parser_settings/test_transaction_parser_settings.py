@@ -104,3 +104,4 @@ class TestTransactionParserSettings(FrappeTestCase):
                 re.compile(r"Please provide a valid JSON value for .*"),
                 self.settings.save,
             )
+            self.settings.reload()
