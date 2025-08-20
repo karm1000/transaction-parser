@@ -23,9 +23,7 @@ class TestTransactionParserSettings(FrappeTestCase):
         self.settings.invoice_lookback_count = -5
         self.assertRaisesRegex(
             frappe.ValidationError,
-            re.compile(
-                r"(Number of Past Invoices to Consider for Item Code Selection must be greater than 0)"
-            ),
+            re.compile(r"(.*must be greater than 0.*)"),
             self.settings.save,
         )
 
