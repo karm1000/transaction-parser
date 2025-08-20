@@ -20,6 +20,7 @@
             "item_name": "_Test Sample Item",
             "item_group": "All Item Groups",
             "valuation_rate": 100,
+            "gst_hsn_code":"48026930",
             "stock_uom": "Nos",
             "uoms": [
                 {
