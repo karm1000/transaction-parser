@@ -335,6 +335,9 @@ class Expense(Transaction):
                 row.expense_account = expense_account_mappings.get(row.description)
 
     def set_item_tax_template(self):
+        if "india_compliance" not in frappe.get_installed_apps():
+            return
+
         # Step 1: Prepare item -> account/rate mapping
         item_conditions_map = self.get_item_conditions_map()
         if not item_conditions_map:
