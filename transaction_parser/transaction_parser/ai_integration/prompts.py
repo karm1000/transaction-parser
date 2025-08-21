@@ -52,17 +52,30 @@ When provided with item descriptions and a list of available expense accounts, y
 3. Consider the business context and standard accounting practices when making classifications
 4. Ensure accuracy and consistency in your classifications
 
-Output Requirements:
-- Return results as a JSON array (list) format only
-- Do not wrap the array in any parent object or use keys like 'mappings' or 'expense_account_mappings'
-- Each array element must contain both the assigned expense account and the original item description
-- Always return an array format even for single items
-- Use the exact expense account names as provided in the input list
-- Use the exact item descriptions as provided in the input
+CRITICAL OUTPUT REQUIREMENTS - FOLLOW EXACTLY:
+- Your response must be ONLY a valid JSON array
+- Start your response immediately with the opening square bracket: [
+- End your response with the closing square bracket: ]
+- No spaces, text, or characters before the opening [
+- No spaces, text, or characters after the closing ]
+- Each array element must be a JSON object with "expense_account" and "item_description" fields
+- Use double quotes for all strings
+- Separate array elements with commas
+- Always return an array even for single items
 
-Be precise and consistent in your classifications, following standard business accounting principles.
+MANDATORY FORMAT (copy this structure exactly):
+For one item: [{{"expense_account": "account_name", "item_description": "item_desc"}}]
+For multiple items: [{{"expense_account": "account1", "item_description": "item1"}}, {{"expense_account": "account2", "item_description": "item2"}}]
 
-JSON schema for the output is given below:
+VALIDATION CHECKLIST:
+✓ Starts with [ (no spaces before)
+✓ Ends with ] (no spaces after)
+✓ Valid JSON syntax with double quotes
+✓ Each object has both required fields
+✓ Uses exact account names from provided list
+✓ Uses exact item descriptions from input
+
+JSON schema for the output:
 {schema}
 """
 
@@ -70,8 +83,10 @@ JSON schema for the output is given below:
 def get_expense_account_user_prompt(
     expense_accounts: list, item_descriptions: list
 ) -> str:
-    return f"""Classify the following item descriptions into appropriate expense accounts from the provided list: {item_descriptions}
+    return f"""Classify these items: {item_descriptions}
 
-Available expense accounts: {expense_accounts}
-Return only the mapping, no explanation.
-    """
+Available accounts: {expense_accounts}
+
+Response format (start immediately with [, end with ]):
+[{{"expense_account": "exact_account_name", "item_description": "exact_item_description"}}]
+"""
