@@ -92,8 +92,6 @@ class TestTransactionParserSettings(FrappeTestCase):
     # JSON field validations
     # ----------------------
     def test_invalid_json_fields(self):
-        self.settings.reload()
-        self.settings.invoice_lookback_count = 5
         for field in [
             "base_schema",
             "tax_schema",
@@ -101,10 +99,10 @@ class TestTransactionParserSettings(FrappeTestCase):
             "party_schema",
             "item_schema",
         ]:
+            self.settings.reload()
             self.settings.set(field, "{invalid json}")
             self.assertRaisesRegex(
                 frappe.ValidationError,
                 re.compile(r"Please provide a valid JSON value for .*"),
                 self.settings.save,
             )
-            self.settings.reload()
