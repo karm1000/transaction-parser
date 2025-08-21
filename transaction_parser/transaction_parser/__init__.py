@@ -18,7 +18,7 @@ TRANSACTION_MAP = {
 def parse(transaction, country, file_url, ai_model=None, page_limit=None):
     is_enabled()
 
-    frappe.has_permission(transaction, "create", throw=True)
+    frappe.has_permission(TRANSACTION_MAP[transaction], "create", throw=True)
 
     frappe.enqueue(
         _parse,
