@@ -3,9 +3,7 @@
 import re
 
 import frappe
-from frappe.tests.utils import FrappeTestCase
-
-from transaction_parser.tests.utils import change_settings
+from frappe.tests.utils import FrappeTestCase, change_settings
 
 DOCTYPE = "Transaction Parser Settings"
 
@@ -13,6 +11,9 @@ DOCTYPE = "Transaction Parser Settings"
 class TestTransactionParserSettings(FrappeTestCase):
     def setUp(self):
         self.settings = frappe.get_cached_doc(DOCTYPE)
+        self.settings.enabled = 1
+        self.settings.invoice_lookback_count = 5
+        self.settings.save(ignore_permissions=True)
 
     def tearDown(self):
         frappe.db.rollback()
@@ -30,7 +31,9 @@ class TestTransactionParserSettings(FrappeTestCase):
     # ----------------------
     # Email configurations
     # ----------------------
-    @change_settings({"parse_incoming_emails": 1, "incoming_email_accounts": []})
+    @change_settings(
+        DOCTYPE, {"parse_incoming_emails": 1, "incoming_email_accounts": []}
+    )
     def test_duplicate_incoming_email_accounts_throws_when_enabled(self):
         self.settings.reload()
         self.settings.append(
@@ -58,7 +61,7 @@ class TestTransactionParserSettings(FrappeTestCase):
             self.settings.save,
         )
 
-    @change_settings({"parse_incoming_emails": 1, "party_emails": []})
+    @change_settings(DOCTYPE, {"parse_incoming_emails": 1, "party_emails": []})
     def test_duplicate_party_emails_throws_when_enabled(self):
         self.settings.reload()
         customer = "_Test TP Customer"
