@@ -140,14 +140,52 @@ class AIParser:
         if not content:
             frappe.throw(_("No response content received"))
 
+        # Clean the content
+        content = content.strip()
+
         try:
             return to_dict(content)
 
         except Exception:
             try:
-                return to_dict(
-                    re.search(r"```json(.*)```", content, re.DOTALL).group(1)
-                )
+                # Try to extract from markdown code blocks
+                json_match = re.search(r"```json(.*)```", content, re.DOTALL)
+                if json_match:
+                    return to_dict(json_match.group(1).strip())
+
+                # Try to fix common malformed JSON issues
+                fixed_content = self._fix_malformed_json(content)
+                if fixed_content != content:
+                    return to_dict(fixed_content)
+
+                raise Exception("No valid JSON found")
 
             except Exception as e:
                 frappe.throw(_(f"Failed to parse response content: {e}"))
+
+    def _fix_malformed_json(self, content: str) -> str:
+        """Attempt to fix common malformed JSON issues."""
+        # Remove leading/trailing whitespace
+        content = content.strip()
+
+        # If content has closing bracket but no opening bracket, add opening bracket
+        if content.endswith("]") and not content.startswith("["):
+            # Find where the first JSON object starts
+            first_brace = content.find("{")
+            if first_brace != -1:
+                content = "[" + content
+
+        # If content has opening bracket but no closing bracket, add closing bracket
+        if content.startswith("[") and not content.endswith("]"):
+            content = content + "]"
+
+        # If content looks like JSON object(s) but missing array brackets
+        if content.startswith("{") and content.endswith("}"):
+            content = "[" + content + "]"
+
+        # If content has multiple objects separated by commas but no array brackets
+        if "{" in content and "}" in content and not content.startswith("["):
+            if content.count("{") > 1 or "}, {" in content:
+                content = "[" + content + "]"
+
+        return content
