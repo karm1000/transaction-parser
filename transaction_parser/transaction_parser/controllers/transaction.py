@@ -289,7 +289,7 @@ class Transaction:
         return self.guess_value(party.name, party_names)
 
     def guess_value(
-        self, value: str, options: list | dict, score_cutoff: int = 80
+        self, value: str, options: list | dict, score_cutoff: int = 75
     ) -> str | None:
         # When `options` is a list:
         #   extractOne("abcd", ["value1", "value2"])
