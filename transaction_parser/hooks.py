@@ -9,6 +9,8 @@ required_apps = ["frappe/erpnext"]
 before_uninstall = "transaction_parser.uninstall.before_uninstall"
 after_install = "transaction_parser.install.after_install"
 
+before_tests = "transaction_parser.tests.before_tests"
+
 app_include_js = "transaction_parser.bundle.js"
 
 doctype_list_js = {
