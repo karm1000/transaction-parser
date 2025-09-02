@@ -10,6 +10,7 @@ dependencies = [
     "ocrmypdf~=16.10.0",
     "rapidfuzz~=3.12.2",
     "pymupdf~=1.26.3",
+    "openai",
 ]
 
 [build-system]
