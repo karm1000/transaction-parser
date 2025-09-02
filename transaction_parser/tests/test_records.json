@@ -41,5 +41,12 @@
                 }
             ]
         }
+    ],
+    "Customer": [
+        {
+            "name": "_Test TP Customer",
+            "customer_name": "_Test TP Customer",
+            "customer_type": "Company"
+        }
     ]
 }
