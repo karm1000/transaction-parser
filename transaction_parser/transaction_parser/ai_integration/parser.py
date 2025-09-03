@@ -104,7 +104,7 @@ class AIParser:
                 messages=messages,
                 response_format={"type": self.model.response_format},
                 stream=False,
-                temperature=0.7,
+                # temperature=0.7,
             )
 
     def _process_response(self, response: dict) -> dict:
