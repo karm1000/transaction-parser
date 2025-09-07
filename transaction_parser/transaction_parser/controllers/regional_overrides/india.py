@@ -169,6 +169,20 @@ class IndiaSalesOrder(SalesOrder, IndiaTransaction):
 
 class IndiaExpense(Expense, IndiaTransaction):
     def get_supplier(self) -> str | None:
+        supplier_identification_order = (
+            ("supplier", self.data.supplier),
+            ("company", self.data.company.billing),
+            ("company", self.data.company.shipping),
+        )
+
+        for key, party in supplier_identification_order:
+            if key == self.company_found_against:
+                continue
+
+            if found := self.search_supplier_based_on_gstin(party.gstin):
+                self.supplier_found_against = key
+                return found
+
         if found := super().get_supplier():
             return found
 
@@ -176,6 +190,9 @@ class IndiaExpense(Expense, IndiaTransaction):
             return
 
         return self.create_supplier()
+
+    def search_supplier_based_on_gstin(self, gstin):
+        return frappe.db.get_value("Supplier", {"gstin": gstin})
 
     def create_supplier(self) -> str | None:
         gstin = self.data.supplier.gstin
