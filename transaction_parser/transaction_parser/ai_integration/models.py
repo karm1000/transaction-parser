@@ -75,6 +75,15 @@ class OpenAIGPT5(Model):
     response_format: str = ResponseFormat.JSON.value
 
 
+@dataclass
+class OpenAIGPT5Mini(Model):
+    """OpenAI GPT-5 Mini model configuration."""
+
+    name: str = "gpt-5-mini"
+    service_provider: str = "OpenAI"
+    base_url: str = "https://api.openai.com/v1"
+
+
 ### Google Gemini Models
 
 
@@ -106,6 +115,7 @@ MODELS = {
     "OpenAI gpt-4o": OpenAIGPT4o(),
     "OpenAI gpt-4o-mini": OpenAIGPT4oMini(),
     "OpenAI gpt-5": OpenAIGPT5(),
+    "OpenAI gpt-5-mini": OpenAIGPT5Mini(),
     "Google Gemini Pro": GeminiPro(),
     "Google Gemini Flash": GeminiFlash(),
 }
