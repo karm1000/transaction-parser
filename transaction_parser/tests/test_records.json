@@ -40,6 +40,35 @@
                     "income_account": "Sales - _TC"
                 }
             ]
+        },
+        {
+            "description": "_Test Item for Parser",
+            "doctype": "Item",
+            "is_stock_item": 1,
+            "item_code": "_Test Item for Parser",
+            "item_name": "_Test Item for Parser",
+            "item_group": "All Item Groups",
+            "gst_hsn_code":"48026930",
+            "valuation_rate": 200,
+            "stock_uom": "Kg",
+            "uoms": [
+                {
+                    "conversion_factor": 1,
+                    "uom": "Kg",
+                    "name": "_Test Item for Parser"
+                }
+            ],
+            "item_defaults": [
+                {
+                    "name": "_Test Item for Parser",
+                    "company": "_Test Company",
+                    "default_warehouse": "Stores - _TC",
+                    "expense_account": "Cost of Goods Sold - _TC",
+                    "buying_cost_center": "Main - _TC",
+                    "selling_cost_center": "Main - _TC",
+                    "income_account": "Sales - _TC"
+                }
+            ]
         }
     ],
     "Customer": [
@@ -47,6 +76,93 @@
             "name": "_Test TP Customer",
             "customer_name": "_Test TP Customer",
             "customer_type": "Company"
+        },
+        {
+            "name": "_Test TP Customer 2",
+            "customer_name": "_Test TP Customer 2",
+            "customer_type": "Individual"
+        }
+    ],
+    "Address": [
+        {
+            "address_title": "_Test TP Customer-Billing",
+            "address_type": "Billing",
+            "address_line1": "123 Test Street",
+            "address_line2": "Test Area",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "pincode": "400001",
+            "country": "India",
+            "doctype": "Address",
+            "links": [
+                {
+                    "link_doctype": "Customer",
+                    "link_name": "_Test TP Customer"
+                }
+            ]
+        },
+        {
+            "address_title": "_Test TP Customer-Shipping",
+            "address_type": "Shipping",
+            "address_line1": "456 Shipping Street",
+            "address_line2": "Shipping Area",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "pincode": "400002",
+            "country": "India",
+            "doctype": "Address",
+            "links": [
+                {
+                    "link_doctype": "Customer",
+                    "link_name": "_Test TP Customer"
+                }
+            ]
+        },
+        {
+            "address_title": "_Test Company-Office",
+            "address_type": "Office",
+            "address_line1": "789 Vendor Street",
+            "address_line2": "Vendor Area",
+            "city": "Mumbai",
+            "state": "Maharashtra",
+            "pincode": "400003",
+            "country": "India",
+            "doctype": "Address",
+            "links": [
+                {
+                    "link_doctype": "Company",
+                    "link_name": "_Test Company"
+                }
+            ]
+        }
+    ],
+    "Contact": [
+        {
+            "first_name": "Test",
+            "last_name": "Customer Contact",
+            "email_id": "customer@test.com",
+            "phone": "+91-9876543210",
+            "doctype": "Contact",
+            "links": [
+                {
+                    "link_doctype": "Customer",
+                    "link_name": "_Test TP Customer"
+                }
+            ]
+        }
+    ],
+    "Transaction Parser Settings": [
+        {
+            "doctype": "Transaction Parser Settings",
+            "enabled": 1,
+            "default_ai_model": "gpt-4",
+            "invoice_lookback_count": 5,
+            "parse_incoming_emails": 0,
+            "base_schema": "{}",
+            "item_schema": "{}",
+            "tax_schema": "{}",
+            "party_schema": "{}",
+            "address_schema": "{}"
         }
     ]
 }

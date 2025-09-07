@@ -2,9 +2,7 @@ import frappe
 
 from transaction_parser.transaction_parser import _parse
 
-PARTY_TYPE_MAP = {
-    "Sales Order": "Customer",
-}
+PARTY_TYPE_MAP = {"Sales Order": "Customer", "Expense": "Supplier"}
 
 
 def on_update(doc, method=None):
@@ -14,6 +12,37 @@ def on_update(doc, method=None):
     settings = frappe.get_cached_doc("Transaction Parser Settings")
     if not (settings.enabled and settings.parse_incoming_emails):
         return
+
+    if settings.parse_party_emails:
+        matched_party_config = next(
+            (row for row in settings.party_emails if row.party_email == doc.sender),
+            None,
+        )
+
+        if matched_party_config:
+            if matched_party_config.party_type == "Supplier":
+                transaction_type = "Expense"
+            else:
+                transaction_type = "Sales Order"
+
+            default_user = frappe.session.user
+
+            # Attachments are not available when the Communication doc is created.
+            # Next time the doc is updated, we will check for attachments,
+            # and update the flag `is_processed_by_transaction_parser` accordingly.
+            attachments = doc.get_attachments()
+            if not attachments:
+                return
+
+            _process_attachments(
+                doc,
+                attachments,
+                transaction_type,
+                settings,
+                default_user,
+                matched_party_config.party,
+            )
+            return
 
     matched_account = next(
         (
@@ -48,16 +77,36 @@ def process_attachments(doc, settings, matched_account, attachments):
         None,
     )
 
+    _process_attachments(
+        doc,
+        attachments,
+        matched_account.transaction,
+        settings,
+        matched_account.user,
+        matched_party,
+        matched_account.company,
+    )
+
+
+def _process_attachments(
+    doc, attachments, transaction_type, settings, user, party, company=None
+):
+    if not company:
+        default_company = frappe.defaults.get_user_default("Company")
+        country = frappe.db.get_value("Company", default_company, "country")
+    else:
+        country = frappe.db.get_value("Company", company, "country")
+
     for attachment in attachments:
         frappe.enqueue(
             _parse,
-            country=frappe.db.get_value("Company", matched_account.company, "country"),
-            transaction=matched_account.transaction,
+            country=country,
+            transaction=transaction_type,
             file_url=attachment.file_url,
             ai_model=settings.default_ai_model,
-            user=matched_account.user,
-            party=matched_party,
-            company=matched_account.company,
+            user=user,
+            party=party,
+            company=company,
             queue="long",
         )
     doc.db_set("is_processed_by_transaction_parser", 1)

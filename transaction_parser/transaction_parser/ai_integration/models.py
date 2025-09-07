@@ -82,6 +82,28 @@ class OpenAIGPT5Mini(Model):
     name: str = "gpt-5-mini"
     service_provider: str = "OpenAI"
     base_url: str = "https://api.openai.com/v1"
+
+
+### Google Gemini Models
+
+
+@dataclass
+class GeminiPro(Model):
+    """Google Gemini Pro model configuration."""
+
+    name: str = "gemini-2.5-pro"
+    service_provider: str = "Google"
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    response_format: str = ResponseFormat.JSON.value
+
+
+@dataclass
+class GeminiFlash(Model):
+    """Google Gemini Flash model configuration."""
+
+    name: str = "gemini-2.5-flash"
+    service_provider: str = "Google"
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
     response_format: str = ResponseFormat.JSON.value
 
 
@@ -94,4 +116,6 @@ MODELS = {
     "OpenAI gpt-4o-mini": OpenAIGPT4oMini(),
     "OpenAI gpt-5": OpenAIGPT5(),
     "OpenAI gpt-5-mini": OpenAIGPT5Mini(),
+    "Google Gemini Pro": GeminiPro(),
+    "Google Gemini Flash": GeminiFlash(),
 }

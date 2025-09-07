@@ -14,6 +14,7 @@
   "invoice_lookback_count",
   "email_configuration_section",
   "parse_incoming_emails",
+  "parse_party_emails",
   "incoming_email_accounts",
   "party_emails",
   "custom_fields_tab",
@@ -89,7 +90,7 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -103,6 +104,14 @@
    "fieldname": "parse_incoming_emails",
    "fieldtype": "Check",
    "label": "Parse Incoming Emails"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.parse_incoming_emails",
+   "description": "Directly Parse Emails from Party",
+   "fieldname": "parse_party_emails",
+   "fieldtype": "Check",
+   "label": "Parse Party Emails"
   },
   {
    "fieldname": "email_configuration_section",
@@ -147,7 +156,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-09-03 12:10:04.390309",
+ "modified": "2025-09-05 15:36:49.135598",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

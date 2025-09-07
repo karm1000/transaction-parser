@@ -33,9 +33,11 @@ def before_tests():
         )
 
     create_test_records()
-    set_default_company_for_tests()
     frappe.db.commit()
+    set_default_company_for_tests()
+    setup_transaction_parser_settings()
 
+    frappe.flags.country = "India"
     frappe.flags.skip_test_records = True
     frappe.enqueue = partial(frappe.enqueue, now=True)
 
@@ -44,9 +46,8 @@ def create_test_records():
     test_records = frappe.get_file_json(
         frappe.get_app_path("transaction_parser", "tests", "test_records.json")
     )
-
     for doctype, data in test_records.items():
-        make_test_objects(doctype, data)
+        make_test_objects(doctype, data, commit=True)
 
 
 def set_default_company_for_tests():
@@ -62,3 +63,9 @@ def set_default_company_for_tests():
     global_defaults = frappe.get_single("Global Defaults")
     global_defaults.default_company = "_Test Company"
     global_defaults.save()
+
+
+def setup_transaction_parser_settings():
+    frappe.db.set_value(
+        "Transaction Parser Settings", None, {"enabled": 1, "invoice_lookback_count": 5}
+    )

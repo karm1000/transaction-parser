@@ -203,8 +203,19 @@ class SalesOrder(Transaction):
             )
         )
 
+        price_list = frappe.db.get_value(
+            "Customer", {"name": self.doc.customer}, "default_price_list"
+        )
+
+        if not price_list:
+            price_list = frappe.db.get_single_value(
+                "Selling Settings", "selling_price_list"
+            )
+
         items = [
-            self.get_item(item, item_codes.get(item.party_item_code))
+            self.get_item(
+                item, item_codes.get(item.party_item_code), price_list=price_list
+            )
             for item in self.data.item_list
         ]
 
