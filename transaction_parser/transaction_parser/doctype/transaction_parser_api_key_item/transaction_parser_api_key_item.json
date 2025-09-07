@@ -15,7 +15,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Service Provider",
-   "options": "DeepSeek\nOpenAI",
+   "options": "DeepSeek\nOpenAI\nGoogle",
    "reqd": 1
   },
   {

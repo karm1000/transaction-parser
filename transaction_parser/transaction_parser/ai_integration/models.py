@@ -65,6 +65,39 @@ class OpenAIGPT4oMini(Model):
     response_format: str = ResponseFormat.JSON.value
 
 
+@dataclass
+class OpenAIGPT5(Model):
+    """OpenAI GPT-5 model configuration."""
+
+    name: str = "gpt-5"
+    service_provider: str = "OpenAI"
+    base_url: str = "https://api.openai.com/v1"
+    response_format: str = ResponseFormat.JSON.value
+
+
+### Google Gemini Models
+
+
+@dataclass
+class GeminiPro(Model):
+    """Google Gemini Pro model configuration."""
+
+    name: str = "gemini-2.5-pro"
+    service_provider: str = "Google"
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    response_format: str = ResponseFormat.JSON.value
+
+
+@dataclass
+class GeminiFlash(Model):
+    """Google Gemini Flash model configuration."""
+
+    name: str = "gemini-2.5-flash"
+    service_provider: str = "Google"
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+    response_format: str = ResponseFormat.JSON.value
+
+
 ### Model Registry
 
 MODELS = {
@@ -72,4 +105,7 @@ MODELS = {
     "DeepSeek Reasoner": DeepSeekReasoner(),
     "OpenAI gpt-4o": OpenAIGPT4o(),
     "OpenAI gpt-4o-mini": OpenAIGPT4oMini(),
+    "OpenAI gpt-5": OpenAIGPT5(),
+    "Google Gemini Pro": GeminiPro(),
+    "Google Gemini Flash": GeminiFlash(),
 }

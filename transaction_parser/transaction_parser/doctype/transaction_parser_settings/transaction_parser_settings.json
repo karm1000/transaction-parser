@@ -90,7 +90,7 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nGoogle Gemini Pro\nGoogle Gemini Flash"
   },
   {
    "depends_on": "eval: doc.enabled",
