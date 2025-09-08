@@ -129,7 +129,7 @@
    "fieldname": "incoming_email_accounts",
    "fieldtype": "Table",
    "label": "Incoming Email Accounts",
-   "mandatory_depends_on": "eval: doc.parse_incoming_emails",
+   "mandatory_depends_on": "eval: doc.parse_incoming_emails && !doc.parse_party_emails",
    "options": "Transaction Parser Email Account"
   },
   {
@@ -156,7 +156,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-09-05 15:36:49.135598",
+ "modified": "2025-09-08 08:48:58.870032",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
