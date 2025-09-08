@@ -82,6 +82,7 @@ class OpenAIGPT5Mini(Model):
     name: str = "gpt-5-mini"
     service_provider: str = "OpenAI"
     base_url: str = "https://api.openai.com/v1"
+    response_format: str = ResponseFormat.JSON.value
 
 
 ### Google Gemini Models
