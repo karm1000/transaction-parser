@@ -1,7 +1,7 @@
-## Transaction Parser
+# Transaction Parser
 
-AI-powered add-on for ERPNext that extracts data from PDFs and creates draft records automatically.
+AI-powered add-on for ERPNext that extracts data from PDFs, CSV, and Excel files and creates draft records automatically.
 
-#### License
+## License
 
 [GNU General Public License (v3)](https://github.com/resilient-tech/transaction-parser/blob/version-15/license.txt)

@@ -2,3 +2,5 @@ pre-commit
 openai
 ocrmypdf
 rapidfuzz
+pandas
+openpyxl
