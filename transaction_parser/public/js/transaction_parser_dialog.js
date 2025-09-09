@@ -17,9 +17,9 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 					label: __("File"),
 					fieldtype: "Attach",
 					reqd: 1,
-					description: __("Supported formats: PDF, CSV, Excel (XLSX, XLS)"),
-					onchange: function () {
-						toggle_page_limit_field(transaction_dialog);
+					description: __("Supported formats: PDF"),
+					options: {
+						restrictions: { allowed_file_types: [".pdf"] },
 					},
 				},
 				{
@@ -29,7 +29,6 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 					fieldname: "page_limit",
 					label: __("Page Limit"),
 					fieldtype: "Int",
-					description: __("Only applicable for PDF files"),
 				},
 				{
 					fieldtype: "Section Break",
@@ -56,6 +55,7 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 			],
 			primary_action_label: __("Submit"),
 			primary_action(values) {
+				validate_file_type(transaction_dialog);
 				frappe.call({
 					method: "transaction_parser.transaction_parser.parse",
 					args: {
@@ -96,25 +96,12 @@ function get_default_country() {
 	return SUPPORTED_COUNTRIES.includes(user_country) ? user_country : "Other";
 }
 
-function toggle_page_limit_field(dialog) {
+function validate_file_type(dialog) {
 	const file_url = dialog.get_value("file_url");
-	if (!file_url) return;
-
-	// Extract file extension
 	const file_extension = file_url.split(".").pop().toLowerCase();
 	const is_pdf = file_extension === "pdf";
 
-	// Show/hide page limit field based on file type
-	const page_limit_field = dialog.get_field("page_limit");
-	if (page_limit_field) {
-		if (is_pdf) {
-			page_limit_field.df.hidden = 0;
-			page_limit_field.refresh();
-		} else {
-			page_limit_field.df.hidden = 1;
-			page_limit_field.refresh();
-			// Clear the value for non-PDF files
-			dialog.set_value("page_limit", "");
-		}
+	if (!is_pdf) {
+		frappe.throw(__("Invalid file type. Only PDF files are supported for manual parsing."));
 	}
 }
