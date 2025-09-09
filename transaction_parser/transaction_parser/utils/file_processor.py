@@ -31,20 +31,14 @@ class FileProcessor:
 
     def _process_spreadsheet(self, doc):
         """Process CSV and Excel files."""
+        file_content = doc.get_content()
 
         if doc.file_type == "CSV":
-            file_content = doc.get_content()
-            # Handle case where content might already be a string or bytes
-            if isinstance(file_content, str):
-                file_content_str = file_content
-            else:
-                file_content_str = self._decode_csv_content(file_content)
+            file_content_str = self._decode_csv_content(file_content)
             rows = read_csv_content(file_content_str)
         elif doc.file_type == "XLSX":
-            file_content = doc.get_content()
             rows = read_xlsx_file_from_attached_file(fcontent=file_content)
         elif doc.file_type == "XLS":
-            file_content = doc.get_content()
             rows = read_xls_file_from_attached_file(file_content)
 
         # Convert rows to a formatted string representation
@@ -78,7 +72,7 @@ class FileProcessor:
     def _format_rows_as_text(self, rows):
         """Convert rows to a text format suitable for AI processing."""
         if not rows:
-            return "No data found in the file."
+            frappe.throw(_("No data found in the file."))
 
         # Create a structured text representation
         text_parts = []
@@ -89,34 +83,27 @@ class FileProcessor:
             text_parts.append("Document Information (Key-Value pairs):")
             text_parts.append("")
             for row in rows:
-                if len(row) >= 2:
-                    key = str(row[0]).strip() if row[0] is not None else ""
-                    value = str(row[1]).strip() if row[1] is not None else ""
-                    if key and value:  # Skip empty entries
-                        text_parts.append(f"{key}: {value}")
+                key = str(row[0] or "").strip()
+                value = str(row[1] or "").strip()
+                if key and value:
+                    text_parts.append(f"{key}: {value}")
         else:
             # Format as regular table
             # First row is typically headers
-            if rows:
-                headers = " | ".join(
-                    [str(cell) if cell is not None else "" for cell in rows[0]]
-                )
-                text_parts.append(f"Columns: {headers}")
-                text_parts.append("")
+            headers = " | ".join(str(cell or "") for cell in rows[0])
+            text_parts.append(f"Columns: {headers}")
+            text_parts.append("")
 
-                # Add data rows (skip header row)
-                text_parts.append("Data:")
-                for index, row in enumerate(rows[1:], 1):
-                    row_data = " | ".join(
-                        [str(cell) if cell is not None else "" for cell in row]
-                    )
-                    text_parts.append(f"Row {index}: {row_data}")
+            # Add data rows (skip header row)
+            text_parts.append("Data:")
+            for index, row in enumerate(rows[1:], 1):
+                row_data = " | ".join(str(cell or "") for cell in row)
+                text_parts.append(f"Row {index}: {row_data}")
 
         # Add summary information
         text_parts.append("")
         text_parts.append(f"Total rows: {len(rows)}")
-        if rows:
-            text_parts.append(f"Total columns: {len(rows[0])}")
+        text_parts.append(f"Total columns: {len(rows[0])}")
 
         return "\n".join(text_parts)
 
