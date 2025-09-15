@@ -17,6 +17,10 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 					label: __("File"),
 					fieldtype: "Attach",
 					reqd: 1,
+					description: __("Supported formats: PDF"),
+					options: {
+						restrictions: { allowed_file_types: [".pdf"] },
+					},
 				},
 				{
 					fieldtype: "Column Break",
@@ -51,6 +55,7 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 			],
 			primary_action_label: __("Submit"),
 			primary_action(values) {
+				validate_file_type(transaction_dialog);
 				frappe.call({
 					method: "transaction_parser.transaction_parser.parse",
 					args: {
@@ -89,4 +94,14 @@ async function get_available_ai_models() {
 function get_default_country() {
 	const user_country = frappe.defaults.get_default("Country");
 	return SUPPORTED_COUNTRIES.includes(user_country) ? user_country : "Other";
+}
+
+function validate_file_type(dialog) {
+	const file_url = dialog.get_value("file_url");
+	const file_extension = file_url.split(".").pop().toLowerCase();
+	const is_pdf = file_extension === "pdf";
+
+	if (!is_pdf) {
+		frappe.throw(__("Invalid file type. Only PDF files are supported for manual parsing."));
+	}
 }

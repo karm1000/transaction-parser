@@ -94,6 +94,7 @@ def _process_attachments(
     if not company:
         default_company = frappe.defaults.get_user_default("Company")
         country = frappe.db.get_value("Company", default_company, "country")
+        country = "India" if country == "India" else "Other"
     else:
         country = frappe.db.get_value("Company", company, "country")
 
@@ -106,7 +107,7 @@ def _process_attachments(
             ai_model=settings.default_ai_model,
             user=user,
             party=party,
-            company=company,
+            company=default_company if not company else company,
             queue="long",
         )
     doc.db_set("is_processed_by_transaction_parser", 1)

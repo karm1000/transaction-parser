@@ -1,4 +1,4 @@
-## Transaction Parser
+# Transaction Parser
 
 ## Overview
 
@@ -139,6 +139,6 @@ When enabled in settings, the system can automatically create suppliers:
    * Enable "Auto Create Supplier" in Transaction Parser Settings
    * Requires valid GSTIN in the invoice
 
-#### License
+## License
 
 [GNU General Public License (v3)](https://github.com/resilient-tech/transaction-parser/blob/version-15/license.txt)
