@@ -17,6 +17,7 @@ class Model:
     service_provider: str
     base_url: str
     response_format: str
+    supports_temperature: bool = True
 
 
 ### DeepSeek Models
@@ -73,6 +74,7 @@ class OpenAIGPT5(Model):
     service_provider: str = "OpenAI"
     base_url: str = "https://api.openai.com/v1"
     response_format: str = ResponseFormat.JSON.value
+    supports_temperature: bool = False
 
 
 @dataclass
@@ -83,6 +85,7 @@ class OpenAIGPT5Mini(Model):
     service_provider: str = "OpenAI"
     base_url: str = "https://api.openai.com/v1"
     response_format: str = ResponseFormat.JSON.value
+    supports_temperature: bool = False
 
 
 ### Google Gemini Models
