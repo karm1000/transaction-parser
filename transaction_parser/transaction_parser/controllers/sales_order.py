@@ -81,6 +81,9 @@ class SalesOrder(Transaction):
         # TODO: validation of Sales Order on save.
 
     def set_missing_values(self):
+        self.set_exchange_rate(
+            self.doc.currency, self.doc.transaction_date, "for_selling"
+        )
         self.doc.set_missing_values()
         self.doc.calculate_taxes_and_totals()
 

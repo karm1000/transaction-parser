@@ -1,4 +1,6 @@
+import erpnext
 import frappe
+from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.get_item_details import get_item_details
 from rapidfuzz import fuzz, process
 
@@ -272,6 +274,19 @@ class Transaction:
         self.file.attached_to_doctype = self.DOCTYPE
         self.file.attached_to_name = self.doc.name
         self.file.save()
+
+    def set_exchange_rate(self, from_currency, date, args):
+        company_currency = erpnext.get_company_currency(self.doc.company)
+        if not self.doc.currency or self.doc.currency == company_currency:
+            self.doc.currency = company_currency
+            self.doc.conversion_rate = 1.0
+        else:
+            self.doc.conversion_rate = get_exchange_rate(
+                from_currency,
+                company_currency,
+                date,
+                args,
+            )
 
     ### Party
 
