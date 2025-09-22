@@ -86,6 +86,7 @@ class Expense(Transaction):
         self.doc.terms = self.get_terms()
 
     def set_missing_values(self) -> None:
+        self.set_exchange_rate(self.doc.currency, self.doc.posting_date, "for_buying")
         self.doc.set_missing_values()
         self.doc.calculate_taxes_and_totals()
 
