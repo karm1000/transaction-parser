@@ -99,13 +99,19 @@ class AIParser:
             api_key=self.get_api_key(),
             base_url=self.model.base_url,
         ) as client:
-            return client.chat.completions.create(
-                model=self.model.name,
-                messages=messages,
-                response_format={"type": self.model.response_format},
-                stream=False,
-                # temperature=0.7,
-            )
+            # Build the request parameters
+            request_params = {
+                "model": self.model.name,
+                "messages": messages,
+                "response_format": {"type": self.model.response_format},
+                "stream": False,
+            }
+
+            # Only include temperature if the model supports it
+            if self.model.supports_temperature:
+                request_params["temperature"] = 0.7
+
+            return client.chat.completions.create(**request_params)
 
     def _process_response(self, response: dict) -> dict:
         """Process the API response and extract content."""
