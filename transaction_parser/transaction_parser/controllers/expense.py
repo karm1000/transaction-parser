@@ -65,6 +65,8 @@ class Expense(Transaction):
         self.doc.bill_date = self.data.purchase_order_date
         self.doc.currency = self.data.currency or None
 
+        self.set_exchange_rate(self.doc.currency, self.doc.posting_date, "for_buying")
+
         self.doc.billing_address = self.get_company_billing_address()
         self.doc.shipping_address = self.get_company_shipping_address()
         self.doc.supplier_address = self.get_supplier_address()
@@ -86,7 +88,6 @@ class Expense(Transaction):
         self.doc.terms = self.get_terms()
 
     def set_missing_values(self) -> None:
-        self.set_exchange_rate(self.doc.currency, self.doc.posting_date, "for_buying")
         self.doc.set_missing_values()
         self.doc.calculate_taxes_and_totals()
 

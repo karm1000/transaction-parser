@@ -53,6 +53,17 @@ class SalesOrder(Transaction):
         self.doc.delivery_date = self.data.delivery_date
         self.doc.currency = self.data.currency or None
 
+        today = frappe.utils.today()
+        self.doc.transaction_date = (
+            delivery_date
+            if (delivery_date := self.doc.delivery_date) and (delivery_date < today)
+            else today
+        )
+
+        self.set_exchange_rate(
+            self.doc.currency, self.doc.transaction_date, "for_selling"
+        )
+
         self.doc.company_address = self.get_company_address()
         self.doc.customer_address = self.get_billing_address()
         self.doc.shipping_address_name = self.get_shipping_address()
@@ -71,19 +82,9 @@ class SalesOrder(Transaction):
         self.doc.items = self.get_items()
         # self.doc.payment_schedule = self.get_payment_schedule()
         self.doc.terms = self.get_terms()
-
-        today = frappe.utils.today()
-        self.doc.transaction_date = (
-            delivery_date
-            if (delivery_date := self.doc.delivery_date) and (delivery_date < today)
-            else today
-        )
         # TODO: validation of Sales Order on save.
 
     def set_missing_values(self):
-        self.set_exchange_rate(
-            self.doc.currency, self.doc.transaction_date, "for_selling"
-        )
         self.doc.set_missing_values()
         self.doc.calculate_taxes_and_totals()
 
