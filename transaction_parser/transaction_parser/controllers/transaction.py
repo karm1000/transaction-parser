@@ -376,6 +376,8 @@ class Transaction:
                 }
             )
 
+        self.process_item_details(item, item_details)
+
         if item.discount:
             self.doc.discount_amount = (self.doc.discount_amount or 0) + item.discount
 
@@ -387,6 +389,10 @@ class Transaction:
                 "rate": item.rate or item_details.get("price_list_rate", 0),
             }
         )
+
+    def process_item_details(self, item, item_details) -> None:
+        """Process item details fetched from get_item_details"""
+        pass
 
     ### Payment Schedule
 
