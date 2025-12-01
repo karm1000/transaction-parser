@@ -79,6 +79,8 @@ class SalesOrder(Transaction):
             ),
         )
 
+        self.doc.ignore_pricing_rule = 1
+
         self.doc.items = self.get_items()
         # self.doc.payment_schedule = self.get_payment_schedule()
         self.doc.terms = self.get_terms()
