@@ -13,6 +13,10 @@ before_tests = "transaction_parser.tests.before_tests"
 
 app_include_js = "transaction_parser.bundle.js"
 
+doctype_js = {
+    "Sales Order": "public/js/sales_order.js",
+}
+
 doctype_list_js = {
     "Sales Order": "transaction_parser/client_scripts/sales_order_list.js",
     "Purchase Invoice": "transaction_parser/client_scripts/purchase_invoice_list.js",
