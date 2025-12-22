@@ -225,6 +225,7 @@ class SalesOrder(Transaction):
                 price_list=price_list,
                 ignore_pricing_rule=self.doc.ignore_pricing_rule,
                 transaction_date=self.doc.transaction_date,
+                conversion_rate=self.doc.conversion_rate,
             )
             for item in self.data.item_list
         ]
