@@ -5,7 +5,10 @@ frappe.ui.form.on("Sales Order", {
 		}
 
 		frm.cscript.customer = function () {
-			erpnext.utils.get_party_details(this.frm, null, null);
+			this.in_apply_price_list = true;
+			erpnext.utils.get_party_details(this.frm, null, null, function () {
+				this.in_apply_price_list = false;
+			});
 		};
 	},
 });
