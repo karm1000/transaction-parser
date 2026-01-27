@@ -98,29 +98,40 @@ def _process_attachments(
     else:
         country = frappe.db.get_value("Company", company, "country")
 
-    def parse():
-        sorted_attachments = sorted(
-            attachments,
-            key=lambda attachment: {"xlsx": 0, "csv": 1, "pdf": 2}.get(
-                attachment.file_url.split(".")[-1].lower(), 3
-            ),
-        )
-
-        for attachment in sorted_attachments:
-            _parse(
-                country=country,
-                transaction=transaction_type,
-                file_url=attachment.file_url,
-                ai_model=settings.default_ai_model,
-                user=user,
-                party=party,
-                company=default_company if not company else company,
-            )
-            frappe.db.commit()
+    sorted_attachments = sorted(
+        attachments,
+        key=lambda attachment: {"xlsx": 0, "csv": 1, "pdf": 2}.get(
+            attachment.file_url.split(".")[-1].lower(), 3
+        ),
+    )
 
     frappe.enqueue(
-        parse,
+        "transaction_parser.transaction_parser.overrides.communication._parse_attachments",
+        doc=doc,
+        country=country,
+        transaction_type=transaction_type,
+        attachments=sorted_attachments,
+        ai_model=settings.default_ai_model,
+        user=user,
+        party=party,
+        company=default_company if not company else company,
         queue="long",
     )
+
+
+def _parse_attachments(
+    doc, country, transaction_type, attachments, ai_model, user, party, company
+):
+    for attachment in attachments:
+        _parse(
+            country=country,
+            transaction=transaction_type,
+            file_url=attachment.file_url,
+            ai_model=ai_model,
+            user=user,
+            party=party,
+            company=company,
+        )
+        frappe.db.commit()
 
     doc.db_set("is_processed_by_transaction_parser", 1)
