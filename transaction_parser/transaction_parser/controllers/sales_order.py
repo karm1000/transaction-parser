@@ -40,14 +40,7 @@ class SalesOrder(Transaction):
         #     self.create_party()
 
         self.doc.po_no = self.data.document_number
-        if so_name := frappe.db.exists(
-            "Sales Order", {"po_no": self.doc.po_no, "docstatus": 1}
-        ):
-            frappe.throw(
-                _(
-                    f"Duplicate Sales Order {so_name} found with PO number {self.doc.po_no}"
-                )
-            )
+        self.validate_po_no()
 
         self.doc.po_date = self.data.purchase_order_date
         self.doc.delivery_date = self.data.delivery_date
@@ -85,6 +78,17 @@ class SalesOrder(Transaction):
         # self.doc.payment_schedule = self.get_payment_schedule()
         self.doc.terms = self.get_terms()
         # TODO: validation of Sales Order on save.
+
+    def validate_po_no(self):
+        if so_name := frappe.db.exists(
+            "Sales Order", {"po_no": self.doc.po_no, "docstatus": 1}
+        ):
+            frappe.throw(
+                _(
+                    f"Duplicate Sales Order {so_name} found with PO number {self.doc.po_no}"
+                ),
+                frappe.DuplicateEntryError,
+            )
 
     def set_missing_values(self):
         self.doc.set_missing_values()
