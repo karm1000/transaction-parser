@@ -62,6 +62,14 @@ def _parse(
         }
 
     except Exception as e:
+        notification = None
+
+        if (
+            isinstance(e, frappe.DuplicateEntryError)
+            and frappe.flags.skip_duplicate_error
+        ):
+            return
+
         error_log = frappe.log_error(
             "Transaction Parser API Error",
             reference_doctype="File",
@@ -79,7 +87,8 @@ def _parse(
         email_failure(user, message, str(e), file_url)
 
     finally:
-        enqueue_notification(**notification)
+        if notification:
+            enqueue_notification(**notification)
 
 
 def email_failure(user, subject, error_message, file_url):
