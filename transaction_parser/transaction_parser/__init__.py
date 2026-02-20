@@ -62,6 +62,12 @@ def _parse(
         }
 
     except Exception as e:
+        if (
+            isinstance(e, frappe.DuplicateEntryError)
+            and frappe.flags.skip_duplicate_error
+        ):
+            return
+
         error_log = frappe.log_error(
             "Transaction Parser API Error",
             reference_doctype="File",
