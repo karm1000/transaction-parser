@@ -68,6 +68,12 @@ def _parse(
             isinstance(e, frappe.DuplicateEntryError)
             and frappe.flags.skip_duplicate_error
         ):
+            notification = {
+                "document_type": "File",
+                "document_name": file.name if file else filename,
+                "subject": _("Duplicate entry found for {0}").format(filename),
+                "message": str(e),
+            }
             return
 
         error_log = frappe.log_error(
