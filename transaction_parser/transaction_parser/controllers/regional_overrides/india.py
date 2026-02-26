@@ -122,11 +122,12 @@ class IndiaTransaction(Transaction):
 
     ### Address
 
-    def search_address(self, party, address, erp_address) -> str | None:
-        if self.is_valid_gstin(party.gstin) and (party.gstin == erp_address.gstin):
-            return erp_address.name
+    def search_address(self, party, address, erp_addresses) -> str | None:
+        for erp_address in erp_addresses:
+            if self.is_valid_gstin(party.gstin) and (party.gstin == erp_address.gstin):
+                return erp_address.name
 
-        return super().search_address(party, address, erp_address)
+        return super().search_address(party, address, erp_addresses)
 
     def guess_address(self, party, address, erp_addresses: list) -> str | None:
         gstin_map = {
