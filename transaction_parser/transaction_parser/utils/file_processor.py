@@ -3,6 +3,8 @@ import io
 import frappe
 import ocrmypdf
 import pymupdf
+from docling.datamodel.base_models import DocumentStream
+from docling.document_converter import DocumentConverter
 from frappe import _
 from frappe.utils.csvutils import read_csv_content
 from frappe.utils.xlsxutils import (
@@ -14,6 +16,14 @@ from frappe.utils.xlsxutils import (
 class FileProcessor:
     """Process files: PDF (trim pages, apply OCR), CSV/Excel (parse data), extract content."""
 
+    def get_doc_stream(self, doc):
+        """Get a DocumentStream for the given file doc."""
+        content = self.get_content(doc)
+        return DocumentStream(
+            name=doc.file_name,
+            content=io.BytesIO(content),
+        )
+
     def get_content(self, doc, page_limit=None):
         if doc.file_type == "PDF":
             return self._process_pdf(doc, page_limit)
@@ -24,10 +34,9 @@ class FileProcessor:
 
     def _process_pdf(self, doc, page_limit=None):
         """Process PDF files with OCR and page limiting."""
-        self.file = io.BytesIO(doc.get_content())
-        self._remove_extra_pages(page_limit)
-        self._apply_ocr()
-        return self._get_text()
+        self.converter = DocumentConverter()
+        result = self.converter.convert(self.get_doc_stream(doc))
+        return result.document.export_to_markdown()
 
     def _process_spreadsheet(self, doc):
         """Process CSV and Excel files."""
