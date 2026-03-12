@@ -3,8 +3,6 @@ import io
 import frappe
 import ocrmypdf
 import pymupdf
-from docling.datamodel.base_models import DocumentStream
-from docling.document_converter import DocumentConverter
 from frappe import _
 from frappe.utils.csvutils import read_csv_content
 from frappe.utils.xlsxutils import (
@@ -14,36 +12,33 @@ from frappe.utils.xlsxutils import (
 
 
 class FileProcessor:
-    """Process files: PDF (trim pages, apply OCR), CSV/Excel (parse data), extract content."""
-
-    def get_doc_stream(self, doc):
-        """Get a DocumentStream for the given file doc."""
-        content = self.get_content(doc)
-        return DocumentStream(
-            name=doc.file_name,
-            content=io.BytesIO(content),
-        )
+    """
+    Process files: PDF (trim pages, apply OCR), CSV/Excel (parse data), extract content.
+    """
 
     def get_content(self, doc, page_limit=None):
         if doc.file_type == "PDF":
-            return self._process_pdf(doc, page_limit)
+            return self.process_pdf(doc, page_limit)
         elif doc.file_type in ["CSV", "XLSX", "XLS"]:
-            return self._process_spreadsheet(doc)
+            return self.process_spreadsheet(doc)
         else:
             frappe.throw(_("Only PDF, CSV, and Excel files are supported"))
 
-    def _process_pdf(self, doc, page_limit=None):
+    def process_pdf(self, doc, page_limit=None):
         """Process PDF files with OCR and page limiting."""
-        self.converter = DocumentConverter()
-        result = self.converter.convert(self.get_doc_stream(doc))
-        return result.document.export_to_markdown()
+        self.file = io.BytesIO(doc.get_content())
+        self.remove_extra_pages(page_limit)
+        self.apply_ocr()
+        return self.get_text()
 
-    def _process_spreadsheet(self, doc):
-        """Process CSV and Excel files."""
+    def process_spreadsheet(self, doc):
+        """
+        Process CSV and Excel files.
+        """
         file_content = doc.get_content()
 
         if doc.file_type == "CSV":
-            file_content_str = self._decode_csv_content(file_content)
+            file_content_str = self.decode_csv_content(file_content)
             rows = read_csv_content(file_content_str)
         elif doc.file_type == "XLSX":
             rows = read_xlsx_file_from_attached_file(fcontent=file_content)
@@ -51,10 +46,12 @@ class FileProcessor:
             rows = read_xls_file_from_attached_file(file_content)
 
         # Convert rows to a formatted string representation
-        return self._format_rows_as_text(rows)
+        return self.format_rows_as_text(rows)
 
-    def _decode_csv_content(self, content):
-        """Decode CSV file content with fallback encodings."""
+    def decode_csv_content(self, content):
+        """
+        Decode CSV file content with fallback encodings.
+        """
         # If content is already a string, return as-is
         if isinstance(content, str):
             return content
@@ -78,8 +75,10 @@ class FileProcessor:
                 )
             )
 
-    def _format_rows_as_text(self, rows):
-        """Convert rows to a text format suitable for AI processing."""
+    def format_rows_as_text(self, rows):
+        """
+        Convert rows to a text format suitable for AI processing.
+        """
         if not rows:
             frappe.throw(_("No data found in the file."))
 
@@ -116,7 +115,7 @@ class FileProcessor:
 
         return "\n".join(text_parts)
 
-    def _remove_extra_pages(self, page_limit=None):
+    def remove_extra_pages(self, page_limit=None):
         if not page_limit:
             return
 
@@ -133,7 +132,7 @@ class FileProcessor:
         self.file = temp_file
         self.file.seek(0)
 
-    def _apply_ocr(self):
+    def apply_ocr(self):
         doc = pymupdf.open(stream=self.file, filetype="pdf")
         pages_to_ocr = [
             str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
@@ -159,7 +158,7 @@ class FileProcessor:
         self.file = temp_file
         self.file.seek(0)
 
-    def _get_text(self):
+    def get_text(self):
         text = ""
         doc = pymupdf.open(stream=self.file, filetype="pdf")
         for page in doc:
