@@ -37,10 +37,11 @@ class FileProcessor:
         """
         Process PDF files with OCR and page limiting.
         """
-        self.file = io.BytesIO(doc.get_content())
-        self.remove_extra_pages(page_limit)
-        self.apply_ocr()
-        return self.get_text()
+        file = io.BytesIO(doc.get_content())
+        file = self.trim_pages(file, page_limit)
+        file = self.apply_ocr(file)
+
+        return self.get_text(file)
 
     def process_spreadsheet(self, doc: File) -> str:
         """
@@ -126,11 +127,11 @@ class FileProcessor:
 
         return "\n".join(text_parts)
 
-    def remove_extra_pages(self, page_limit: int | None = None):
-        if not page_limit:
-            return
+    def trim_pages(self, file: io.BytesIO, page_limit: int | None = None) -> io.BytesIO:
+        if not page_limit or page_limit <= 0:
+            return file
 
-        input_pdf = pymupdf.open(stream=self.file, filetype="pdf")
+        input_pdf = pymupdf.open(stream=file, filetype="pdf")
         output_pdf = pymupdf.open()
         output_pdf.insert_pdf(input_pdf, to_page=page_limit - 1)
 
@@ -140,25 +141,25 @@ class FileProcessor:
         output_pdf.close()
         input_pdf.close()
 
-        self.file = temp_file
-        self.file.seek(0)
+        temp_file.seek(0)
+        return temp_file
 
-    def apply_ocr(self):
-        doc = pymupdf.open(stream=self.file, filetype="pdf")
+    def apply_ocr(self, file: io.BytesIO) -> io.BytesIO:
+        doc = pymupdf.open(stream=file, filetype="pdf")
         pages_to_ocr = [
             str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
         ]
 
         if not pages_to_ocr:
-            return
+            return file
 
         pages = ",".join(pages_to_ocr)
 
         temp_file = io.BytesIO()
-        self.file.seek(0)
+        file.seek(0)
 
         ocrmypdf.ocr(
-            input_file=self.file,
+            input_file=file,
             output_file=temp_file,
             pages=pages,
             progress_bar=False,
@@ -166,12 +167,12 @@ class FileProcessor:
             force_ocr=True,
         )
 
-        self.file = temp_file
-        self.file.seek(0)
+        temp_file.seek(0)
+        return temp_file
 
-    def get_text(self) -> str:
+    def get_text(self, file: io.BytesIO) -> str:
         text = ""
-        doc = pymupdf.open(stream=self.file, filetype="pdf")
+        doc = pymupdf.open(stream=file, filetype="pdf")
         for page in doc:
             text += page.get_text("text")
 
