@@ -132,6 +132,11 @@ class FileProcessor:
             return file
 
         input_pdf = pymupdf.open(stream=file, filetype="pdf")
+
+        if input_pdf.page_count <= page_limit:
+            input_pdf.close()
+            return file
+
         output_pdf = pymupdf.open()
         output_pdf.insert_pdf(input_pdf, to_page=page_limit - 1)
 
