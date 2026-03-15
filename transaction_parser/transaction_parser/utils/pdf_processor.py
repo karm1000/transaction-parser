@@ -5,7 +5,8 @@ import frappe
 import ocrmypdf
 import pymupdf
 from docling.datamodel.base_models import DocumentStream
-from docling.document_converter import DocumentConverter
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import DocumentConverter, PdfFormatOption
 from frappe import _
 from frappe.core.doctype.file.file import File
 
@@ -33,7 +34,7 @@ class BasePDFProcessor(ABC):
         Returns:
                 Extracted text content from the PDF
         """
-        ...
+        pass
 
     def get_sanitized_file(
         self, file: io.BytesIO | File, page_limit: int | None = None
@@ -79,10 +80,20 @@ class DoclingPDFProcessor(BasePDFProcessor):
         file = self.get_sanitized_file(file, page_limit)
 
         source = DocumentStream(name="document.pdf", stream=file)
-        converter = DocumentConverter()
+        converter = self._get_converter()
         result = converter.convert(source)
 
         return result.document.export_to_markdown()
+
+    def _get_converter(self) -> DocumentConverter:
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = False  # TODO: OCR Setup
+
+        return DocumentConverter(
+            format_options={
+                "pdf": PdfFormatOption(pipeline_options=pipeline_options),
+            }
+        )
 
 
 class OCRPDFProcessor(BasePDFProcessor):
