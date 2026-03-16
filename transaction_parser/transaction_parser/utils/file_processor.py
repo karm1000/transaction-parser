@@ -10,7 +10,7 @@ from frappe.utils.xlsxutils import (
 )
 
 from transaction_parser.transaction_parser.utils.pdf_processor import (
-    BasePDFProcessor,
+    PDFProcessor,
     get_pdf_processor,
 )
 
@@ -24,7 +24,7 @@ class FileProcessor:
         self,
         doc: File,
         page_limit: int | None = None,
-        pdf_processor: BasePDFProcessor | None = None,
+        pdf_processor: PDFProcessor | None = None,
     ) -> str | None:
         if doc.file_type == "PDF":
             return self.process_pdf(doc, page_limit, pdf_processor)
@@ -41,7 +41,7 @@ class FileProcessor:
         self,
         doc: File,
         page_limit: int | None = None,
-        pdf_processor: BasePDFProcessor | None = None,
+        pdf_processor: PDFProcessor | None = None,
     ) -> str:
         """
         Process PDF files using the configured PDF processor strategy.

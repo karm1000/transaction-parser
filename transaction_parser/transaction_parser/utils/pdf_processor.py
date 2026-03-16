@@ -10,16 +10,24 @@ from docling.document_converter import DocumentConverter, PdfFormatOption
 from frappe import _
 from frappe.core.doctype.file.file import File
 
+DEFAULT_PDF_PROCESSOR = "OCRMyPDF"
 
-class BasePDFProcessor(ABC):
+
+class PDFProcessor(ABC):
     """
     Abstract base class for PDF processors.
 
-    To add a new processor:
-    1. Create a new file in pdf_processors/
-    2. Subclass BasePDFProcessor
-    3. Implement the `process` method
-    4. Register it in pdf_processors/__init__.py PDF_PROCESSORS dict
+    To add a new processor from another app:
+
+        1. Subclass PDFProcessor
+        2. Implement the `process` method
+        3. Register it via the `pdf_processors` hook in your app's hooks.py:
+
+    ```
+    pdf_processors = {
+        "MyProcessor": "my_app.utils.pdf_processor.MyPDFProcessor",
+    }
+    ```
     """
 
     @abstractmethod
@@ -28,18 +36,20 @@ class BasePDFProcessor(ABC):
         Process a PDF file and return extracted text.
 
         Args:
-                file: PDF file as BytesIO stream or Frappe File document
-                page_limit: Maximum number of pages to process (None = all pages)
+                        file: PDF file as BytesIO stream or Frappe File document
+                        page_limit: Maximum number of pages to process (None = all pages)
 
         Returns:
-                Extracted text content from the PDF
+                        Extracted text content from the PDF
         """
         pass
 
     def get_sanitized_file(
         self, file: io.BytesIO | File, page_limit: int | None = None
     ) -> io.BytesIO:
-        """Get file as BytesIO stream and trim pages if needed."""
+        """
+        Get file as BytesIO stream and trim pages if needed.
+        """
         if isinstance(file, File):
             file = io.BytesIO(file.get_content())
 
@@ -67,8 +77,19 @@ class BasePDFProcessor(ABC):
         temp_file.seek(0)
         return temp_file
 
+    def get_text(self, file: io.BytesIO) -> str:
+        text = ""
+        doc = pymupdf.open(stream=file, filetype="pdf")
 
-class DoclingPDFProcessor(BasePDFProcessor):
+        for page in doc:
+            text += page.get_text("text")
+
+        doc.close()
+
+        return text
+
+
+class DoclingPDFProcessor(PDFProcessor):
     """
     PDF processor using Docling for document conversion and text extraction.
 
@@ -79,7 +100,7 @@ class DoclingPDFProcessor(BasePDFProcessor):
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
         file = self.get_sanitized_file(file, page_limit)
 
-        source = DocumentStream(name="document.pdf", stream=file)
+        source = DocumentStream(name="document.pdf", stream=file)  # temporary name
         converter = self._get_converter()
         result = converter.convert(source)
 
@@ -96,7 +117,7 @@ class DoclingPDFProcessor(BasePDFProcessor):
         )
 
 
-class OCRPDFProcessor(BasePDFProcessor):
+class OCRMyPDFProcessor(PDFProcessor):
     """
     PDF processor using PyMuPDF for text extraction and OCRmyPDF for OCR.
     """
@@ -135,48 +156,42 @@ class OCRPDFProcessor(BasePDFProcessor):
         temp_file.seek(0)
         return temp_file
 
-    def get_text(self, file: io.BytesIO) -> str:
-        text = ""
-        doc = pymupdf.open(stream=file, filetype="pdf")
 
-        for page in doc:
-            text += page.get_text("text")
-
-        doc.close()
-
-        return text
-
-
-# Registry: add new processors here
-PDF_PROCESSORS: dict[str, type[BasePDFProcessor]] = {
-    "OCR": OCRPDFProcessor,
-    "Docling": DoclingPDFProcessor,
-}
-
-DEFAULT_PDF_PROCESSOR = "OCR"
-
-
-def get_pdf_processor(name: str | None = None) -> BasePDFProcessor:
+@frappe.request_cache
+def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     """
     Factory function to get a PDF processor by name.
 
     Usage:
 
-    ```
-    processor = get_pdf_processor("OCR")
-    text = processor.process(file, page_limit=5)
-    ```
-    """
-    name = name or DEFAULT_PDF_PROCESSOR
+        ```
+        processor = get_pdf_processor("OCR")
+        text = processor.process(file, page_limit=5)
+        ```
 
-    processor_class = PDF_PROCESSORS.get(name)
-    if not processor_class:
-        supported = ", ".join(PDF_PROCESSORS.keys())
+    To register a custom processor from another app, add to its hooks.py:
+
+        ```
+        pdf_processors = {
+            "MyProcessor": "my_app.utils.pdf_processor.MyPDFProcessor",
+        }
+        ```
+    """
+    if not name:
+        name = (
+            frappe.db.get_single_value("Transaction Parser Settings", "pdf_processor")
+            or DEFAULT_PDF_PROCESSOR
+        )
+
+    processors = frappe.get_hooks("pdf_processors") or {}
+    class_path = (processors.get(name) or [None])[-1]
+
+    if not class_path:
         frappe.throw(
             title=_("Unsupported PDF Processor"),
             msg=_("PDF Processor '{0}' is not supported. <br>Choose from: {1}").format(
-                name, supported
+                name, ", ".join(processors.keys())
             ),
         )
 
-    return processor_class()
+    return frappe.get_attr(class_path)()

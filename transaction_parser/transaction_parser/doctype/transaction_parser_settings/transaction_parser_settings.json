@@ -94,13 +94,13 @@
    "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
   },
   {
-   "default": "Docling",
+   "default": "OCRMyPDF",
    "depends_on": "eval: doc.enabled",
    "description": "Select the library to use for PDF text extraction",
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
-   "options": "Docling\nOCRmyPDF"
+   "options": "OCRMyPDF\nDocling"
   },
   {
    "depends_on": "eval: doc.enabled",
