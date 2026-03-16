@@ -32,3 +32,5 @@ pdf_processors = {
     "OCRMyPDF": "transaction_parser.transaction_parser.utils.pdf_processor.OCRMyPDFProcessor",
     "Docling": "transaction_parser.transaction_parser.utils.pdf_processor.DoclingPDFProcessor",
 }
+
+export_python_type_annotations = True

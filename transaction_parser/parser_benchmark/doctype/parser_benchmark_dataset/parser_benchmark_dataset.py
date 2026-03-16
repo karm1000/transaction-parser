@@ -41,7 +41,7 @@ def run_benchmark(dataset_name: str):
         }
     ).insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    frappe.db.commit() # Ensure the log is saved before the background job picks it up
 
     frappe.enqueue(
         _run_benchmark,
