@@ -95,3 +95,12 @@ def get_ai_models():
         "default_model": default_model,
         "supported_models": supported_models,
     }
+
+
+@frappe.whitelist()
+def get_pdf_processors():
+    from transaction_parser.transaction_parser.utils.pdf_processor import (
+        get_available_pdf_processors,
+    )
+
+    return get_available_pdf_processors()

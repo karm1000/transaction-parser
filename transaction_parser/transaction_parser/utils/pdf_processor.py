@@ -195,3 +195,9 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
         )
 
     return frappe.get_attr(class_path)()
+
+
+def get_available_pdf_processors() -> list[str]:
+    """Return names of all registered PDF processors from hooks."""
+    processors = frappe.get_hooks("pdf_processors") or {}
+    return list(processors.keys())

@@ -1,0 +1,55 @@
+{
+ "actions": [],
+ "creation": "2026-03-16 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "ai_model",
+  "currency",
+  "input_cost_per_million",
+  "output_cost_per_million"
+ ],
+ "fields": [
+  {
+   "fieldname": "ai_model",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "AI Model",
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash",
+   "reqd": 1
+  },
+  {
+   "default": "USD",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "input_cost_per_million",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Input Cost / 1M Tokens",
+   "reqd": 1
+  },
+  {
+   "fieldname": "output_cost_per_million",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Output Cost / 1M Tokens",
+   "reqd": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-16 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Token Cost",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

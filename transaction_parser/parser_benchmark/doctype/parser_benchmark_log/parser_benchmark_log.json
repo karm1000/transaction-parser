@@ -1,0 +1,240 @@
+{
+ "actions": [],
+ "autoname": "format:PBL-{#####}",
+ "creation": "2026-03-16 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "dataset",
+  "status",
+  "column_break_summary",
+  "ai_model",
+  "pdf_processor",
+  "total_time",
+  "file_parsing_tab",
+  "file_parse_time",
+  "column_break_file_metrics",
+  "file_parse_memory",
+  "section_break_file_content",
+  "file_content",
+  "ai_response_tab",
+  "prompt_tokens",
+  "completion_tokens",
+  "total_tokens",
+  "ai_parse_time",
+  "column_break_ai",
+  "input_cost",
+  "output_cost",
+  "total_cost",
+  "section_break_ai_content",
+  "ai_response",
+  "result_tab",
+  "document_type",
+  "column_break_wdyy",
+  "document_name",
+  "section_break_error",
+  "error"
+ ],
+ "fields": [
+  {
+   "fieldname": "dataset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Dataset",
+   "options": "Parser Benchmark Dataset",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Queued\nRunning\nCompleted\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_summary",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ai_model",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "AI Model",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf_processor",
+   "fieldtype": "Data",
+   "label": "PDF Processor",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_time",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Time (s)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "file_parsing_tab",
+   "fieldtype": "Tab Break",
+   "label": "File Parsing"
+  },
+  {
+   "fieldname": "file_parse_time",
+   "fieldtype": "Float",
+   "label": "Parse Time (s)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_file_metrics",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "file_parse_memory",
+   "fieldtype": "Float",
+   "label": "Memory Delta (MB)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_file_content",
+   "fieldtype": "Section Break",
+   "label": "Extracted Content"
+  },
+  {
+   "fieldname": "file_content",
+   "fieldtype": "Code",
+   "label": "File Content",
+   "options": "Markdown",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ai_response_tab",
+   "fieldtype": "Tab Break",
+   "label": "AI Response"
+  },
+  {
+   "fieldname": "prompt_tokens",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Prompt Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completion_tokens",
+   "fieldtype": "Int",
+   "label": "Completion Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_tokens",
+   "fieldtype": "Int",
+   "label": "Total Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ai",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ai_parse_time",
+   "fieldtype": "Float",
+   "label": "AI Parse Time (s)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "input_cost",
+   "fieldtype": "Float",
+   "label": "Input Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "output_cost",
+   "fieldtype": "Float",
+   "label": "Output Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ai_content",
+   "fieldtype": "Section Break",
+   "label": "AI Output"
+  },
+  {
+   "fieldname": "ai_response",
+   "fieldtype": "JSON",
+   "label": "AI Response",
+   "read_only": 1
+  },
+  {
+   "fieldname": "result_tab",
+   "fieldtype": "Tab Break",
+   "label": "Result"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Document Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "document_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Document",
+   "options": "document_type",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.status === 'Failed'",
+   "fieldname": "section_break_error",
+   "fieldtype": "Section Break",
+   "label": "Error"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Code",
+   "label": "Error Traceback",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_wdyy",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-16 12:52:18.204234",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Log",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
