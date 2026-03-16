@@ -339,18 +339,35 @@ class Transaction:
             .where(link_doctype.link_name == party.name)
         ).run(as_dict=True)
 
-        for erp_address in erp_addresses:
-            if found := self.search_address(party, address, erp_address):
-                return found
+        if found := self.search_address(party, address, erp_addresses):
+            return found
 
         return self.guess_address(party, address, erp_addresses)
 
-    def search_address(self, party, address, erp_address) -> str | None:
-        if erp_address.pincode == address.postal_code:
-            return erp_address.name
+    def search_address(self, party, address, erp_addresses) -> str | None:
+        pincode_match = None
+        address_line1_match = None
 
-        if erp_address.address_line1 == address.address_line_1:
-            return erp_address.name
+        for erp_address in erp_addresses:
+            is_pincode_match = (
+                erp_address.pincode and erp_address.pincode == address.postal_code
+            )
+
+            is_address_line1_match = (
+                erp_address.address_line1
+                and erp_address.address_line1 == address.address_line_1
+            )
+
+            if is_pincode_match and is_address_line1_match:
+                return erp_address.name
+
+            if not pincode_match and is_pincode_match:
+                pincode_match = erp_address.name
+
+            if not address_line1_match and is_address_line1_match:
+                address_line1_match = erp_address.name
+
+        return pincode_match or address_line1_match
 
     def guess_address(self, party, address, erp_addresses: list) -> str | None:
         address_line_1_map = {
