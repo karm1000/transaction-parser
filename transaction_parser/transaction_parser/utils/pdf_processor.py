@@ -93,6 +93,8 @@ class DoclingPDFProcessor(PDFProcessor):
     formula recognition, reading order detection, and OCR.
     """
 
+    _converter = None
+
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
         from docling.datamodel.base_models import DocumentStream
 
@@ -105,17 +107,20 @@ class DoclingPDFProcessor(PDFProcessor):
         return result.document.export_to_markdown()
 
     def _get_converter(self):
-        from docling.datamodel.pipeline_options import PdfPipelineOptions
-        from docling.document_converter import DocumentConverter, PdfFormatOption
+        if DoclingPDFProcessor._converter is None:
+            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.document_converter import DocumentConverter, PdfFormatOption
 
-        pipeline_options = PdfPipelineOptions()
-        pipeline_options.do_ocr = False  # TODO: OCR Setup
+            pipeline_options = PdfPipelineOptions()
+            pipeline_options.do_ocr = False  # TODO: OCR Setup
 
-        return DocumentConverter(
-            format_options={
-                "pdf": PdfFormatOption(pipeline_options=pipeline_options),
-            }
-        )
+            DoclingPDFProcessor._converter = DocumentConverter(
+                format_options={
+                    "pdf": PdfFormatOption(pipeline_options=pipeline_options),
+                }
+            )
+
+        return DoclingPDFProcessor._converter
 
 
 class OCRMyPDFProcessor(PDFProcessor):
