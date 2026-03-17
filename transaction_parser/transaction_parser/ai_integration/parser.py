@@ -37,27 +37,8 @@ class AIParser:
         file_doc_name: str | None = None,
     ) -> dict:
         messages = self._build_messages(document_type, document_schema, document_data)
-        response = self.send_message(messages=messages, file_doc_name=file_doc_name)
-        return self.get_content(response)
-
-    def parse_with_response(
-        self,
-        document_type: str,
-        document_schema: dict,
-        document_data: str,
-        file_doc_name: str | None = None,
-    ) -> tuple[dict, dict]:
-        """Parse document and return both the parsed content and the raw API response.
-
-        Useful for benchmarking and diagnostics where token usage and other
-        response metadata are needed alongside the parsed output.
-
-        Returns:
-            tuple: (parsed_content, raw_response)
-        """
-        messages = self._build_messages(document_type, document_schema, document_data)
-        response = self.send_message(messages=messages, file_doc_name=file_doc_name)
-        return self.get_content(response), response
+        self.ai_response = self.send_message(messages=messages, file_doc_name=file_doc_name)
+        return self.get_content(self.ai_response)
 
     def _build_messages(
         self, document_type: str, document_schema: dict, document_data: str

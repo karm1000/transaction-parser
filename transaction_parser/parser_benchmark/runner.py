@@ -103,7 +103,7 @@ class BenchmarkRunner:
         parser = AIParser(self.dataset.ai_model)
 
         start = default_timer()
-        ai_content, response = parser.parse_with_response(
+        ai_content = parser.parse(
             document_type=self._controller.DOCTYPE,
             document_schema=schema,
             document_data=self._file_content,
@@ -112,7 +112,7 @@ class BenchmarkRunner:
         self.log.ai_parse_time = round(default_timer() - start, 4)
 
         # token usage
-        usage = response.get("usage", {})
+        usage = parser.ai_response.get("usage", {})
         self.log.prompt_tokens = usage.get("prompt_tokens", 0)
         self.log.completion_tokens = usage.get("completion_tokens", 0)
         self.log.total_tokens = usage.get("total_tokens", 0)
