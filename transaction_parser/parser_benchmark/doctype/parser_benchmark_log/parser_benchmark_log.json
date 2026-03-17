@@ -1,10 +1,11 @@
 {
  "actions": [],
- "autoname": "format:PBL-{#####}",
+ "autoname": "naming_series:",
  "creation": "2026-03-16 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "naming_series",
   "dataset",
   "status",
   "column_break_summary",
@@ -36,6 +37,14 @@
   "error"
  ],
  "fields": [
+  {
+   "default": "PBL-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "PBL-"
+  },
   {
    "fieldname": "dataset",
    "fieldtype": "Link",
@@ -217,7 +226,7 @@
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",
- "naming_rule": "Expression (old style)",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
