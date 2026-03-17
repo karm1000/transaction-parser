@@ -36,6 +36,11 @@ class Transaction:
         self.file = file
         self.ai_model = ai_model
         self.data = self._parse_file_content(ai_model, page_limit)
+
+        return self.create_document()
+
+    def create_document(self):
+        """Create, populate, and insert the transaction document."""
         self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
         self.doc.is_created_by_transaction_parser = 1
 

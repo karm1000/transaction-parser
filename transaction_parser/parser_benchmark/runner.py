@@ -126,15 +126,8 @@ class BenchmarkRunner:
     def _run_document_generation(self, file_doc):
         c = self._controller
         c.data = self._ai_content
-        c.doc = frappe.get_doc({"doctype": c.DOCTYPE})
-        c.doc.is_created_by_transaction_parser = 1
-        c.doc.is_created_by_benchmark = 1
-
-        c.set_details()
-        c.set_missing_values()
-        c._set_flags()
-        c.doc.insert()
-        c._attach_file()
+        c.create_document()
+        c.doc.db_set("is_created_by_benchmark", 1)
 
         self.log.document_type = c.DOCTYPE
         self.log.document_name = c.doc.name
