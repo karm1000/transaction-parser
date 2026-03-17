@@ -157,15 +157,14 @@ class OCRMyPDFProcessor(PDFProcessor):
         ]
 
         doc.close()
+        file.seek(0)
 
         if not pages_to_ocr:
-            file.seek(0)
             return file
 
         pages = ",".join(pages_to_ocr)
 
         temp_file = io.BytesIO()
-        file.seek(0)
 
         ocrmypdf.ocr(
             input_file=file,
