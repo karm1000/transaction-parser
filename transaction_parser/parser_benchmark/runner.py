@@ -101,14 +101,15 @@ class BenchmarkRunner:
         self._controller.file = file_doc
 
         schema = self._controller.get_schema()
-
         parser = AIParser(self.dataset.ai_model)
-        messages = parser._build_messages(
-            self._controller.DOCTYPE, schema, self._file_content
-        )
 
         start = default_timer()
-        response = parser.send_message(messages=messages, file_doc_name=file_doc.name)
+        ai_content, response = parser.parse_with_response(
+            document_type=self._controller.DOCTYPE,
+            document_schema=schema,
+            document_data=self._file_content,
+            file_doc_name=file_doc.name,
+        )
         self.log.ai_parse_time = round(default_timer() - start, 4)
 
         # token usage
@@ -118,9 +119,7 @@ class BenchmarkRunner:
         self.log.total_tokens = usage.get("total_tokens", 0)
 
         # parsed content
-        ai_content = parser.get_content(response)
         self.log.ai_response = frappe.as_json(ai_content, indent=2)
-
         self._ai_content = ai_content
 
     # ── step 3: document generation ─────────────────────────
