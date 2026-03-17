@@ -1,7 +1,7 @@
 {
  "actions": [],
- "autoname": "format:PBD-{#####}",
- "creation": "2026-03-16 00:00:00.000000",
+ "autoname": "naming_series:",
+ "creation": "2026-03-16 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -18,7 +18,9 @@
   "pdf_processor",
   "column_break_processing",
   "company",
-  "page_limit"
+  "page_limit",
+  "section_break_bhsg",
+  "naming_series"
  ],
  "fields": [
   {
@@ -84,7 +86,8 @@
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
-   "options": "OCRMyPDF\nDocling"
+   "options": "OCRMyPDF\nDocling",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_processing",
@@ -101,15 +104,26 @@
    "fieldname": "page_limit",
    "fieldtype": "Int",
    "label": "Page Limit"
+  },
+  {
+   "fieldname": "section_break_bhsg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "Parser-Dataset-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "Parser-Dataset-"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-16 00:00:00.000000",
+ "modified": "2026-03-16 13:33:28.707264",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
- "naming_rule": "Expression",
+ "naming_rule": "By \"Naming Series\" field",
  "owner": "Administrator",
  "permissions": [
   {
@@ -125,9 +139,10 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "title_field": "title",
- "show_title_field_in_link": 1
+ "title_field": "title"
 }
