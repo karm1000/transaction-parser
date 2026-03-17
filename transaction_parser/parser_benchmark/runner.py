@@ -1,4 +1,4 @@
-import resource
+import tracemalloc
 from timeit import default_timer
 
 import frappe
@@ -76,7 +76,7 @@ class BenchmarkRunner:
         if file_doc.file_type == "PDF" and self.dataset.pdf_processor:
             pdf_processor = get_pdf_processor(self.dataset.pdf_processor)
 
-        mem_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        tracemalloc.start()
         start = default_timer()
 
         content = FileProcessor().get_content(
@@ -87,9 +87,9 @@ class BenchmarkRunner:
 
         self.log.file_parse_time = round(default_timer() - start, 4)
 
-        mem_after = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        # ru_maxrss is in KB on Linux
-        self.log.file_parse_memory = round((mem_after - mem_before) / 1024, 2)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        self.log.file_parse_memory = round(peak / 1024 / 1024, 2)  # bytes → MB
 
         self.log.file_content = content
         self._file_content = content
