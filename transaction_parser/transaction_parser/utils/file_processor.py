@@ -82,21 +82,18 @@ class FileProcessor:
             return content
 
         # If content is bytes, decode it
-        for encoding in ("utf-8", "utf-8-sig", "cp1252"):
+        # ! Note: Always keep `latin1` as the last fallback encoding, as it can decode any byte sequence without errors (Garbage)
+        for encoding in ("utf-8", "utf-8-sig", "cp1252", "latin1"):
             try:
                 return content.decode(encoding)
             except UnicodeDecodeError:
                 continue
 
-        # Latin-1 never raises; use as final fallback before giving up
-        try:
-            return content.decode("latin1")
-        except Exception:
-            frappe.throw(
-                _(
-                    "Unable to decode CSV file. Please ensure the file is saved with a supported encoding."
-                )
+        frappe.throw(
+            _(
+                "Unable to decode CSV file. Please ensure the file is saved with a supported encoding."
             )
+        )
 
     def format_rows_as_text(self, rows: list) -> str:
         """
