@@ -78,19 +78,18 @@ class BenchmarkRunner:
 
         tracemalloc.start()
         start = default_timer()
+        try:
+            content = FileProcessor().get_content(
+                file_doc,
+                self.dataset.page_limit or None,
+                pdf_processor,
+            )
+        finally:
+            self.log.file_parse_time = round(default_timer() - start, 4)
+            _, peak = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
 
-        content = FileProcessor().get_content(
-            file_doc,
-            self.dataset.page_limit or None,
-            pdf_processor,
-        )
-
-        self.log.file_parse_time = round(default_timer() - start, 4)
-
-        _, peak = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
         self.log.file_parse_memory = round(peak / 1024 / 1024, 2)  # bytes → MB
-
         self.log.file_content = content
         self._file_content = content
 
