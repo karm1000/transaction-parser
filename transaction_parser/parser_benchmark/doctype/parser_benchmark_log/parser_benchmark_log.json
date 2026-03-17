@@ -5,13 +5,15 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "naming_series",
   "dataset",
   "status",
+  "total_time",
   "column_break_summary",
   "ai_model",
   "pdf_processor",
-  "total_time",
+  "section_break_nmcv",
+  "naming_series",
+  "column_break_ubhs",
   "file_parsing_tab",
   "file_parse_time",
   "column_break_file_metrics",
@@ -19,6 +21,11 @@
   "section_break_file_content",
   "file_content",
   "ai_response_tab",
+  "input_token_cost",
+  "currency",
+  "column_break_ncdl",
+  "output_token_cost",
+  "section_break_yqhs",
   "prompt_tokens",
   "completion_tokens",
   "total_tokens",
@@ -38,12 +45,12 @@
  ],
  "fields": [
   {
-   "default": "PBL-",
+   "default": "PAR-BM-LOG-",
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "hidden": 1,
    "label": "Naming Series",
-   "options": "PBL-"
+   "options": "PAR-BM-LOG-"
   },
   {
    "fieldname": "dataset",
@@ -103,9 +110,10 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Peak memory allocated during file parsing, measured using tracemalloc",
    "fieldname": "file_parse_memory",
    "fieldtype": "Float",
-   "label": "Memory Delta (MB)",
+   "label": "Peak Memory (MB)",
    "read_only": 1
   },
   {
@@ -156,21 +164,32 @@
   },
   {
    "fieldname": "input_cost",
-   "fieldtype": "Float",
+   "fieldtype": "Currency",
    "label": "Input Cost",
+   "options": "currency",
    "read_only": 1
   },
   {
    "fieldname": "output_cost",
-   "fieldtype": "Float",
+   "fieldtype": "Currency",
    "label": "Output Cost",
+   "options": "currency",
    "read_only": 1
   },
   {
    "fieldname": "total_cost",
-   "fieldtype": "Float",
+   "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Total Cost",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Currency",
+   "options": "Currency",
    "read_only": 1
   },
   {
@@ -218,11 +237,46 @@
   {
    "fieldname": "column_break_wdyy",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_nmcv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ubhs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Cost per 1M input tokens at the time of this run",
+   "fieldname": "input_token_cost",
+   "fieldtype": "Currency",
+   "label": "Input Token Cost",
+   "non_negative": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "description": "Cost per 1M output tokens at the time of this run",
+   "fieldname": "output_token_cost",
+   "fieldtype": "Currency",
+   "label": "Output Token Cost",
+   "non_negative": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ncdl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_yqhs",
+   "fieldtype": "Section Break"
   }
  ],
+ "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-16 12:52:18.204234",
+ "modified": "2026-03-17 12:19:10.850540",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

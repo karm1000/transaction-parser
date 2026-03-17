@@ -28,7 +28,7 @@ class ParserBenchmarkDataset(Document):
         country: DF.Literal["India", "Other"]
         enabled: DF.Check
         file: DF.Attach
-        naming_series: DF.Literal["Parser-Dataset-"]
+        naming_series: DF.Literal["PAR-BM-DTS-"]
         page_limit: DF.Int
         pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
         title: DF.Data

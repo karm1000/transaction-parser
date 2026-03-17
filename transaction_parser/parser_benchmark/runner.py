@@ -149,6 +149,10 @@ class BenchmarkRunner:
         if not cost_row:
             return
 
+        self.log.currency = cost_row.currency
+        self.log.input_token_cost = cost_row.input_cost_per_million
+        self.log.output_token_cost = cost_row.output_cost_per_million
+
         prompt = self.log.prompt_tokens or 0
         completion = self.log.completion_tokens or 0
 

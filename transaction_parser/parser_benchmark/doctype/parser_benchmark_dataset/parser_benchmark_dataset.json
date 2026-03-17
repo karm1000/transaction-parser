@@ -103,23 +103,24 @@
   {
    "fieldname": "page_limit",
    "fieldtype": "Int",
-   "label": "Page Limit"
+   "label": "Page Limit",
+   "non_negative": 1
   },
   {
    "fieldname": "section_break_bhsg",
    "fieldtype": "Section Break"
   },
   {
-   "default": "Parser-Dataset-",
+   "default": "PAR-BM-DTS-",
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Naming Series",
-   "options": "Parser-Dataset-"
+   "options": "PAR-BM-DTS-"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-17 11:04:01.862839",
+ "modified": "2026-03-17 12:17:35.880185",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
