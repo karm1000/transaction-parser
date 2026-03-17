@@ -82,17 +82,15 @@ class FileProcessor:
             return content
 
         # If content is bytes, decode it
-        encodings = ["utf-8", "utf-8-sig", "latin1", "cp1252"]
-
-        for encoding in encodings:
+        for encoding in ("utf-8", "utf-8-sig", "cp1252"):
             try:
                 return content.decode(encoding)
             except UnicodeDecodeError:
                 continue
 
-        # If all encodings fail, try with error handling
+        # Latin-1 never raises; use as final fallback before giving up
         try:
-            return content.decode("utf-8", errors="replace")
+            return content.decode("latin1")
         except Exception:
             frappe.throw(
                 _(
