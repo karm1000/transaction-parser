@@ -189,7 +189,7 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     Usage:
 
     ```
-    processor = get_pdf_processor("OCR")
+    processor = get_pdf_processor("Docling")
     text = processor.process(file, page_limit=5)
     ```
 
