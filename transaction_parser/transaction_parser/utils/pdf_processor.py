@@ -145,6 +145,7 @@ class OCRMyPDFProcessor(PDFProcessor):
         doc.close()
 
         if not pages_to_ocr:
+            file.seek(0)
             return file
 
         pages = ",".join(pages_to_ocr)
