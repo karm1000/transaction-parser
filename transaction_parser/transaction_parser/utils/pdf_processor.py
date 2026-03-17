@@ -160,7 +160,6 @@ class OCRMyPDFProcessor(PDFProcessor):
         return temp_file
 
 
-@frappe.request_cache
 def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     """
     Factory function to get a PDF processor by name.
