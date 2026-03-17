@@ -186,6 +186,8 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
         )
 
     processors = frappe.get_hooks("pdf_processors") or {}
+
+    # [-1] → last in resolution order app's overrides will take precedence
     class_path = (processors.get(name) or [None])[-1]
 
     if not class_path:
