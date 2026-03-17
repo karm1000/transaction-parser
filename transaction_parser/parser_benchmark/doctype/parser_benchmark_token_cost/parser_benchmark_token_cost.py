@@ -13,9 +13,18 @@ class ParserBenchmarkTokenCost(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
-        ai_model: DF.Select
-        currency: DF.Link | None
-        input_cost_per_million: DF.Float
+        ai_model: DF.Literal[
+            "DeepSeek Chat",
+            "DeepSeek Reasoner",
+            "OpenAI gpt-4o",
+            "OpenAI gpt-4o-mini",
+            "OpenAI gpt-5",
+            "OpenAI gpt-5-mini",
+            "Google Gemini Pro",
+            "Google Gemini Flash",
+        ]
+        currency: DF.Link
+        input_cost_per_million: DF.Currency
         output_cost_per_million: DF.Float
         parent: DF.Data
         parentfield: DF.Data

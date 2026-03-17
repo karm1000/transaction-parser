@@ -1,6 +1,6 @@
 {
  "actions": [],
- "creation": "2026-03-16 00:00:00.000000",
+ "creation": "2026-03-16 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -11,12 +11,13 @@
    "fieldname": "token_costs",
    "fieldtype": "Table",
    "label": "Token Costs",
-   "options": "Parser Benchmark Token Cost"
+   "options": "Parser Benchmark Token Cost",
+   "reqd": 1
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-03-16 00:00:00.000000",
+ "modified": "2026-03-17 12:28:36.279956",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Settings",
@@ -33,6 +34,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

@@ -1,12 +1,13 @@
 {
  "actions": [],
- "creation": "2026-03-16 00:00:00.000000",
+ "creation": "2026-03-16 00:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "ai_model",
-  "currency",
   "input_cost_per_million",
+  "column_break_jvcd",
+  "currency",
   "output_cost_per_million"
  ],
  "fields": [
@@ -20,35 +21,48 @@
   },
   {
    "default": "USD",
+   "description": "Recommend using USD",
    "fieldname": "currency",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Currency",
-   "options": "Currency"
-  },
-  {
-   "fieldname": "input_cost_per_million",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Input Cost / 1M Tokens",
+   "options": "Currency",
    "reqd": 1
   },
   {
+   "description": "Per 1M Tokens",
+   "fieldname": "input_cost_per_million",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Input Cost",
+   "non_negative": 1,
+   "options": "currency",
+   "reqd": 1
+  },
+  {
+   "description": "Per 1M Tokens",
    "fieldname": "output_cost_per_million",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Output Cost / 1M Tokens",
+   "label": "Output Cost",
+   "non_negative": 1,
+   "options": "currency",
    "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jvcd",
+   "fieldtype": "Column Break"
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2026-03-16 00:00:00.000000",
+ "modified": "2026-03-17 12:33:28.293555",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Token Cost",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
