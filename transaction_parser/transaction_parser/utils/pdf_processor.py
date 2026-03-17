@@ -2,11 +2,7 @@ import io
 from abc import ABC, abstractmethod
 
 import frappe
-import ocrmypdf
 import pymupdf
-from docling.datamodel.base_models import DocumentStream
-from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.document_converter import DocumentConverter, PdfFormatOption
 from frappe import _
 from frappe.core.doctype.file.file import File
 
@@ -97,7 +93,11 @@ class DoclingPDFProcessor(PDFProcessor):
     formula recognition, reading order detection, and OCR.
     """
 
+    _converter = None
+
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
+        from docling.datamodel.base_models import DocumentStream
+
         file = self.get_sanitized_file(file, page_limit)
 
         source = DocumentStream(name="document.pdf", stream=file)  # temporary name
@@ -106,15 +106,21 @@ class DoclingPDFProcessor(PDFProcessor):
 
         return result.document.export_to_markdown()
 
-    def _get_converter(self) -> DocumentConverter:
-        pipeline_options = PdfPipelineOptions()
-        pipeline_options.do_ocr = False  # TODO: OCR Setup
+    def _get_converter(self):
+        if DoclingPDFProcessor._converter is None:
+            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.document_converter import DocumentConverter, PdfFormatOption
 
-        return DocumentConverter(
-            format_options={
-                "pdf": PdfFormatOption(pipeline_options=pipeline_options),
-            }
-        )
+            pipeline_options = PdfPipelineOptions()
+            pipeline_options.do_ocr = False  # TODO: OCR Setup
+
+            DoclingPDFProcessor._converter = DocumentConverter(
+                format_options={
+                    "pdf": PdfFormatOption(pipeline_options=pipeline_options),
+                }
+            )
+
+        return DoclingPDFProcessor._converter
 
 
 class OCRMyPDFProcessor(PDFProcessor):
@@ -129,6 +135,8 @@ class OCRMyPDFProcessor(PDFProcessor):
         return self.get_text(file)
 
     def apply_ocr(self, file: io.BytesIO) -> io.BytesIO:
+        import ocrmypdf
+
         doc = pymupdf.open(stream=file, filetype="pdf")
         pages_to_ocr = [
             str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
@@ -137,6 +145,7 @@ class OCRMyPDFProcessor(PDFProcessor):
         doc.close()
 
         if not pages_to_ocr:
+            file.seek(0)
             return file
 
         pages = ",".join(pages_to_ocr)
@@ -157,7 +166,6 @@ class OCRMyPDFProcessor(PDFProcessor):
         return temp_file
 
 
-@frappe.request_cache
 def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     """
     Factory function to get a PDF processor by name.
@@ -184,6 +192,8 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
         )
 
     processors = frappe.get_hooks("pdf_processors") or {}
+
+    # [-1] → last in resolution order app's overrides will take precedence
     class_path = (processors.get(name) or [None])[-1]
 
     if not class_path:
