@@ -62,6 +62,13 @@ class FileProcessor:
             rows = read_xlsx_file_from_attached_file(fcontent=file_content)
         elif doc.file_type == "XLS":
             rows = read_xls_file_from_attached_file(file_content)
+        else:
+            frappe.throw(
+                title=_("Unsupported File Type"),
+                msg=_(
+                    "Cannot process spreadsheet with file type: {0}. <br> Supported types are CSV, XLSX, and XLS."
+                ).format(doc.file_type),
+            )
 
         # Convert rows to a formatted string representation
         return self.format_rows_as_text(rows)
