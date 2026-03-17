@@ -2,11 +2,7 @@ import io
 from abc import ABC, abstractmethod
 
 import frappe
-import ocrmypdf
 import pymupdf
-from docling.datamodel.base_models import DocumentStream
-from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.document_converter import DocumentConverter, PdfFormatOption
 from frappe import _
 from frappe.core.doctype.file.file import File
 
@@ -98,6 +94,8 @@ class DoclingPDFProcessor(PDFProcessor):
     """
 
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
+        from docling.datamodel.base_models import DocumentStream
+
         file = self.get_sanitized_file(file, page_limit)
 
         source = DocumentStream(name="document.pdf", stream=file)  # temporary name
@@ -106,7 +104,10 @@ class DoclingPDFProcessor(PDFProcessor):
 
         return result.document.export_to_markdown()
 
-    def _get_converter(self) -> DocumentConverter:
+    def _get_converter(self):
+        from docling.datamodel.pipeline_options import PdfPipelineOptions
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+
         pipeline_options = PdfPipelineOptions()
         pipeline_options.do_ocr = False  # TODO: OCR Setup
 
@@ -129,6 +130,8 @@ class OCRMyPDFProcessor(PDFProcessor):
         return self.get_text(file)
 
     def apply_ocr(self, file: io.BytesIO) -> io.BytesIO:
+        import ocrmypdf
+
         doc = pymupdf.open(stream=file, filetype="pdf")
         pages_to_ocr = [
             str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
