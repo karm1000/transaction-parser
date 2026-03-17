@@ -151,7 +151,7 @@ class AIParser:
             _("API Key not found for model {0}").format(self.model.service_provider)
         )
 
-    def get_content(self, response: dict) -> dict | str:
+    def get_content(self, response: dict) -> dict:
         """Extract content from API response."""
         content = response["choices"][0]["message"]["content"]
 
