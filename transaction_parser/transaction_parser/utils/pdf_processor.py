@@ -53,12 +53,14 @@ class PDFProcessor(ABC):
 
     def trim_pages(self, file: io.BytesIO, page_limit: int | None = None) -> io.BytesIO:
         if not page_limit or page_limit <= 0:
+            file.seek(0)
             return file
 
         input_pdf = pymupdf.open(stream=file, filetype="pdf")
 
         if input_pdf.page_count <= page_limit:
             input_pdf.close()
+            file.seek(0)
             return file
 
         output_pdf = pymupdf.open()
