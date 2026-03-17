@@ -96,13 +96,24 @@ class DoclingPDFProcessor(PDFProcessor):
     _converter = None
 
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
-        from docling.datamodel.base_models import DocumentStream
+        from docling.datamodel.base_models import ConversionStatus, DocumentStream
 
         file = self.get_sanitized_file(file, page_limit)
 
         source = DocumentStream(name="document.pdf", stream=file)  # temporary name
         converter = self._get_converter()
         result = converter.convert(source)
+
+        if result.status not in (
+            ConversionStatus.SUCCESS,
+            ConversionStatus.PARTIAL_SUCCESS,
+        ):
+            frappe.throw(
+                title=_("PDF Reading Failed"),
+                msg=_("Docling failed to read the document. Status: {0}").format(
+                    result.status
+                ),
+            )
 
         return result.document.export_to_markdown()
 
