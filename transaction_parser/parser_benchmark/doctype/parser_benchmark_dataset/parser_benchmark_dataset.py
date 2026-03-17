@@ -28,7 +28,7 @@ class ParserBenchmarkDataset(Document):
         country: DF.Literal["India", "Other"]
         enabled: DF.Check
         file: DF.Attach
-        naming_series: DF.Literal["PBD-#####"]
+        naming_series: DF.Literal["Parser-Dataset-"]
         page_limit: DF.Int
         pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
         title: DF.Data
@@ -67,3 +67,14 @@ def _run_benchmark(log_name: str):
     from transaction_parser.parser_benchmark.runner import BenchmarkRunner
 
     BenchmarkRunner(log_name).run()
+
+
+@frappe.whitelist()
+def get_pdf_processors():
+    frappe.has_permission("Parser Benchmark Dataset", "write", throw=True)
+
+    from transaction_parser.transaction_parser.utils.pdf_processor import (
+        get_available_pdf_processors,
+    )
+
+    return get_available_pdf_processors()
