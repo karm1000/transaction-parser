@@ -2,6 +2,8 @@ import frappe
 
 FIELDS_TO_DELETE = {
     "Transaction Parser Settings": ["in_auto_create_supplier"],
+    "Sales Order": ["is_created_by_transaction_parser", "is_created_by_benchmark"],
+    "Purchase Invoice": ["is_created_by_transaction_parser", "is_created_by_benchmark"],
 }
 
 

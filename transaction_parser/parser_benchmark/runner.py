@@ -129,6 +129,7 @@ class BenchmarkRunner:
         c.data = self._ai_content
         c.doc = frappe.get_doc({"doctype": c.DOCTYPE})
         c.doc.is_created_by_transaction_parser = 1
+        c.doc.is_created_by_benchmark = 1
 
         c.set_details()
         c.set_missing_values()
