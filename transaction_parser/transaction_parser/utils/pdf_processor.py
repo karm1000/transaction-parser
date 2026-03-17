@@ -125,7 +125,7 @@ class DoclingPDFProcessor(PDFProcessor):
 
 class OCRMyPDFProcessor(PDFProcessor):
     """
-    PDF processor using PyMuPDF for text extraction and OCRmyPDF for OCR.
+    PDF processor using PyMuPDF for text extraction and OCRMyPDF for OCR.
     """
 
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
