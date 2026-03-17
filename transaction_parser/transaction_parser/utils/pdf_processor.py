@@ -15,14 +15,14 @@ class PDFProcessor(ABC):
 
     To add a new processor from another app:
 
-        1. Subclass PDFProcessor
-        2. Implement the `process` method
-        3. Register it via the `pdf_processors` hook in your app's hooks.py:
+            1. Subclass PDFProcessor
+            2. Implement the `process` method
+            3. Register it via the `pdf_processors` hook in your app's hooks.py:
 
     ```
-    pdf_processors = {
-        "MyProcessor": "my_app.utils.pdf_processor.MyPDFProcessor",
-    }
+           pdf_processors = {
+               "MyProcessor": "my_app.utils.pdf_processor.MyPDFProcessor",
+           }
     ```
     """
 
@@ -32,11 +32,11 @@ class PDFProcessor(ABC):
         Process a PDF file and return extracted text.
 
         Args:
-                        file: PDF file as BytesIO stream or Frappe File document
-                        page_limit: Maximum number of pages to process (None = all pages)
+                                        file: PDF file as BytesIO stream or Frappe File document
+                                        page_limit: Maximum number of pages to process (None = all pages)
 
         Returns:
-                        Extracted text content from the PDF
+                                        Extracted text content from the PDF
         """
         pass
 
@@ -108,6 +108,7 @@ class DoclingPDFProcessor(PDFProcessor):
 
     def _get_converter(self):
         if DoclingPDFProcessor._converter is None:
+            from docling.datamodel.base_models import InputFormat
             from docling.datamodel.pipeline_options import PdfPipelineOptions
             from docling.document_converter import DocumentConverter, PdfFormatOption
 
@@ -116,7 +117,7 @@ class DoclingPDFProcessor(PDFProcessor):
 
             DoclingPDFProcessor._converter = DocumentConverter(
                 format_options={
-                    "pdf": PdfFormatOption(pipeline_options=pipeline_options),
+                    InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options),
                 }
             )
 
@@ -172,18 +173,18 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
 
     Usage:
 
-        ```
-        processor = get_pdf_processor("OCR")
-        text = processor.process(file, page_limit=5)
-        ```
+            ```
+                   processor = get_pdf_processor("OCR")
+                   text = processor.process(file, page_limit=5)
+            ```
 
     To register a custom processor from another app, add to its hooks.py:
 
-        ```
-        pdf_processors = {
-            "MyProcessor": "my_app.utils.pdf_processor.MyPDFProcessor",
-        }
-        ```
+            ```
+                   pdf_processors = {
+                       "MyProcessor": "my_app.utils.pdf_processor.MyPDFProcessor",
+                   }
+            ```
     """
     if not name:
         name = (
