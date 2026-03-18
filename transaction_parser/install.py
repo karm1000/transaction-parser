@@ -11,14 +11,7 @@ CUSTOM_FIELDS = {
             "label": "Is Created By Transaction Parser",
             "read_only": 1,
             "insert_after": "is_internal_customer",
-        },
-        {
-            "fieldname": "is_created_by_benchmark",
-            "fieldtype": "Check",
-            "label": "Is Created By Benchmark",
-            "read_only": 1,
-            "insert_after": "is_created_by_transaction_parser",
-        },
+        }
     ],
     "Purchase Invoice": [
         {
@@ -27,13 +20,6 @@ CUSTOM_FIELDS = {
             "label": "Is Created By Transaction Parser",
             "read_only": 1,
             "insert_after": "is_internal_supplier",
-        },
-        {
-            "fieldname": "is_created_by_benchmark",
-            "fieldtype": "Check",
-            "label": "Is Created By Benchmark",
-            "read_only": 1,
-            "insert_after": "is_created_by_transaction_parser",
         },
     ],
     "Communication": [
