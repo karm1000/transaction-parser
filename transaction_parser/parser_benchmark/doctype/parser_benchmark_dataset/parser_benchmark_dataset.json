@@ -9,17 +9,39 @@
   "column_break_title",
   "enabled",
   "section_break_file",
-  "column_break_file",
   "file",
   "transaction_type",
   "column_break_gbap",
   "country",
   "company",
   "processing_section",
-  "ai_model",
-  "pdf_processor",
-  "column_break_processing",
+  "column_break_ai_models",
+  "openai_gpt_4o_mini",
+  "openai_gpt_4o",
+  "openai_gpt_5_mini",
+  "openai_gpt_5",
+  "column_break_leid",
+  "deepseek_chat",
+  "deepseek_reasoner",
+  "column_break_nqke",
+  "google_gemini_flash_25",
+  "google_gemini_pro_25",
+  "pdf_processor_section",
+  "ocrmypdf",
+  "column_break_pdf_processor",
+  "docling",
+  "other_config_section",
   "page_limit",
+  "schedule_section",
+  "monday",
+  "thursday",
+  "sunday",
+  "column_break_schedule",
+  "tuesday",
+  "friday",
+  "column_break_szid",
+  "wednesday",
+  "saturday",
   "section_break_bhsg",
   "naming_series"
  ],
@@ -51,10 +73,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "column_break_file",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "transaction_type",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -71,27 +89,7 @@
    "reqd": 1
   },
   {
-   "fieldname": "processing_section",
-   "fieldtype": "Section Break",
-   "label": "Processing Configuration"
-  },
-  {
-   "fieldname": "ai_model",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "AI Model",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5",
-   "reqd": 1
-  },
-  {
-   "fieldname": "pdf_processor",
-   "fieldtype": "Select",
-   "label": "PDF Processor",
-   "options": "OCRMyPDF\nDocling",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_processing",
+   "fieldname": "column_break_gbap",
    "fieldtype": "Column Break"
   },
   {
@@ -101,10 +99,144 @@
    "options": "Company"
   },
   {
+   "fieldname": "processing_section",
+   "fieldtype": "Section Break",
+   "label": "AI Models"
+  },
+  {
+   "default": "0",
+   "fieldname": "deepseek_chat",
+   "fieldtype": "Check",
+   "label": "DeepSeek Chat"
+  },
+  {
+   "default": "0",
+   "fieldname": "deepseek_reasoner",
+   "fieldtype": "Check",
+   "label": "DeepSeek Reasoner"
+  },
+  {
+   "default": "0",
+   "fieldname": "openai_gpt_4o",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-4o"
+  },
+  {
+   "default": "0",
+   "fieldname": "openai_gpt_4o_mini",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-4o-mini"
+  },
+  {
+   "fieldname": "column_break_ai_models",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "openai_gpt_5",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-5"
+  },
+  {
+   "default": "0",
+   "fieldname": "openai_gpt_5_mini",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-5-mini"
+  },
+  {
+   "default": "0",
+   "fieldname": "google_gemini_pro_25",
+   "fieldtype": "Check",
+   "label": "Google Gemini Pro-2.5"
+  },
+  {
+   "default": "0",
+   "fieldname": "google_gemini_flash_25",
+   "fieldtype": "Check",
+   "label": "Google Gemini Flash-2.5"
+  },
+  {
+   "fieldname": "pdf_processor_section",
+   "fieldtype": "Section Break",
+   "label": "PDF Processors"
+  },
+  {
+   "default": "0",
+   "fieldname": "ocrmypdf",
+   "fieldtype": "Check",
+   "label": "OCRMyPDF"
+  },
+  {
+   "fieldname": "column_break_pdf_processor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "docling",
+   "fieldtype": "Check",
+   "label": "Docling"
+  },
+  {
+   "fieldname": "other_config_section",
+   "fieldtype": "Section Break",
+   "label": "Other Configuration"
+  },
+  {
    "fieldname": "page_limit",
    "fieldtype": "Int",
    "label": "Page Limit",
    "non_negative": 1
+  },
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "default": "0",
+   "fieldname": "monday",
+   "fieldtype": "Check",
+   "label": "Monday"
+  },
+  {
+   "default": "0",
+   "fieldname": "tuesday",
+   "fieldtype": "Check",
+   "label": "Tuesday"
+  },
+  {
+   "default": "0",
+   "fieldname": "wednesday",
+   "fieldtype": "Check",
+   "label": "Wednesday"
+  },
+  {
+   "default": "0",
+   "fieldname": "thursday",
+   "fieldtype": "Check",
+   "label": "Thursday"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "friday",
+   "fieldtype": "Check",
+   "label": "Friday"
+  },
+  {
+   "default": "0",
+   "fieldname": "saturday",
+   "fieldtype": "Check",
+   "label": "Saturday"
+  },
+  {
+   "default": "0",
+   "fieldname": "sunday",
+   "fieldtype": "Check",
+   "label": "Sunday"
   },
   {
    "fieldname": "section_break_bhsg",
@@ -118,13 +250,21 @@
    "options": "PAR-BM-DTS-"
   },
   {
-   "fieldname": "column_break_gbap",
+   "fieldname": "column_break_leid",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_nqke",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_szid",
    "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 08:15:07.566307",
+ "modified": "2026-03-18 09:58:01.274730",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

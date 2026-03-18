@@ -14,25 +14,31 @@ class ParserBenchmarkDataset(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
-        ai_model: DF.Literal[
-            "DeepSeek Chat",
-            "DeepSeek Reasoner",
-            "OpenAI gpt-4o",
-            "OpenAI gpt-4o-mini",
-            "OpenAI gpt-5",
-            "OpenAI gpt-5-mini",
-            "Google Gemini Pro-2.5",
-            "Google Gemini Flash-2.5",
-        ]
         company: DF.Link | None
         country: DF.Literal["India", "Other"]
+        deepseek_chat: DF.Check
+        deepseek_reasoner: DF.Check
+        docling: DF.Check
         enabled: DF.Check
         file: DF.Attach
+        friday: DF.Check
+        google_gemini_flash_25: DF.Check
+        google_gemini_pro_25: DF.Check
+        monday: DF.Check
         naming_series: DF.Literal["PAR-BM-DTS-"]
+        ocrmypdf: DF.Check
+        openai_gpt_4o: DF.Check
+        openai_gpt_4o_mini: DF.Check
+        openai_gpt_5: DF.Check
+        openai_gpt_5_mini: DF.Check
         page_limit: DF.Int
-        pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
+        saturday: DF.Check
+        sunday: DF.Check
+        thursday: DF.Check
         title: DF.Data
         transaction_type: DF.Literal["Sales Order", "Expense"]
+        tuesday: DF.Check
+        wednesday: DF.Check
     # end: auto-generated types
 
     pass
