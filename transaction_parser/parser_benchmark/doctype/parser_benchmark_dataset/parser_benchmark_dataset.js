@@ -4,7 +4,7 @@
 frappe.ui.form.on("Parser Benchmark Dataset", {
 	refresh(frm) {
 		if (!frm.is_new() && frm.doc.enabled) {
-			frm.add_custom_button(__("Run Benchmark"), () => run_benchmark(frm), __("Actions"));
+			frm.add_custom_button(__("Run Benchmark"), () => run_benchmark(frm));
 		}
 
 		set_pdf_processor_options(frm);
