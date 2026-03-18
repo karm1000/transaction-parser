@@ -110,10 +110,10 @@ class BenchmarkRunner:
             self.log.file_parse_time = flt(default_timer() - start, self.precision)
             _, peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
+            self.log.file_parse_memory = flt(
+                peak / 1024 / 1024, self.precision
+            )  # bytes → MB
 
-        self.log.file_parse_memory = flt(
-            peak / 1024 / 1024, self.precision
-        )  # bytes → MB
         self.log.file_content = content
         return content
 

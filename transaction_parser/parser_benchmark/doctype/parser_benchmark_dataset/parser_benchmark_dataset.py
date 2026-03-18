@@ -55,11 +55,24 @@ class ParserBenchmarkDataset(Document):
     # end: auto-generated types
 
     def validate(self):
-        self.validate_selections()
+        self.file_doc = frappe.get_last_doc("File", filters={"file_url": self.file})
+        self.validate_file_type()
+        self.validate_selected_models()
+        self.validate_selected_processors()
 
-    def validate_selections(self):
+    def validate_file_type(self):
+        if self.file_doc.file_type not in ["PDF", "CSV", "XLSX", "XLS"]:
+            frappe.throw(
+                _("Unsupported file type: {0}").format(self.file_doc.file_type)
+            )
+
+    def validate_selected_models(self):
         if not self.get_selected_models():
             frappe.throw(_("Please select at least one AI Model."))
+
+    def validate_selected_processors(self):
+        if self.file_doc.file_type != "PDF":
+            return
 
         if not self.get_selected_processors():
             frappe.throw(_("Please select at least one PDF Processor."))
