@@ -109,6 +109,18 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
 
     for ai_model in dataset.get_selected_models():
         for pdf_processor in processors:
+            existing = frappe.db.exists(
+                "Parser Benchmark Log",
+                {
+                    "dataset": dataset.name,
+                    "ai_model": ai_model,
+                    "pdf_processor": pdf_processor or "",
+                    "status": ("in", ("Queued", "Running")),
+                },
+            )
+            if existing:
+                continue
+
             log = frappe.get_doc(
                 {
                     "doctype": "Parser Benchmark Log",

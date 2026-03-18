@@ -23,6 +23,7 @@ class AIParser:
         is_enabled(self.settings)
 
         self.model = self._get_model(model)
+        self.ai_response = {}
         if not self.model:
             frappe.throw(_(f"AI Model: {model} not found"))
 
@@ -37,7 +38,9 @@ class AIParser:
         file_doc_name: str | None = None,
     ) -> dict:
         messages = self._build_messages(document_type, document_schema, document_data)
-        self.ai_response = self.send_message(messages=messages, file_doc_name=file_doc_name)
+        self.ai_response = self.send_message(
+            messages=messages, file_doc_name=file_doc_name
+        )
         return self.get_content(self.ai_response)
 
     def _build_messages(
