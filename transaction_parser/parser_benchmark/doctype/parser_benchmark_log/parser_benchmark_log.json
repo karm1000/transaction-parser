@@ -99,7 +99,7 @@
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
-   "options": "OCRMyPDF\nDocling",
+   "options": "\nOCRMyPDF\nDocling",
    "read_only": 1
   },
   {
@@ -357,7 +357,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 11:57:16.173340",
+ "modified": "2026-03-18 12:50:34.387945",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

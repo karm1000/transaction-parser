@@ -105,9 +105,10 @@ def run_benchmark(dataset_name: str):
 def _create_and_enqueue_logs(dataset) -> list[str]:
     """Create one log per model x processor combo and enqueue each for background execution."""
     log_names = []
+    processors = dataset.get_selected_processors() or [None]
 
     for ai_model in dataset.get_selected_models():
-        for pdf_processor in dataset.get_selected_processors():
+        for pdf_processor in processors:
             log = frappe.get_doc(
                 {
                     "doctype": "Parser Benchmark Log",
