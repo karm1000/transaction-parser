@@ -2,6 +2,16 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Parser Benchmark Dataset", {
+	setup(frm) {
+		frm.set_query("party_type", function () {
+			return {
+				filters: {
+					name: ["in", Object.keys(frappe.boot.party_account_types)],
+				},
+			};
+		});
+	},
+
 	refresh(frm) {
 		if (!frm.is_new() && frm.doc.enabled) {
 			frm.add_custom_button(__("Run Benchmark"), () => run_benchmark(frm));

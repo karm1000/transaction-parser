@@ -48,6 +48,8 @@ class ParserBenchmarkDataset(Document):
         openai_gpt_5: DF.Check
         openai_gpt_5_mini: DF.Check
         page_limit: DF.Int
+        party: DF.DynamicLink | None
+        party_type: DF.Link | None
         title: DF.Data
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
@@ -64,18 +66,12 @@ class ParserBenchmarkDataset(Document):
 
     def get_selected_models(self) -> list[str]:
         """Return list of selected AI model names."""
-        return [
-            label
-            for field, label in AI_MODEL_FIELD_MAP.items()
-            if self.get(field)
-        ]
+        return [label for field, label in AI_MODEL_FIELD_MAP.items() if self.get(field)]
 
     def get_selected_processors(self) -> list[str]:
         """Return list of selected PDF processor names."""
         return [
-            label
-            for field, label in PDF_PROCESSOR_FIELD_MAP.items()
-            if self.get(field)
+            label for field, label in PDF_PROCESSOR_FIELD_MAP.items() if self.get(field)
         ]
 
 

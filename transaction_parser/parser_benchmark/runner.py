@@ -32,7 +32,7 @@ class BenchmarkRunner:
         self.dataset: ParserBenchmarkDataset = frappe.get_doc(
             "Parser Benchmark Dataset", self.log.dataset
         )
-        self.precision = cint(frappe.db.get_default("float_precision")) or 3
+        self.precision = 6  # to get 1-millionth of a token cost
 
     def run(self):
         self.log.status = "Running"

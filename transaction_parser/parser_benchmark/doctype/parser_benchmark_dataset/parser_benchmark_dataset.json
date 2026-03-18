@@ -13,7 +13,11 @@
   "transaction_type",
   "column_break_gbap",
   "country",
+  "section_break_sobg",
   "company",
+  "column_break_qccq",
+  "party_type",
+  "party",
   "processing_section",
   "column_break_ai_models",
   "openai_gpt_4o_mini",
@@ -61,7 +65,8 @@
    "fieldname": "file",
    "fieldtype": "Attach",
    "label": "File",
-   "reqd": 1
+   "reqd": 1,
+   "set_only_once": 1
   },
   {
    "fieldname": "transaction_type",
@@ -88,6 +93,22 @@
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "label": "Party Type",
+   "options": "DocType",
+   "set_only_once": 1
+  },
+  {
+   "depends_on": "eval: doc.party_type",
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "mandatory_depends_on": "eval: doc.party_type",
+   "options": "party_type",
+   "set_only_once": 1
   },
   {
    "fieldname": "processing_section",
@@ -200,11 +221,19 @@
   {
    "fieldname": "column_break_zgpf",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_sobg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_qccq",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 10:17:58.099090",
+ "modified": "2026-03-18 11:19:11.810544",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
