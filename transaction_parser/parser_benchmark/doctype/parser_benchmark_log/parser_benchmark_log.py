@@ -19,8 +19,6 @@ class ParserBenchmarkLog(Document):
         completion_tokens: DF.Int
         currency: DF.Link | None
         dataset: DF.Link
-        document_name: DF.DynamicLink | None
-        document_type: DF.Link | None
         error: DF.Code | None
         file_content: DF.Code | None
         file_parse_memory: DF.Float
