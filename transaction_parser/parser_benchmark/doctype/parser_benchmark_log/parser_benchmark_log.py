@@ -15,7 +15,7 @@ class ParserBenchmarkLog(Document):
 
         ai_model: DF.Data | None
         ai_parse_time: DF.Float
-        ai_response: DF.JSON | None
+        ai_response: DF.Code | None
         completion_tokens: DF.Int
         currency: DF.Link | None
         dataset: DF.Link
