@@ -13,7 +13,16 @@ class ParserBenchmarkLog(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
-        ai_model: DF.Data | None
+        ai_model: DF.Literal[
+            "DeepSeek Chat",
+            "DeepSeek Reasoner",
+            "OpenAI gpt-4o",
+            "OpenAI gpt-4o-mini",
+            "OpenAI gpt-5",
+            "OpenAI gpt-5-mini",
+            "Google Gemini Pro-2.5",
+            "Google Gemini Flash-2.5",
+        ]
         ai_parse_time: DF.Float
         ai_response: DF.Code | None
         company: DF.Link | None
@@ -31,7 +40,7 @@ class ParserBenchmarkLog(Document):
         output_cost: DF.Currency
         output_token_cost: DF.Currency
         page_limit: DF.Int
-        pdf_processor: DF.Data | None
+        pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
         prompt_tokens: DF.Int
         status: DF.Literal["Queued", "Running", "Completed", "Failed"]
         total_cost: DF.Currency

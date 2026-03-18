@@ -86,15 +86,17 @@
   },
   {
    "fieldname": "ai_model",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "in_list_view": 1,
    "label": "AI Model",
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5",
    "read_only": 1
   },
   {
    "fieldname": "pdf_processor",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "label": "PDF Processor",
+   "options": "OCRMyPDF\nDocling",
    "read_only": 1
   },
   {
@@ -337,7 +339,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 10:01:56.943584",
+ "modified": "2026-03-18 10:04:36.919978",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",
