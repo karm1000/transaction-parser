@@ -36,6 +36,7 @@ class BenchmarkRunner:
 
     def run(self):
         self.log.status = "Running"
+        self.log.currency = "USD"
         self.log.save(ignore_permissions=True)
         frappe.db.commit()  # persist "Running" status
 
@@ -71,7 +72,7 @@ class BenchmarkRunner:
         ds = self.dataset
         cls = get_controller(ds.country, ds.transaction_type)
 
-        controller = cls(company=ds.company)
+        controller = cls(company=ds.company, party=ds.party)
         controller.initialize()
         controller.file = file_doc
         controller.ai_model = self.log.ai_model

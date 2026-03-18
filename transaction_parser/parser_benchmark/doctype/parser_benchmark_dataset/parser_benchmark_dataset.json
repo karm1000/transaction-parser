@@ -55,6 +55,8 @@
    "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Enabled"
   },
   {
@@ -97,9 +99,9 @@
   {
    "fieldname": "party_type",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Party Type",
-   "options": "DocType",
-   "set_only_once": 1
+   "options": "DocType"
   },
   {
    "depends_on": "eval: doc.party_type",
@@ -107,8 +109,7 @@
    "fieldtype": "Dynamic Link",
    "label": "Party",
    "mandatory_depends_on": "eval: doc.party_type",
-   "options": "party_type",
-   "set_only_once": 1
+   "options": "party_type"
   },
   {
    "fieldname": "processing_section",
@@ -232,8 +233,13 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-03-18 11:19:11.810544",
+ "links": [
+  {
+   "link_doctype": "Parser Benchmark Log",
+   "link_fieldname": "dataset"
+  }
+ ],
+ "modified": "2026-03-18 11:52:07.185717",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

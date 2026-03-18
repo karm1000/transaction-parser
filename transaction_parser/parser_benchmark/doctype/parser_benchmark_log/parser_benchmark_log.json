@@ -11,6 +11,8 @@
   "column_break_summary",
   "country",
   "company",
+  "party_type",
+  "party",
   "section_break_peyo",
   "total_time",
   "column_break_fmal",
@@ -68,7 +70,8 @@
    "label": "Dataset",
    "options": "Parser Benchmark Dataset",
    "read_only": 1,
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "default": "Queued",
@@ -307,6 +310,21 @@
    "read_only": 1
   },
   {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Party Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type",
+   "read_only": 1
+  },
+  {
    "fieldname": "section_break_peyo",
    "fieldtype": "Section Break"
   },
@@ -339,7 +357,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 10:04:36.919978",
+ "modified": "2026-03-18 11:57:16.173340",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

@@ -105,6 +105,8 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
                     "transaction_type": dataset.transaction_type,
                     "country": dataset.country,
                     "company": dataset.company,
+                    "party_type": dataset.party_type,
+                    "party": dataset.party,
                     "page_limit": dataset.page_limit,
                 }
             ).insert(ignore_permissions=True)
@@ -118,7 +120,7 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
             _run_benchmark,
             log_name=log_name,
             queue="long",
-            now=frappe.conf.developer_mode,
+            # now=frappe.conf.developer_mode,
         )
 
     return log_names
