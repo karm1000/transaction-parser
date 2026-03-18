@@ -12,6 +12,49 @@ DOCTYPE = "Transaction Parser Settings"
 
 
 class TransactionParserSettings(Document):
+    # begin: auto-generated types
+    # This code is auto-generated. Do not modify anything in this block.
+
+    from typing import TYPE_CHECKING
+
+    if TYPE_CHECKING:
+        from frappe.types import DF
+
+        from transaction_parser.transaction_parser.doctype.transaction_parser_api_key_item.transaction_parser_api_key_item import (
+            TransactionParserAPIKeyItem,
+        )
+        from transaction_parser.transaction_parser.doctype.transaction_parser_email_account.transaction_parser_email_account import (
+            TransactionParserEmailAccount,
+        )
+        from transaction_parser.transaction_parser.doctype.transaction_parser_party_email.transaction_parser_party_email import (
+            TransactionParserPartyEmail,
+        )
+
+        address_schema: DF.JSON | None
+        api_keys: DF.Table[TransactionParserAPIKeyItem]
+        base_schema: DF.JSON | None
+        default_ai_model: DF.Literal[
+            "DeepSeek Chat",
+            "DeepSeek Reasoner",
+            "OpenAI gpt-4o",
+            "OpenAI gpt-4o-mini",
+            "OpenAI gpt-5",
+            "OpenAI gpt-5-mini",
+            "Google Gemini Pro-2.5",
+            "Google Gemini Flash-2.5",
+        ]
+        enabled: DF.Check
+        incoming_email_accounts: DF.Table[TransactionParserEmailAccount]
+        invoice_lookback_count: DF.Int
+        item_schema: DF.JSON | None
+        parse_incoming_emails: DF.Check
+        parse_party_emails: DF.Check
+        party_emails: DF.Table[TransactionParserPartyEmail]
+        party_schema: DF.JSON | None
+        pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
+        tax_schema: DF.JSON | None
+
+    # end: auto-generated types
     # TODO: can we check API creds?
     def validate(self):
         self.validate_lookback_count()

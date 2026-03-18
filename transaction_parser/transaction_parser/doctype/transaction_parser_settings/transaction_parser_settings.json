@@ -91,7 +91,7 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5"
   },
   {
    "default": "OCRMyPDF",
@@ -166,7 +166,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-14 13:35:17.150533",
+ "modified": "2026-03-18 08:14:24.869817",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

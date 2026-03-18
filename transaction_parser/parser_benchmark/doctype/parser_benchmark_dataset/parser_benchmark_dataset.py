@@ -21,8 +21,8 @@ class ParserBenchmarkDataset(Document):
             "OpenAI gpt-4o-mini",
             "OpenAI gpt-5",
             "OpenAI gpt-5-mini",
-            "Google Gemini Pro",
-            "Google Gemini Flash",
+            "Google Gemini Pro-2.5",
+            "Google Gemini Flash-2.5",
         ]
         company: DF.Link | None
         country: DF.Literal["India", "Other"]
