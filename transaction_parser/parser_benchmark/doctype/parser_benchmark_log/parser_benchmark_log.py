@@ -16,7 +16,9 @@ class ParserBenchmarkLog(Document):
         ai_model: DF.Data | None
         ai_parse_time: DF.Float
         ai_response: DF.Code | None
+        company: DF.Link | None
         completion_tokens: DF.Int
+        country: DF.Literal["India", "Other"]
         currency: DF.Link | None
         dataset: DF.Link
         error: DF.Code | None
@@ -28,12 +30,14 @@ class ParserBenchmarkLog(Document):
         naming_series: DF.Literal["PAR-BM-LOG-"]
         output_cost: DF.Currency
         output_token_cost: DF.Currency
+        page_limit: DF.Int
         pdf_processor: DF.Data | None
         prompt_tokens: DF.Int
         status: DF.Literal["Queued", "Running", "Completed", "Failed"]
         total_cost: DF.Currency
         total_time: DF.Float
         total_tokens: DF.Int
+        transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
     pass

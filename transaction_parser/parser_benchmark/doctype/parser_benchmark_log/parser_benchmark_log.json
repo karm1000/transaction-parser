@@ -5,22 +5,35 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "config_section",
   "dataset",
-  "status",
-  "total_time",
+  "transaction_type",
   "column_break_summary",
-  "ai_model",
-  "pdf_processor",
+  "country",
+  "company",
+  "section_break_peyo",
+  "total_time",
+  "column_break_fmal",
+  "status",
   "section_break_nmcv",
   "naming_series",
   "column_break_ubhs",
   "file_parsing_tab",
-  "file_parse_time",
+  "pdf_processor",
   "column_break_file_metrics",
+  "page_limit",
+  "section_break_umzr",
+  "file_parse_time",
+  "column_break_kgph",
   "file_parse_memory",
   "section_break_file_content",
   "file_content",
   "ai_response_tab",
+  "other_details_section",
+  "ai_model",
+  "column_break_fsxb",
+  "ai_parse_time",
+  "api_cost_section",
   "input_token_cost",
   "currency",
   "column_break_ncdl",
@@ -29,7 +42,6 @@
   "prompt_tokens",
   "completion_tokens",
   "total_tokens",
-  "ai_parse_time",
   "column_break_ai",
   "input_cost",
   "output_cost",
@@ -191,10 +203,10 @@
   },
   {
    "fieldname": "section_break_ai_content",
-   "fieldtype": "Section Break",
-   "label": "AI Output"
+   "fieldtype": "Section Break"
   },
   {
+   "description": "Only document content",
    "fieldname": "ai_response",
    "fieldtype": "Code",
    "label": "AI Response",
@@ -212,6 +224,7 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "section_break_nmcv",
    "fieldtype": "Section Break"
   },
@@ -243,18 +256,83 @@
   },
   {
    "fieldname": "section_break_yqhs",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Token Details"
   },
   {
    "fieldname": "error_tab",
    "fieldtype": "Tab Break",
    "label": "Error"
+  },
+  {
+   "fieldname": "api_cost_section",
+   "fieldtype": "Section Break",
+   "label": "API Cost"
+  },
+  {
+   "fieldname": "other_details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "column_break_fsxb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transaction_type",
+   "fieldtype": "Select",
+   "label": "Transaction Type",
+   "options": "Sales Order\nExpense",
+   "read_only": 1
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Select",
+   "label": "Country",
+   "options": "India\nOther",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_peyo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_fmal",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "config_section",
+   "fieldtype": "Section Break",
+   "label": "Config"
+  },
+  {
+   "default": "0",
+   "fieldname": "page_limit",
+   "fieldtype": "Int",
+   "label": "Page Limit",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_umzr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_kgph",
+   "fieldtype": "Column Break"
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 07:31:12.048039",
+ "modified": "2026-03-18 07:58:21.307417",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

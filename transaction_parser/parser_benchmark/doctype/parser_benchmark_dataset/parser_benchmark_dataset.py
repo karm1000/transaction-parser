@@ -24,7 +24,7 @@ class ParserBenchmarkDataset(Document):
             "Google Gemini Pro",
             "Google Gemini Flash",
         ]
-        company: DF.Link
+        company: DF.Link | None
         country: DF.Literal["India", "Other"]
         enabled: DF.Check
         file: DF.Attach
