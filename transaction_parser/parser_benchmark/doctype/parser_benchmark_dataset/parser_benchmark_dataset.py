@@ -54,24 +54,28 @@ class ParserBenchmarkDataset(Document):
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
+    SUPPORTED_FILE_TYPES = ("PDF", "CSV", "XLSX", "XLS")
+
     def validate(self):
-        self.file_doc = frappe.get_last_doc("File", filters={"file_url": self.file})
+        self.set_file_type()
         self.validate_file_type()
         self.validate_selected_models()
         self.validate_selected_processors()
 
+    def set_file_type(self):
+        file_doc = frappe.get_last_doc("File", filters={"file_url": self.file})
+        self.file_type = file_doc.file_type
+
     def validate_file_type(self):
-        if self.file_doc.file_type not in ["PDF", "CSV", "XLSX", "XLS"]:
-            frappe.throw(
-                _("Unsupported file type: {0}").format(self.file_doc.file_type)
-            )
+        if self.file_type not in self.SUPPORTED_FILE_TYPES:
+            frappe.throw(_("Unsupported file type: {0}").format(self.file_type))
 
     def validate_selected_models(self):
         if not self.get_selected_models():
             frappe.throw(_("Please select at least one AI Model."))
 
     def validate_selected_processors(self):
-        if self.file_doc.file_type != "PDF":
+        if self.file_type != "PDF":
             return
 
         if not self.get_selected_processors():
@@ -134,6 +138,7 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
                     "party_type": dataset.party_type,
                     "party": dataset.party,
                     "page_limit": dataset.page_limit,
+                    "file_type": dataset.file_type,
                 }
             ).insert(ignore_permissions=True)
 

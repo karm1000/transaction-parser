@@ -22,6 +22,7 @@
   "column_break_ubhs",
   "file_parsing_tab",
   "pdf_processor",
+  "file_type",
   "column_break_file_metrics",
   "page_limit",
   "section_break_umzr",
@@ -107,6 +108,12 @@
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Total Time (s)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "file_type",
+   "fieldtype": "Data",
+   "label": "File Type",
    "read_only": 1
   },
   {

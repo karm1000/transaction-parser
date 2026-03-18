@@ -95,7 +95,7 @@ class BenchmarkRunner:
 
     def _run_file_parsing(self, file_doc: File) -> str:
         pdf_processor = None
-        if file_doc.file_type == "PDF" and self.log.pdf_processor:
+        if self.log.file_type == "PDF" and self.log.pdf_processor:
             pdf_processor = get_pdf_processor(self.log.pdf_processor)
 
         tracemalloc.start()

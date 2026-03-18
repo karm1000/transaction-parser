@@ -10,6 +10,7 @@
   "enabled",
   "section_break_file",
   "file",
+  "file_type",
   "transaction_type",
   "column_break_gbap",
   "country",
@@ -69,6 +70,12 @@
    "label": "File",
    "reqd": 1,
    "set_only_once": 1
+  },
+  {
+   "fieldname": "file_type",
+   "fieldtype": "Data",
+   "label": "File Type",
+   "read_only": 1
   },
   {
    "fieldname": "transaction_type",
