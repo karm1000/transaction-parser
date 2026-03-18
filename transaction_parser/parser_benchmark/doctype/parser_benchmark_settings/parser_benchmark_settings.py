@@ -52,10 +52,9 @@ def run_scheduled_benchmarks():
         _create_and_enqueue_logs,
     )
 
-    try:
-        settings: ParserBenchmarkSettings = frappe.get_cached_doc("Parser Benchmark Settings")
-    except Exception:
-        return
+    settings: ParserBenchmarkSettings = frappe.get_cached_doc(
+        "Parser Benchmark Settings"
+    )
 
     if not settings.enabled or not settings.is_scheduled_today():
         return

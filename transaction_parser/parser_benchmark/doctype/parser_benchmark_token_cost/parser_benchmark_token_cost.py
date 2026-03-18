@@ -25,7 +25,7 @@ class ParserBenchmarkTokenCost(Document):
         ]
         currency: DF.Link
         input_cost_per_million: DF.Currency
-        output_cost_per_million: DF.Float
+        output_cost_per_million: DF.Currency
         parent: DF.Data
         parentfield: DF.Data
         parenttype: DF.Data

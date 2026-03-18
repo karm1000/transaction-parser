@@ -39,6 +39,7 @@ class ParserBenchmarkDataset(Document):
         docling: DF.Check
         enabled: DF.Check
         file: DF.Attach
+        file_type: DF.Data | None
         google_gemini_flash_25: DF.Check
         google_gemini_pro_25: DF.Check
         naming_series: DF.Literal["PAR-BM-DTS-"]
@@ -101,7 +102,11 @@ def run_benchmark(dataset_name: str):
     log_names = _create_and_enqueue_logs(dataset)
 
     if not log_names:
-        frappe.throw(_("No model/processor combinations selected."))
+        frappe.throw(
+            _(
+                "No new benchmarks to queue. All selected combinations are already queued or running."
+            )
+        )
 
     return log_names
 
