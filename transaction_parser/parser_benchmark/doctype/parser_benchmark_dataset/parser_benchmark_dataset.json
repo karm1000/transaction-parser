@@ -9,15 +9,16 @@
   "column_break_title",
   "enabled",
   "section_break_file",
-  "file",
   "column_break_file",
+  "file",
   "transaction_type",
+  "column_break_gbap",
   "country",
+  "company",
   "processing_section",
   "ai_model",
   "pdf_processor",
   "column_break_processing",
-  "company",
   "page_limit",
   "section_break_bhsg",
   "naming_series"
@@ -115,11 +116,15 @@
    "fieldtype": "Select",
    "label": "Naming Series",
    "options": "PAR-BM-DTS-"
+  },
+  {
+   "fieldname": "column_break_gbap",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 07:55:54.431360",
+ "modified": "2026-03-18 08:03:14.089586",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
