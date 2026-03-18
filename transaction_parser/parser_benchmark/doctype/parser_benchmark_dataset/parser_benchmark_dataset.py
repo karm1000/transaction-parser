@@ -2,7 +2,25 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
+
+# Maps dataset checkbox fieldnames → model/processor display names
+AI_MODEL_FIELD_MAP = {
+    "deepseek_chat": "DeepSeek Chat",
+    "deepseek_reasoner": "DeepSeek Reasoner",
+    "openai_gpt_4o": "OpenAI gpt-4o",
+    "openai_gpt_4o_mini": "OpenAI gpt-4o-mini",
+    "openai_gpt_5": "OpenAI gpt-5",
+    "openai_gpt_5_mini": "OpenAI gpt-5-mini",
+    "google_gemini_pro_25": "Google Gemini Pro-2.5",
+    "google_gemini_flash_25": "Google Gemini Flash-2.5",
+}
+
+PDF_PROCESSOR_FIELD_MAP = {
+    "ocrmypdf": "OCRMyPDF",
+    "docling": "Docling",
+}
 
 
 class ParserBenchmarkDataset(Document):
@@ -34,32 +52,80 @@ class ParserBenchmarkDataset(Document):
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
-    pass
+    def validate(self):
+        self.validate_selections()
+
+    def validate_selections(self):
+        if not self.get_selected_models():
+            frappe.throw(_("Please select at least one AI Model."))
+
+        if not self.get_selected_processors():
+            frappe.throw(_("Please select at least one PDF Processor."))
+
+    def get_selected_models(self) -> list[str]:
+        """Return list of selected AI model names."""
+        return [
+            label
+            for field, label in AI_MODEL_FIELD_MAP.items()
+            if self.get(field)
+        ]
+
+    def get_selected_processors(self) -> list[str]:
+        """Return list of selected PDF processor names."""
+        return [
+            label
+            for field, label in PDF_PROCESSOR_FIELD_MAP.items()
+            if self.get(field)
+        ]
 
 
 @frappe.whitelist()
 def run_benchmark(dataset_name: str):
-    """Create a Benchmark Log and enqueue the benchmark run."""
+    """Create Benchmark Logs for each model x processor combo and enqueue runs."""
     frappe.has_permission("Parser Benchmark Dataset", "write", throw=True)
 
-    log = frappe.get_doc(
-        {
-            "doctype": "Parser Benchmark Log",
-            "dataset": dataset_name,
-            "status": "Queued",
-        }
-    ).insert(ignore_permissions=True)
+    dataset = frappe.get_doc("Parser Benchmark Dataset", dataset_name)
+    log_names = _create_and_enqueue_logs(dataset)
 
-    frappe.db.commit()  # Ensure the log is saved before the background job picks it up
+    if not log_names:
+        frappe.throw(_("No model/processor combinations selected."))
 
-    frappe.enqueue(
-        _run_benchmark,
-        log_name=log.name,
-        queue="long",
-        now=frappe.conf.developer_mode,
-    )
+    return log_names
 
-    return log.name
+
+def _create_and_enqueue_logs(dataset) -> list[str]:
+    """Create one log per model x processor combo and enqueue each for background execution."""
+    log_names = []
+
+    for ai_model in dataset.get_selected_models():
+        for pdf_processor in dataset.get_selected_processors():
+            log = frappe.get_doc(
+                {
+                    "doctype": "Parser Benchmark Log",
+                    "dataset": dataset.name,
+                    "status": "Queued",
+                    "ai_model": ai_model,
+                    "pdf_processor": pdf_processor,
+                    "transaction_type": dataset.transaction_type,
+                    "country": dataset.country,
+                    "company": dataset.company,
+                    "page_limit": dataset.page_limit,
+                }
+            ).insert(ignore_permissions=True)
+
+            log_names.append(log.name)
+
+    frappe.db.commit()
+
+    for log_name in log_names:
+        frappe.enqueue(
+            _run_benchmark,
+            log_name=log_name,
+            queue="long",
+            now=frappe.conf.developer_mode,
+        )
+
+    return log_names
 
 
 def _run_benchmark(log_name: str):

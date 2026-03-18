@@ -16,17 +16,19 @@ function run_benchmark(frm) {
 		method: "transaction_parser.parser_benchmark.doctype.parser_benchmark_dataset.parser_benchmark_dataset.run_benchmark",
 		args: { dataset_name: frm.doc.name },
 		freeze: true,
-		freeze_message: __("Queuing benchmark..."),
+		freeze_message: __("Queuing benchmarks..."),
 		callback(r) {
-			if (r.message) {
+			if (r.message && r.message.length) {
 				frappe.show_alert({
-					message: __("Benchmark queued. Redirecting to log..."),
+					message: __("{0} benchmark(s) queued.", [r.message.length]),
 					indicator: "green",
 				});
-				frappe.set_route("Form", "Parser Benchmark Log", r.message);
+				frappe.set_route("List", "Parser Benchmark Log", {
+					dataset: frm.doc.name,
+				});
 			} else {
 				frappe.show_alert({
-					message: __("Failed to queue benchmark. Please try again."),
+					message: __("No benchmarks queued. Check model/processor selections."),
 					indicator: "red",
 				});
 			}

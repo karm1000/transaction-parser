@@ -20,13 +20,11 @@ from transaction_parser.transaction_parser.utils.pdf_processor import get_pdf_pr
 
 class BenchmarkRunner:
     """
-    Wraps the existing Transaction Parser flow to capture
-    performance metrics (time, memory, tokens, cost) for benchmarking.
+    Runs a single benchmark for one AI model + PDF processor combination.
 
     Flow:
         1. File parsing   → time, memory, extracted content
         2. AI parsing     → time, tokens, cost, AI response
-        3. Doc generation → linked document (Sales Order / Purchase Invoice)
     """
 
     def __init__(self, log_name: str):
@@ -38,10 +36,8 @@ class BenchmarkRunner:
 
     def run(self):
         self.log.status = "Running"
-        self.log.ai_model = self.dataset.ai_model
-        self.log.pdf_processor = self.dataset.pdf_processor
         self.log.save(ignore_permissions=True)
-        frappe.db.commit()  # persist "Running" status before the long background job starts
+        frappe.db.commit()  # persist "Running" status
 
         total_start = default_timer()
 
@@ -50,9 +46,8 @@ class BenchmarkRunner:
             self.controller: Transaction = self._get_controller(file_doc)
 
             file_content = self._run_file_parsing(file_doc)
-            ai_content = self._run_ai_parsing(file_content, file_doc.name)
+            self._run_ai_parsing(file_content, file_doc.name)
             self._calculate_cost()
-            self._run_document_generation(ai_content)
 
             self.log.status = "Completed"
 
@@ -63,7 +58,7 @@ class BenchmarkRunner:
         finally:
             self.log.total_time = flt(default_timer() - total_start, self.precision)
             self.log.save(ignore_permissions=True)
-            frappe.db.commit()  # background jobs don't auto-commit; persist final results
+            frappe.db.commit()
 
         return self.log.name
 
@@ -77,26 +72,20 @@ class BenchmarkRunner:
         cls = get_controller(ds.country, ds.transaction_type)
 
         controller = cls(company=ds.company)
-        controller.initialize()  # manual initialization to set up doctype/schema without needing document data
+        controller.initialize()
         controller.file = file_doc
-        controller.ai_model = self.dataset.ai_model
+        controller.ai_model = self.log.ai_model
 
         return controller
 
     def _get_cost_row(self):
-        from transaction_parser.parser_benchmark.doctype.parser_benchmark_settings.parser_benchmark_settings import (
-            ParserBenchmarkSettings,
-        )
-
         try:
-            settings: ParserBenchmarkSettings = frappe.get_cached_doc(
-                "Parser Benchmark Settings"
-            )
+            settings = frappe.get_cached_doc("Parser Benchmark Settings")
         except Exception:
             return None
 
         for row in settings.token_costs:
-            if row.ai_model == self.dataset.ai_model:
+            if row.ai_model == self.log.ai_model:
                 return row
 
         return None
@@ -105,8 +94,8 @@ class BenchmarkRunner:
 
     def _run_file_parsing(self, file_doc: File) -> str:
         pdf_processor = None
-        if file_doc.file_type == "PDF" and self.dataset.pdf_processor:
-            pdf_processor = get_pdf_processor(self.dataset.pdf_processor)
+        if file_doc.file_type == "PDF" and self.log.pdf_processor:
+            pdf_processor = get_pdf_processor(self.log.pdf_processor)
 
         tracemalloc.start()
         start = default_timer()
@@ -130,7 +119,7 @@ class BenchmarkRunner:
     # ── step 2: AI parsing ──────────────────────────────────
 
     def _run_ai_parsing(self, file_content: str, file_name: str) -> dict:
-        parser = AIParser(self.dataset.ai_model)
+        parser = AIParser(self.log.ai_model)
 
         start = default_timer()
         ai_content = parser.parse(
@@ -149,19 +138,8 @@ class BenchmarkRunner:
 
         return ai_content
 
-    # ── step 3: document generation ─────────────────────────
+    # ── step 3: cost calculation ────────────────────────────
 
-    def _run_document_generation(self, ai_content: dict):
-        self.controller.data = ai_content
-        self.controller.create_document()
-        self.controller.doc.db_set("is_created_by_benchmark", 1)
-
-        self.log.document_type = self.controller.DOCTYPE
-        self.log.document_name = self.controller.doc.name
-
-    # ── step 4: cost calculation ────────────────────────────
-
-    # Code is not reaching here, need to fix the issue first
     def _calculate_cost(self):
         cost_row = self._get_cost_row()
         if not cost_row:
