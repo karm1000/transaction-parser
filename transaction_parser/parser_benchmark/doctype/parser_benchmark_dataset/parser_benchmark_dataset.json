@@ -23,25 +23,16 @@
   "column_break_leid",
   "deepseek_chat",
   "deepseek_reasoner",
-  "column_break_nqke",
+  "column_break_zgpf",
   "google_gemini_flash_25",
   "google_gemini_pro_25",
   "pdf_processor_section",
   "ocrmypdf",
-  "column_break_pdf_processor",
   "docling",
+  "column_break_pdf_processor",
   "other_config_section",
   "page_limit",
-  "schedule_section",
-  "monday",
-  "thursday",
-  "sunday",
-  "column_break_schedule",
-  "tuesday",
-  "friday",
-  "column_break_szid",
-  "wednesday",
-  "saturday",
+  "column_break_jjht",
   "section_break_bhsg",
   "naming_series"
  ],
@@ -188,57 +179,6 @@
    "non_negative": 1
   },
   {
-   "fieldname": "schedule_section",
-   "fieldtype": "Section Break",
-   "label": "Schedule"
-  },
-  {
-   "default": "0",
-   "fieldname": "monday",
-   "fieldtype": "Check",
-   "label": "Monday"
-  },
-  {
-   "default": "0",
-   "fieldname": "tuesday",
-   "fieldtype": "Check",
-   "label": "Tuesday"
-  },
-  {
-   "default": "0",
-   "fieldname": "wednesday",
-   "fieldtype": "Check",
-   "label": "Wednesday"
-  },
-  {
-   "default": "0",
-   "fieldname": "thursday",
-   "fieldtype": "Check",
-   "label": "Thursday"
-  },
-  {
-   "fieldname": "column_break_schedule",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "0",
-   "fieldname": "friday",
-   "fieldtype": "Check",
-   "label": "Friday"
-  },
-  {
-   "default": "0",
-   "fieldname": "saturday",
-   "fieldtype": "Check",
-   "label": "Saturday"
-  },
-  {
-   "default": "0",
-   "fieldname": "sunday",
-   "fieldtype": "Check",
-   "label": "Sunday"
-  },
-  {
    "fieldname": "section_break_bhsg",
    "fieldtype": "Section Break"
   },
@@ -254,17 +194,17 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_nqke",
+   "fieldname": "column_break_jjht",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "column_break_szid",
+   "fieldname": "column_break_zgpf",
    "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 09:58:01.274730",
+ "modified": "2026-03-18 10:17:58.099090",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

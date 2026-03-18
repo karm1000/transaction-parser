@@ -21,10 +21,8 @@ class ParserBenchmarkDataset(Document):
         docling: DF.Check
         enabled: DF.Check
         file: DF.Attach
-        friday: DF.Check
         google_gemini_flash_25: DF.Check
         google_gemini_pro_25: DF.Check
-        monday: DF.Check
         naming_series: DF.Literal["PAR-BM-DTS-"]
         ocrmypdf: DF.Check
         openai_gpt_4o: DF.Check
@@ -32,13 +30,8 @@ class ParserBenchmarkDataset(Document):
         openai_gpt_5: DF.Check
         openai_gpt_5_mini: DF.Check
         page_limit: DF.Int
-        saturday: DF.Check
-        sunday: DF.Check
-        thursday: DF.Check
         title: DF.Data
         transaction_type: DF.Literal["Sales Order", "Expense"]
-        tuesday: DF.Check
-        wednesday: DF.Check
     # end: auto-generated types
 
     pass

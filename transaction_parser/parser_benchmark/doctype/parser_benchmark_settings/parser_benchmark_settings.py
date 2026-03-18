@@ -17,7 +17,15 @@ class ParserBenchmarkSettings(Document):
             ParserBenchmarkTokenCost,
         )
 
+        enabled: DF.Check
+        friday: DF.Check
+        monday: DF.Check
+        saturday: DF.Check
+        sunday: DF.Check
+        thursday: DF.Check
         token_costs: DF.Table[ParserBenchmarkTokenCost]
+        tuesday: DF.Check
+        wednesday: DF.Check
     # end: auto-generated types
 
     pass
