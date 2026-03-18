@@ -77,6 +77,8 @@ class ParserBenchmarkDataset(Document):
 
     def validate_selected_processors(self):
         if self.file_type != "PDF":
+            self.ocrmypdf = None
+            self.docling = None
             return
 
         if not self.get_selected_processors():
@@ -114,7 +116,11 @@ def run_benchmark(dataset_name: str):
 def _create_and_enqueue_logs(dataset) -> list[str]:
     """Create one log per model x processor combo and enqueue each for background execution."""
     log_names = []
-    processors = dataset.get_selected_processors() or [None]
+
+    if dataset.file_type == "PDF":
+        processors = dataset.get_selected_processors() or [None]
+    else:
+        processors = [None]
 
     for ai_model in dataset.get_selected_models():
         for pdf_processor in processors:
@@ -152,12 +158,15 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
     frappe.db.commit()
 
     for log_name in log_names:
-        frappe.enqueue(
-            _run_benchmark,
-            log_name=log_name,
-            queue="long",
-            # now=frappe.conf.developer_mode,
-        )
+        try:
+            frappe.enqueue(
+                _run_benchmark,
+                log_name=log_name,
+                queue="long",
+            )
+        except Exception:
+            frappe.db.set_value("Parser Benchmark Log", log_name, "status", "Failed")
+            frappe.db.commit()
 
     return log_names
 
