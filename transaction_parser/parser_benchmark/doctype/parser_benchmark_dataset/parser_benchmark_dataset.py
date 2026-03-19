@@ -51,7 +51,6 @@ class ParserBenchmarkDataset(Document):
         page_limit: DF.Int
         party: DF.DynamicLink | None
         party_type: DF.Link | None
-        title: DF.Data
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 

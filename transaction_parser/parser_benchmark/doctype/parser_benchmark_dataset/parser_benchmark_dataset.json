@@ -5,9 +5,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "title",
-  "column_break_title",
   "enabled",
+  "column_break_title",
   "section_break_file",
   "file",
   "file_type",
@@ -42,12 +41,6 @@
   "naming_series"
  ],
  "fields": [
-  {
-   "fieldname": "title",
-   "fieldtype": "Data",
-   "label": "Title",
-   "reqd": 1
-  },
   {
    "fieldname": "column_break_title",
    "fieldtype": "Column Break"
@@ -115,7 +108,6 @@
    "fieldname": "party",
    "fieldtype": "Dynamic Link",
    "label": "Party",
-   "mandatory_depends_on": "eval: doc.party_type",
    "options": "party_type"
   },
   {
@@ -246,7 +238,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-18 13:39:37.507823",
+ "modified": "2026-03-19 03:36:39.325714",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
@@ -267,9 +259,7 @@
   }
  ],
  "row_format": "Dynamic",
- "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
- "title_field": "title"
+ "states": []
 }
