@@ -36,7 +36,10 @@ pdf_processors = {
 export_python_type_annotations = True
 
 scheduler_events = {
-    "daily": [
-        "transaction_parser.parser_benchmark.doctype.parser_benchmark_settings.parser_benchmark_settings.run_scheduled_benchmarks",
-    ],
+    "cron": {
+        # at 2:00 am every day
+        "0 2 * * *": [
+            "transaction_parser.parser_benchmark.doctype.parser_benchmark_settings.parser_benchmark_settings.run_scheduled_benchmarks",
+        ],
+    }
 }
