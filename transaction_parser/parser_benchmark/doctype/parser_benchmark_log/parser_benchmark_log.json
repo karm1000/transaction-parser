@@ -8,8 +8,8 @@
   "config_section",
   "dataset",
   "transaction_type",
-  "column_break_summary",
   "country",
+  "column_break_summary",
   "company",
   "party_type",
   "party",
@@ -51,6 +51,13 @@
   "total_cost",
   "section_break_ai_content",
   "ai_response",
+  "accuracy_tab",
+  "accuracy_section",
+  "accuracy_score",
+  "column_break_accuracy",
+  "response_hash",
+  "section_break_mismatches",
+  "field_mismatches",
   "error_tab",
   "section_break_error",
   "error"
@@ -273,6 +280,46 @@
    "label": "Token Details"
   },
   {
+   "fieldname": "accuracy_tab",
+   "fieldtype": "Tab Break",
+   "label": "Accuracy"
+  },
+  {
+   "fieldname": "accuracy_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Percentage of fields matching the expected result (0-100)",
+   "fieldname": "accuracy_score",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Accuracy Score (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_accuracy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Hash of AI response for consistency tracking across runs",
+   "fieldname": "response_hash",
+   "fieldtype": "Data",
+   "label": "Response Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_mismatches",
+   "fieldtype": "Section Break",
+   "label": "Field Mismatches"
+  },
+  {
+   "fieldname": "field_mismatches",
+   "fieldtype": "Code",
+   "label": "Field Mismatches",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
    "fieldname": "error_tab",
    "fieldtype": "Tab Break",
    "label": "Error"
@@ -364,7 +411,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-18 13:39:29.730560",
+ "modified": "2026-03-20 08:14:27.215617",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

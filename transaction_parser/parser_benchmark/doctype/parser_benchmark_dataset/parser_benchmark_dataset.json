@@ -10,8 +10,8 @@
   "section_break_file",
   "file",
   "file_type",
-  "transaction_type",
   "column_break_gbap",
+  "transaction_type",
   "country",
   "section_break_sobg",
   "company",
@@ -37,6 +37,8 @@
   "other_config_section",
   "page_limit",
   "column_break_jjht",
+  "expected_result_section",
+  "expected_result",
   "section_break_bhsg",
   "naming_series"
  ],
@@ -144,7 +146,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "openai_gpt_5",
    "fieldtype": "Check",
    "label": "OpenAI gpt-5"
@@ -168,12 +170,13 @@
    "label": "Google Gemini Flash-2.5"
   },
   {
+   "depends_on": "eval: doc.file_type === \"PDF\"",
    "fieldname": "pdf_processor_section",
    "fieldtype": "Section Break",
    "label": "PDF Processors"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "ocrmypdf",
    "fieldtype": "Check",
    "label": "OCRMyPDF"
@@ -198,6 +201,18 @@
    "fieldtype": "Int",
    "label": "Page Limit",
    "non_negative": 1
+  },
+  {
+   "fieldname": "expected_result_section",
+   "fieldtype": "Section Break",
+   "label": "Expected Result"
+  },
+  {
+   "description": "The correct/expected parsed output JSON for this dataset. Used to score AI accuracy.",
+   "fieldname": "expected_result",
+   "fieldtype": "Code",
+   "label": "Expected Result",
+   "options": "JSON"
   },
   {
    "fieldname": "section_break_bhsg",
@@ -238,7 +253,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-19 03:36:39.325714",
+ "modified": "2026-03-20 08:12:11.328907",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

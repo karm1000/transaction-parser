@@ -38,6 +38,7 @@ class ParserBenchmarkDataset(Document):
         deepseek_reasoner: DF.Check
         docling: DF.Check
         enabled: DF.Check
+        expected_result: DF.Code | None
         file: DF.Attach
         file_type: DF.Data | None
         google_gemini_flash_25: DF.Check

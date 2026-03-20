@@ -47,8 +47,9 @@ class BenchmarkRunner:
             self.controller: Transaction = self._get_controller(file_doc)
 
             file_content = self._run_file_parsing(file_doc)
-            self._run_ai_parsing(file_content, file_doc.name)
+            ai_content = self._run_ai_parsing(file_content, file_doc.name)
             self._calculate_cost()
+            self._score_response(ai_content)
 
             self.log.status = "Completed"
 
@@ -162,3 +163,24 @@ class BenchmarkRunner:
         self.log.total_cost = flt(
             self.log.input_cost + self.log.output_cost, self.precision
         )
+
+    # ── step 4: accuracy scoring ─────────────────────────────
+
+    def _score_response(self, ai_content: dict):
+        from transaction_parser.parser_benchmark.scorer import (
+            compute_response_hash,
+            score_response,
+        )
+
+        self.log.response_hash = compute_response_hash(ai_content)
+
+        expected = self.dataset.expected_result
+        if not expected:
+            return
+
+        if isinstance(expected, str):
+            expected = frappe.parse_json(expected)
+
+        result = score_response(expected, ai_content)
+        self.log.accuracy_score = result["accuracy_score"]
+        self.log.field_mismatches = frappe.as_json(result["mismatches"], indent=2)

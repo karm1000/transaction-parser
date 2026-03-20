@@ -12,6 +12,7 @@ dependencies = [
     "pymupdf~=1.26.3",
     "openai",
     "docling>=2.75.0",
+    "deepdiff>=8.0",
 ]
 
 [build-system]
