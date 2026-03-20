@@ -60,7 +60,6 @@ def _format_mismatches(diff: DeepDiff) -> list[dict]:
     return mismatches
 
 
-# TODO: need some changes here
 def get_consistency(dataset: str, ai_model: str, pdf_processor: str = "") -> dict:
     """
     Check how consistent a model's response is for a given dataset + processor combo.
