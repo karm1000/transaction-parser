@@ -60,10 +60,25 @@ class ParserBenchmarkDataset(Document):
     def validate(self):
         self.set_file_type()
         self.validate_file_type()
+        self.validate_expected_result()
         self.validate_selected_models()
         self.validate_selected_processors()
 
+    def validate_expected_result(self):
+        if not self.expected_result:
+            return
+
+        try:
+            frappe.parse_json(self.expected_result)
+        except Exception:
+            frappe.throw(
+                title=_("Invalid JSON"), msg=_("Expected Result must be valid JSON.")
+            )
+
     def set_file_type(self):
+        if not self.has_value_changed("file"):
+            return
+
         file_doc = frappe.get_last_doc("File", filters={"file_url": self.file})
         self.file_type = file_doc.file_type
 
