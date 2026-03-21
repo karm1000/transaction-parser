@@ -3,7 +3,7 @@
 
 frappe.ui.form.on("Parser Benchmark Dataset", {
 	refresh(frm) {
-		if (!frm.is_new() && frm.doc.enabled) {
+		if (frm.doc.docstatus === 1 && frm.doc.enabled) {
 			frm.add_custom_button(__("Run Benchmark"), () => run_benchmark(frm));
 		}
 	},

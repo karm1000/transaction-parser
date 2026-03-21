@@ -1,6 +1,7 @@
 # Copyright (c) 2026, Resilient Tech and contributors
 # For license information, please see license.txt
 
+import frappe
 from frappe.model.document import Document
 
 
@@ -36,13 +37,11 @@ class ParserBenchmarkLog(Document):
         file_content: DF.Code | None
         file_parse_memory: DF.Float
         file_parse_time: DF.Float
-        file_type: DF.Data | None
         input_cost: DF.Currency
         input_token_cost: DF.Currency
         naming_series: DF.Literal["PAR-BM-LOG-"]
         output_cost: DF.Currency
         output_token_cost: DF.Currency
-        page_limit: DF.Int
         party: DF.DynamicLink | None
         party_type: DF.Link | None
         pdf_processor: DF.Literal["", "OCRMyPDF", "Docling"]
@@ -54,4 +53,42 @@ class ParserBenchmarkLog(Document):
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
-    pass
+    def _get_dataset(self):
+        if not hasattr(self, "_dataset_doc"):
+            self._dataset_doc = frappe.get_cached_doc(
+                "Parser Benchmark Dataset", self.dataset
+            )
+
+        return self._dataset_doc
+
+    def get_from_dataset(self, fieldname: str):
+        dataset = self._get_dataset()
+        return dataset.get(fieldname) if dataset else None
+
+    @property
+    def transaction_type(self):
+        return self.get_from_dataset("transaction_type")
+
+    @property
+    def country(self):
+        return self.get_from_dataset("country")
+
+    @property
+    def company(self):
+        return self.get_from_dataset("company")
+
+    @property
+    def party_type(self):
+        return self.get_from_dataset("party_type")
+
+    @property
+    def party(self):
+        return self.get_from_dataset("party")
+
+    @property
+    def page_limit(self):
+        return self.get_from_dataset("page_limit") or 0
+
+    @property
+    def file_type(self):
+        return self.get_from_dataset("file_type")

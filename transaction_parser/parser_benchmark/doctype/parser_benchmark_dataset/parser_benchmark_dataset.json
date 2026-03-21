@@ -40,7 +40,9 @@
   "expected_result_section",
   "expected_result",
   "section_break_bhsg",
-  "naming_series"
+  "naming_series",
+  "column_break_aoce",
+  "amended_from"
  ],
  "fields": [
   {
@@ -48,6 +50,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "default": "1",
    "fieldname": "enabled",
    "fieldtype": "Check",
@@ -63,8 +66,8 @@
    "fieldname": "file",
    "fieldtype": "Attach",
    "label": "File",
-   "reqd": 1,
-   "set_only_once": 1
+   "print_hide": 1,
+   "reqd": 1
   },
   {
    "fieldname": "file_type",
@@ -118,24 +121,28 @@
    "label": "AI Models"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "deepseek_chat",
    "fieldtype": "Check",
    "label": "DeepSeek Chat"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "deepseek_reasoner",
    "fieldtype": "Check",
    "label": "DeepSeek Reasoner"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "openai_gpt_4o",
    "fieldtype": "Check",
    "label": "OpenAI gpt-4o"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "openai_gpt_4o_mini",
    "fieldtype": "Check",
@@ -146,24 +153,28 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "default": "1",
    "fieldname": "openai_gpt_5",
    "fieldtype": "Check",
    "label": "OpenAI gpt-5"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "openai_gpt_5_mini",
    "fieldtype": "Check",
    "label": "OpenAI gpt-5-mini"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "google_gemini_pro_25",
    "fieldtype": "Check",
    "label": "Google Gemini Pro-2.5"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "google_gemini_flash_25",
    "fieldtype": "Check",
@@ -176,6 +187,7 @@
    "label": "PDF Processors"
   },
   {
+   "allow_on_submit": 1,
    "default": "1",
    "fieldname": "ocrmypdf",
    "fieldtype": "Check",
@@ -186,6 +198,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "allow_on_submit": 1,
    "default": "0",
    "fieldname": "docling",
    "fieldtype": "Check",
@@ -208,6 +221,7 @@
    "label": "Expected Result"
   },
   {
+   "allow_on_submit": 1,
    "description": "The correct/expected parsed output JSON for this dataset. Used to score AI accuracy.",
    "fieldname": "expected_result",
    "fieldtype": "Code",
@@ -215,6 +229,7 @@
    "options": "JSON"
   },
   {
+   "collapsible": 1,
    "fieldname": "section_break_bhsg",
    "fieldtype": "Section Break"
   },
@@ -244,16 +259,30 @@
   {
    "fieldname": "column_break_qccq",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Parser Benchmark Dataset",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_aoce",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
+ "is_submittable": 1,
  "links": [
   {
    "link_doctype": "Parser Benchmark Log",
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-20 08:12:11.328907",
+ "modified": "2026-03-21 13:51:36.810990",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

@@ -103,6 +103,7 @@
    "read_only": 1
   },
   {
+   "depends_on": "eval: doc.file_type === \"PDF\"",
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
@@ -119,6 +120,7 @@
   {
    "fieldname": "file_type",
    "fieldtype": "Data",
+   "is_virtual": 1,
    "label": "File Type",
    "read_only": 1
   },
@@ -333,8 +335,7 @@
   {
    "fieldname": "transaction_type",
    "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
+   "is_virtual": 1,
    "label": "Transaction Type",
    "options": "Sales Order\nExpense",
    "read_only": 1
@@ -342,8 +343,7 @@
   {
    "fieldname": "country",
    "fieldtype": "Select",
-   "in_list_view": 1,
-   "in_standard_filter": 1,
+   "is_virtual": 1,
    "label": "Country",
    "options": "India\nOther",
    "read_only": 1
@@ -351,6 +351,7 @@
   {
    "fieldname": "company",
    "fieldtype": "Link",
+   "is_virtual": 1,
    "label": "Company",
    "options": "Company",
    "read_only": 1
@@ -359,6 +360,7 @@
    "fieldname": "party_type",
    "fieldtype": "Link",
    "hidden": 1,
+   "is_virtual": 1,
    "label": "Party Type",
    "options": "DocType",
    "read_only": 1
@@ -366,6 +368,7 @@
   {
    "fieldname": "party",
    "fieldtype": "Dynamic Link",
+   "is_virtual": 1,
    "label": "Party",
    "options": "party_type",
    "read_only": 1
@@ -384,11 +387,10 @@
    "label": "Config"
   },
   {
-   "default": "0",
    "fieldname": "page_limit",
    "fieldtype": "Int",
+   "is_virtual": 1,
    "label": "Page Limit",
-   "non_negative": 1,
    "read_only": 1
   },
   {
@@ -403,7 +405,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-21 10:46:06.203098",
+ "modified": "2026-03-21 13:50:57.098387",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

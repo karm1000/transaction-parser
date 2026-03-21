@@ -32,6 +32,7 @@ class ParserBenchmarkDataset(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
+        amended_from: DF.Link | None
         company: DF.Link | None
         country: DF.Literal["India", "Other"]
         deepseek_chat: DF.Check
@@ -76,7 +77,7 @@ class ParserBenchmarkDataset(Document):
             )
 
     def set_file_type(self):
-        if not self.has_value_changed("file"):
+        if self.file_type and not self.has_value_changed("file"):
             return
 
         file_doc = frappe.get_last_doc("File", filters={"file_url": self.file})
@@ -116,6 +117,9 @@ def run_benchmark(dataset_name: str):
     frappe.has_permission("Parser Benchmark Dataset", "write", throw=True)
 
     dataset = frappe.get_doc("Parser Benchmark Dataset", dataset_name)
+    if dataset.docstatus != 1:
+        frappe.throw(_("Dataset must be submitted before running benchmarks."))
+
     log_names = _create_and_enqueue_logs(dataset)
 
     if not log_names:
@@ -154,17 +158,10 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
             log = frappe.get_doc(
                 {
                     "doctype": "Parser Benchmark Log",
-                    "dataset": dataset.name,
                     "status": "Queued",
+                    "dataset": dataset.name,
                     "ai_model": ai_model,
                     "pdf_processor": pdf_processor,
-                    "transaction_type": dataset.transaction_type,
-                    "country": dataset.country,
-                    "company": dataset.company,
-                    "party_type": dataset.party_type,
-                    "party": dataset.party,
-                    "page_limit": dataset.page_limit,
-                    "file_type": dataset.file_type,
                 }
             ).insert(ignore_permissions=True)
 

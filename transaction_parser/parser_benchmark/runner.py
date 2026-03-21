@@ -3,7 +3,7 @@ from timeit import default_timer
 
 import frappe
 from frappe.core.doctype.file.file import File
-from frappe.utils import cint, flt
+from frappe.utils import flt
 
 from transaction_parser.parser_benchmark.doctype.parser_benchmark_dataset.parser_benchmark_dataset import (
     ParserBenchmarkDataset,

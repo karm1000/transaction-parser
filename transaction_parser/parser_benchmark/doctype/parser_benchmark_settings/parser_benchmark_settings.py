@@ -61,7 +61,7 @@ def run_scheduled_benchmarks():
 
     datasets = frappe.get_all(
         "Parser Benchmark Dataset",
-        filters={"enabled": 1},
+        filters={"enabled": 1, "docstatus": 1},
         pluck="name",
     )
 
