@@ -93,8 +93,8 @@ class ParserBenchmarkDataset(Document):
 
     def validate_selected_processors(self):
         if self.file_type != "PDF":
-            self.ocrmypdf = None
-            self.docling = None
+            for field in PDF_PROCESSOR_FIELD_MAP:
+                 self.set(field, 0)
             return
 
         if not self.get_selected_processors():
