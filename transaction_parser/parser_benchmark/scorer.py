@@ -18,7 +18,7 @@ def score_response(expected: dict, actual: dict, max_diffs: int = 500) -> dict:
         get_deep_distance=True,
     )
 
-    distance = diff.get("deep_distance", 1) or 1
+    distance = diff.get("deep_distance", 0)
     accuracy = flt((1 - distance) * 100, 2)
 
     return {
