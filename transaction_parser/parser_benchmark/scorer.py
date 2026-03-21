@@ -27,6 +27,12 @@ def score_response(expected: dict, actual: dict, max_diffs: int = 500) -> dict:
     }
 
 
+_CHANGED_TYPES = {"values_changed", "type_changes"}
+_REMOVED_TYPES = {"dictionary_item_removed", "iterable_item_removed"}
+_ADDED_TYPES = {"dictionary_item_added", "iterable_item_added"}
+_HANDLED_TYPES = _CHANGED_TYPES | _REMOVED_TYPES | _ADDED_TYPES | {"deep_distance"}
+
+
 def _format_mismatches(diff: DeepDiff) -> list[dict]:
     """Flatten DeepDiff into a simple list of {field, expected, actual}."""
     mismatches = []
@@ -60,5 +66,20 @@ def _format_mismatches(diff: DeepDiff) -> list[dict]:
 
     for path, val in diff.get("iterable_item_added", {}).items():
         mismatches.append({"field": path, "expected": None, "actual": val})
+
+    # catch-all for unhandled DeepDiff change types
+    for change_type, changes in diff.items():
+        if change_type in _HANDLED_TYPES:
+            continue
+
+        if isinstance(changes, dict):
+            for path, val in changes.items():
+                mismatches.append(
+                    {"field": f"{change_type}: {path}", "expected": None, "actual": val}
+                )
+        else:
+            mismatches.append(
+                {"field": change_type, "expected": None, "actual": str(changes)}
+            )
 
     return mismatches
