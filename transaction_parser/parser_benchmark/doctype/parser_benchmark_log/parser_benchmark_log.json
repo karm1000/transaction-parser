@@ -55,7 +55,6 @@
   "accuracy_section",
   "accuracy_score",
   "column_break_accuracy",
-  "response_hash",
   "section_break_mismatches",
   "field_mismatches",
   "error_tab",
@@ -301,13 +300,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "description": "Hash of AI response for consistency tracking across runs",
-   "fieldname": "response_hash",
-   "fieldtype": "Data",
-   "label": "Response Hash",
-   "read_only": 1
-  },
-  {
    "fieldname": "section_break_mismatches",
    "fieldtype": "Section Break",
    "label": "Field Mismatches"
@@ -411,7 +403,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-20 08:14:27.215617",
+ "modified": "2026-03-21 10:46:06.203098",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",

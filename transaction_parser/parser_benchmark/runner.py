@@ -167,12 +167,7 @@ class BenchmarkRunner:
     # ── step 4: accuracy scoring ─────────────────────────────
 
     def _score_response(self, ai_content: dict):
-        from transaction_parser.parser_benchmark.scorer import (
-            compute_response_hash,
-            score_response,
-        )
-
-        self.log.response_hash = compute_response_hash(ai_content)
+        from transaction_parser.parser_benchmark.scorer import score_response
 
         expected = self.dataset.expected_result
         if not expected:

@@ -47,7 +47,6 @@ class ParserBenchmarkLog(Document):
         party_type: DF.Link | None
         pdf_processor: DF.Literal["", "OCRMyPDF", "Docling"]
         prompt_tokens: DF.Int
-        response_hash: DF.Data | None
         status: DF.Literal["Queued", "Running", "Completed", "Failed"]
         total_cost: DF.Currency
         total_time: DF.Float
