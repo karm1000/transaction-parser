@@ -210,6 +210,7 @@
    "label": "Other Configuration"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "page_limit",
    "fieldtype": "Int",
    "label": "Page Limit",
@@ -282,7 +283,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-21 13:51:36.810990",
+ "modified": "2026-03-24 14:57:58.689734",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

@@ -162,6 +162,7 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
                     "dataset": dataset.name,
                     "ai_model": ai_model,
                     "pdf_processor": pdf_processor,
+                    "currency": "USD",
                 }
             ).insert(ignore_permissions=True)
 
