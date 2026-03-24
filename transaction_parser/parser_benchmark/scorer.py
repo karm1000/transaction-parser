@@ -3,8 +3,28 @@ from deepdiff import DeepDiff
 from frappe.utils import flt
 
 
+def _normalize_empty(obj):
+    """Recursively convert empty strings to None so `""` vs `None` is not a mismatch.
+
+    Leaves `0`, `False`, and other falsy values untouched.
+    """
+    if isinstance(obj, dict):
+        return {k: _normalize_empty(v) for k, v in obj.items()}
+
+    if isinstance(obj, list):
+        return [_normalize_empty(v) for v in obj]
+
+    if obj == "":
+        return None
+
+    return obj
+
+
 def score_response(expected: dict, actual: dict, max_diffs: int = 500) -> dict:
     """Compare AI response against expected result using DeepDiff."""
+    expected = _normalize_empty(expected)
+    actual = _normalize_empty(actual)
+
     diff = DeepDiff(
         expected,
         actual,

@@ -54,6 +54,9 @@ class ParserBenchmarkLog(Document):
     # end: auto-generated types
 
     def _get_dataset(self):
+        if not self.dataset:
+            return None
+
         if not hasattr(self, "_dataset_doc"):
             self._dataset_doc = frappe.get_cached_doc(
                 "Parser Benchmark Dataset", self.dataset
