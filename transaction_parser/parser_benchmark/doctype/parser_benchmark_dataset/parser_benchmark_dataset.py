@@ -61,20 +61,9 @@ class ParserBenchmarkDataset(Document):
     def validate(self):
         self.set_file_type()
         self.validate_file_type()
-        self.validate_expected_result()
         self.validate_selected_models()
         self.validate_selected_processors()
-
-    def validate_expected_result(self):
-        if not self.expected_result:
-            return
-
-        try:
-            frappe.parse_json(self.expected_result)
-        except Exception:
-            frappe.throw(
-                title=_("Invalid JSON"), msg=_("Expected Result must be valid JSON.")
-            )
+        self.validate_expected_result()
 
     def set_file_type(self):
         if self.file_type and not self.has_value_changed("file"):
@@ -94,11 +83,22 @@ class ParserBenchmarkDataset(Document):
     def validate_selected_processors(self):
         if self.file_type != "PDF":
             for field in PDF_PROCESSOR_FIELD_MAP:
-                 self.set(field, 0)
+                self.set(field, 0)
             return
 
         if not self.get_selected_processors():
             frappe.throw(_("Please select at least one PDF Processor."))
+
+    def validate_expected_result(self):
+        if not self.expected_result:
+            return
+
+        try:
+            frappe.parse_json(self.expected_result)
+        except Exception:
+            frappe.throw(
+                title=_("Invalid JSON"), msg=_("Expected Result must be valid JSON.")
+            )
 
     def get_selected_models(self) -> list[str]:
         """Return list of selected AI model names."""

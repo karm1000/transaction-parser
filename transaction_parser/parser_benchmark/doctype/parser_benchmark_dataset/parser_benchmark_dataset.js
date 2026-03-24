@@ -6,6 +6,8 @@ frappe.ui.form.on("Parser Benchmark Dataset", {
 		if (frm.doc.docstatus === 1 && frm.doc.enabled) {
 			frm.add_custom_button(__("Run Benchmark"), () => run_benchmark(frm));
 		}
+
+		if (frm.doc.docstatus === 0) set_party_type(frm);
 	},
 
 	transaction_type(frm) {
