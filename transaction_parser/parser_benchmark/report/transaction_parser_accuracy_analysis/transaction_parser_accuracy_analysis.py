@@ -7,6 +7,7 @@ from enum import StrEnum
 
 import frappe
 from frappe import _
+from frappe.query_builder.functions import Coalesce
 
 PARTY_TYPE_MAP = {
     "Sales Order": "Customer",
@@ -229,14 +230,23 @@ class AccuracyAnalysisReport:
             },
         ]
 
-    # ── SQL query ────────────────────────────────────────────────────
+    # ── Query ─────────────────────────────────────────────────────
 
     def _fetch_logs(self):
-        conditions, values = self._build_conditions()
+        log = frappe.qb.DocType("Parser Benchmark Log")
+        ds = frappe.qb.DocType("Parser Benchmark Dataset")
+        cust = frappe.qb.DocType("Customer")
+        supp = frappe.qb.DocType("Supplier")
 
-        return frappe.db.sql(
-            f"""
-            SELECT
+        query = (
+            frappe.qb.from_(log)
+            .join(ds)
+            .on(log.dataset == ds.name)
+            .left_join(cust)
+            .on((ds.party_type == "Customer") & (ds.party == cust.name))
+            .left_join(supp)
+            .on((ds.party_type == "Supplier") & (ds.party == supp.name))
+            .select(
                 log.ai_model,
                 log.pdf_processor,
                 log.accuracy_score,
@@ -253,58 +263,36 @@ class AccuracyAnalysisReport:
                 log.dataset,
                 ds.party,
                 ds.file_type,
-                COALESCE(cust.customer_name, supp.supplier_name, ds.party) AS party_name
-            FROM `tabParser Benchmark Log` log
-            JOIN `tabParser Benchmark Dataset` ds ON log.dataset = ds.name
-            LEFT JOIN `tabCustomer` cust
-                ON ds.party_type = 'Customer' AND ds.party = cust.name
-            LEFT JOIN `tabSupplier` supp
-                ON ds.party_type = 'Supplier' AND ds.party = supp.name
-            WHERE log.status = 'Completed'
-                {conditions}
-            ORDER BY ds.party, log.ai_model, ds.file_type
-            """,
-            values=values,
-            as_dict=True,
+                Coalesce(cust.customer_name, supp.supplier_name, ds.party).as_(
+                    "party_name"
+                ),
+            )
+            .where(log.status == "Completed")
+            .orderby(ds.party, log.ai_model, ds.file_type)
         )
 
-    def _build_conditions(self):
-        conditions: list[str] = []
-        values: dict = {}
-
+        # exact-match filters
         for column, key in (
-            ("ds.company", "company"),
-            ("ds.transaction_type", "transaction_type"),
-            ("ds.party_type", "party_type"),
-            ("ds.party", "party"),
+            (ds.company, "company"),
+            (ds.transaction_type, "transaction_type"),
+            (ds.party_type, "party_type"),
+            (ds.party, "party"),
         ):
             if self.filters.get(key):
-                conditions.append(f"AND {column} = %({key})s")
-                values[key] = self.filters[key]
+                query = query.where(column == self.filters[key])
 
+        # multi-select IN filters
         for column, key in (
-            ("ds.file_type", "file_type"),
-            ("log.ai_model", "ai_model"),
-            ("log.pdf_processor", "pdf_processor"),
+            (ds.file_type, "file_type"),
+            (log.ai_model, "ai_model"),
+            (log.pdf_processor, "pdf_processor"),
         ):
-            self._add_in_condition(conditions, values, column, key)
+            values = self.filters.get(key)
+            if values:
+                items = values if isinstance(values, list) else [values]
+                query = query.where(column.isin(items))
 
-        return "\n                ".join(conditions), values
-
-    def _add_in_condition(self, conditions, values, column, key):
-        """Append an ``IN (...)`` clause for a multi-select filter."""
-        raw = self.filters.get(key)
-        if not raw:
-            return
-
-        items = raw if isinstance(raw, list) else [raw]
-        placeholders = []
-        for i, val in enumerate(items):
-            param = f"{key}_{i}"
-            placeholders.append(f"%({param})s")
-            values[param] = val
-
-        conditions.append(f"AND {column} IN ({', '.join(placeholders)})")
+        return query.run(as_dict=True)
 
     # ── Helpers ──────────────────────────────────────────────────────
 
