@@ -49,7 +49,7 @@ class ParserBenchmarkSettings(Document):
 def run_scheduled_benchmarks():
     """Scheduled job: runs all enabled datasets if today is a scheduled day."""
     from transaction_parser.parser_benchmark.doctype.parser_benchmark_dataset.parser_benchmark_dataset import (
-        _create_and_enqueue_logs,
+        create_and_enqueue_benchmark_logs,
     )
 
     settings: ParserBenchmarkSettings = frappe.get_cached_doc(
@@ -66,5 +66,4 @@ def run_scheduled_benchmarks():
     )
 
     for dataset_name in datasets:
-        dataset = frappe.get_doc("Parser Benchmark Dataset", dataset_name)
-        _create_and_enqueue_logs(dataset)
+        create_and_enqueue_benchmark_logs(dataset_name)

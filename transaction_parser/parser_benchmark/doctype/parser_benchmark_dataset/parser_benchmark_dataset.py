@@ -116,50 +116,41 @@ def run_benchmark(dataset_name: str):
     """Create Benchmark Logs for each model x processor combo and enqueue runs."""
     frappe.has_permission("Parser Benchmark Dataset", "write", throw=True)
 
-    dataset = frappe.get_doc("Parser Benchmark Dataset", dataset_name)
-    if dataset.docstatus != 1:
+    if frappe.db.get_value("Parser Benchmark Dataset", dataset_name, "docstatus") != 1:
         frappe.throw(_("Dataset must be submitted before running benchmarks."))
 
-    log_names = _create_and_enqueue_logs(dataset)
+    log_names = create_and_enqueue_benchmark_logs(dataset_name)
 
     if not log_names:
         frappe.throw(
             _(
-                "No new benchmarks to queue. All selected combinations are already queued or running."
+                "No new benchmarks to queue. Please check if the dataset is properly configured"
             )
         )
 
     return log_names
 
 
-def _create_and_enqueue_logs(dataset) -> list[str]:
+def create_and_enqueue_benchmark_logs(dataset_name: str) -> list[str]:
     """Create one log per model x processor combo and enqueue each for background execution."""
-    log_names = []
-
-    if dataset.file_type == "PDF":
-        processors = dataset.get_selected_processors() or [None]
-    else:
-        processors = [None]
+    dataset: ParserBenchmarkDataset = frappe.get_cached_doc(
+        "Parser Benchmark Dataset", dataset_name
+    )
+    models = dataset.get_selected_models()
+    processors = (
+        dataset.get_selected_processors() or [None]
+        if dataset.file_type == "PDF"
+        else [None]
+    )
 
     commit_info = get_commit_info()
+    log_names = []
 
-    for ai_model in dataset.get_selected_models():
+    for ai_model in models:
         for pdf_processor in processors:
-            existing = frappe.db.exists(
-                "Parser Benchmark Log",
+            log = frappe.new_doc("Parser Benchmark Log")
+            log.update(
                 {
-                    "dataset": dataset.name,
-                    "ai_model": ai_model,
-                    "pdf_processor": pdf_processor or "",
-                    "status": ("in", ("Queued", "Running")),
-                },
-            )
-            if existing:
-                continue
-
-            log = frappe.get_doc(
-                {
-                    "doctype": "Parser Benchmark Log",
                     "status": "Queued",
                     "dataset": dataset.name,
                     "ai_model": ai_model,
@@ -167,19 +158,15 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
                     "currency": "USD",
                     **commit_info,
                 }
-            ).insert(ignore_permissions=True)
-
+            )
+            log.insert(ignore_permissions=True)
             log_names.append(log.name)
 
     frappe.db.commit()
 
     for log_name in log_names:
         try:
-            frappe.enqueue(
-                _run_benchmark,
-                log_name=log_name,
-                queue="long",
-            )
+            frappe.enqueue(_run_benchmark, log_name=log_name, queue="long")
         except Exception:
             frappe.db.set_value("Parser Benchmark Log", log_name, "status", "Failed")
             frappe.db.commit()
@@ -218,14 +205,3 @@ def get_commit_info() -> dict:
         pass
 
     return {}
-
-
-@frappe.whitelist()
-def get_pdf_processors():
-    frappe.has_permission("Parser Benchmark Dataset", "write", throw=True)
-
-    from transaction_parser.transaction_parser.utils.pdf_processor import (
-        get_available_pdf_processors,
-    )
-
-    return get_available_pdf_processors()

@@ -11,6 +11,9 @@ from transaction_parser.parser_benchmark.doctype.parser_benchmark_dataset.parser
 from transaction_parser.parser_benchmark.doctype.parser_benchmark_log.parser_benchmark_log import (
     ParserBenchmarkLog,
 )
+from transaction_parser.parser_benchmark.doctype.parser_benchmark_settings.parser_benchmark_settings import (
+    ParserBenchmarkSettings,
+)
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.controllers import get_controller
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
@@ -73,7 +76,7 @@ class BenchmarkRunner:
         ds = self.dataset
         cls = get_controller(ds.country, ds.transaction_type)
 
-        controller = cls(company=ds.company, party=ds.party)
+        controller: Transaction = cls(company=ds.company, party=ds.party)
         controller.initialize()
         controller.file = file_doc
         controller.ai_model = self.log.ai_model
@@ -82,7 +85,9 @@ class BenchmarkRunner:
 
     def _get_cost_row(self):
         try:
-            settings = frappe.get_cached_doc("Parser Benchmark Settings")
+            settings: ParserBenchmarkSettings = frappe.get_cached_doc(
+                "Parser Benchmark Settings"
+            )
         except Exception:
             return None
 
