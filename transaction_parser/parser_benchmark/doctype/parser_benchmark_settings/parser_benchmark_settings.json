@@ -24,8 +24,7 @@
    "fieldname": "token_costs",
    "fieldtype": "Table",
    "label": "Token Costs",
-   "options": "Parser Benchmark Token Cost",
-   "reqd": 1
+   "options": "Parser Benchmark Token Cost"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -101,7 +100,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-03-25 12:49:58.838421",
+ "modified": "2026-03-25 12:53:24.601045",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Settings",

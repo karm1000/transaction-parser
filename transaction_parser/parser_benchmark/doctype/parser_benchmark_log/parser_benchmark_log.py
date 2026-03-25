@@ -27,6 +27,8 @@ class ParserBenchmarkLog(Document):
         ]
         ai_parse_time: DF.Float
         ai_response: DF.Code | None
+        commit_hash: DF.Data | None
+        commit_message: DF.SmallText | None
         company: DF.Link | None
         completion_tokens: DF.Int
         country: DF.Literal["India", "Other"]

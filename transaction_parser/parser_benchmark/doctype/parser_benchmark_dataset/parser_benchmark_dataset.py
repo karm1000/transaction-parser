@@ -141,6 +141,8 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
     else:
         processors = [None]
 
+    commit_info = get_commit_info()
+
     for ai_model in dataset.get_selected_models():
         for pdf_processor in processors:
             existing = frappe.db.exists(
@@ -163,6 +165,7 @@ def _create_and_enqueue_logs(dataset) -> list[str]:
                     "ai_model": ai_model,
                     "pdf_processor": pdf_processor,
                     "currency": "USD",
+                    **commit_info,
                 }
             ).insert(ignore_permissions=True)
 
@@ -188,6 +191,33 @@ def _run_benchmark(log_name: str):
     from transaction_parser.parser_benchmark.runner import BenchmarkRunner
 
     BenchmarkRunner(log_name).run()
+
+
+def get_commit_info() -> dict:
+    """Return the current git commit hash and message for the transaction_parser app."""
+    import subprocess
+
+    app_path = frappe.get_app_path("transaction_parser")
+
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--format=%H%n%s"],
+            cwd=app_path,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode == 0:
+            lines = result.stdout.strip().split("\n", 1)
+            return {
+                "commit_hash": lines[0] if lines else "",
+                "commit_message": lines[1] if len(lines) > 1 else "",
+            }
+    except Exception:
+        pass
+
+    return {}
 
 
 @frappe.whitelist()

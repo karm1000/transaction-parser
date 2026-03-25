@@ -17,6 +17,10 @@
   "total_time",
   "column_break_fmal",
   "status",
+  "version_section",
+  "commit_hash",
+  "column_break_version",
+  "commit_message",
   "section_break_nmcv",
   "naming_series",
   "column_break_ubhs",
@@ -246,6 +250,29 @@
   },
   {
    "collapsible": 1,
+   "fieldname": "version_section",
+   "fieldtype": "Section Break",
+   "label": "Version"
+  },
+  {
+   "fieldname": "commit_hash",
+   "fieldtype": "Data",
+   "label": "Commit Hash",
+   "length": 40,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_version",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "commit_message",
+   "fieldtype": "Small Text",
+   "label": "Commit Message",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
    "fieldname": "section_break_nmcv",
    "fieldtype": "Section Break"
   },
@@ -405,7 +432,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-03-21 13:50:57.098387",
+ "modified": "2026-03-25 13:08:38.340789",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",
