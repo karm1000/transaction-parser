@@ -57,7 +57,9 @@ class Col(StrEnum):
     TOTAL_TOKENS = "total_tokens"
     CURRENCY = "currency"
     DATASET = "dataset"
-    MISMATCH_COUNT = "mismatch_count"
+    RUN_COUNT = "run_count"
+    MISMATCH_RATE = "mismatch_rate"
+    UNIQUE_MISMATCHES = "unique_mismatches"
     TOP_MISMATCHES = "top_mismatches"
 
 
@@ -90,9 +92,14 @@ class AccuracyAnalysisReport:
 
     def run(self):
         self.data = [self._build_row(r) for r in self._fetch_logs()]
+        self._aggregate_by_config()
 
         if self.group_by_party:
             self._group_by_party()
+
+        # strip internal keys before sending to client
+        for row in self.data:
+            row.pop("_mismatch_fields", None)
 
         return self._get_columns(), self.data
 
@@ -118,6 +125,12 @@ class AccuracyAnalysisReport:
                 "fieldtype": "Link",
                 "options": "Parser Benchmark Dataset",
                 "width": 160,
+            },
+            {
+                "fieldname": Col.RUN_COUNT,
+                "label": _("Runs"),
+                "fieldtype": "Int",
+                "width": 70,
             },
             {
                 "fieldname": Col.ACCURACY_SCORE,
@@ -197,10 +210,16 @@ class AccuracyAnalysisReport:
                 "width": 110,
             },
             {
-                "fieldname": Col.MISMATCH_COUNT,
-                "label": _("Mismatches"),
+                "fieldname": Col.MISMATCH_RATE,
+                "label": _("Mismatch Rate (%)"),
+                "fieldtype": "Percent",
+                "width": 140,
+            },
+            {
+                "fieldname": Col.UNIQUE_MISMATCHES,
+                "label": _("Unique Fields"),
                 "fieldtype": "Int",
-                "width": 100,
+                "width": 110,
             },
             {
                 "fieldname": Col.TOP_MISMATCHES,
@@ -300,6 +319,12 @@ class AccuracyAnalysisReport:
         mismatches = self._parse_mismatches(r.field_mismatches)
         mismatch_fields = [self._short_field_name(m["field"]) for m in mismatches]
 
+        if mismatch_fields:
+            top = Counter(mismatch_fields).most_common(5)
+            top_str = ", ".join(f"{name} x{cnt}" for name, cnt in top)
+        else:
+            top_str = ""
+
         return {
             Col.PARTY: r.party or _("No Party"),
             Col.PARTY_NAME: r.party_name or "",
@@ -317,10 +342,9 @@ class AccuracyAnalysisReport:
             Col.COMPLETION_TOKENS: r.completion_tokens,
             Col.TOTAL_TOKENS: r.total_tokens,
             Col.CURRENCY: r.currency,
-            Col.MISMATCH_COUNT: len(mismatches),
-            Col.TOP_MISMATCHES: ", ".join(mismatch_fields[:5])
-            if mismatch_fields
-            else "",
+            Col.MISMATCH_RATE: round(100 - (r.accuracy_score or 0), 2),
+            Col.UNIQUE_MISMATCHES: len(set(mismatch_fields)),
+            Col.TOP_MISMATCHES: top_str,
             "_mismatch_fields": mismatch_fields,
         }
 
@@ -342,6 +366,74 @@ class AccuracyAnalysisReport:
 
         keys = re.findall(r"\['(.*?)'\]", field)
         return ".".join(keys) if keys else field
+
+    # ── Aggregation ──────────────────────────────────────────────────
+
+    def _aggregate_by_config(self):
+        """Collapse multiple runs of the same config into one averaged row.
+
+        Groups by (party, ai_model, pdf_processor, file_type) and averages
+        numeric fields. The Dataset column shows the latest dataset if all
+        runs share one, otherwise left blank.
+        """
+        if not self.data:
+            return
+
+        groups: dict[tuple, list[dict]] = defaultdict(list)
+        for row in self.data:
+            key = (
+                row.get(Col.DATASET),
+                row.get(Col.AI_MODEL),
+                row.get(Col.PDF_PROCESSOR) or "",
+                row.get(Col.FILE_TYPE),
+            )
+            groups[key].append(row)
+
+        aggregated = []
+        for _key, rows in groups.items():
+            count = len(rows)
+            agg = {
+                Col.PARTY: rows[0].get(Col.PARTY),
+                Col.PARTY_NAME: rows[0].get(Col.PARTY_NAME),
+                Col.AI_MODEL: rows[0].get(Col.AI_MODEL),
+                Col.PDF_PROCESSOR: rows[0].get(Col.PDF_PROCESSOR),
+                Col.FILE_TYPE: rows[0].get(Col.FILE_TYPE),
+                Col.CURRENCY: rows[0].get(Col.CURRENCY),
+                Col.RUN_COUNT: count,
+            }
+
+            # unique datasets — show if only one, else blank
+            agg[Col.DATASET] = rows[0].get(Col.DATASET, "")
+
+            for field in _AVG_FIELDS:
+                vals = [r.get(field) or 0 for r in rows]
+                agg[field] = round(sum(vals) / count, 2) if count else 0
+
+            for field in _SUM_FIELDS:
+                agg[field] = round(sum(r.get(field) or 0 for r in rows) / count, 6)
+
+            # aggregate mismatches
+            all_fields = []
+            for r in rows:
+                all_fields.extend(r.get("_mismatch_fields", []))
+
+            agg[Col.MISMATCH_RATE] = round(100 - (agg.get(Col.ACCURACY_SCORE) or 0), 2)
+            agg[Col.UNIQUE_MISMATCHES] = round(
+                sum(r.get(Col.UNIQUE_MISMATCHES, 0) for r in rows) / count
+            )
+
+            if all_fields:
+                top = Counter(all_fields).most_common(5)
+                agg[Col.TOP_MISMATCHES] = ", ".join(
+                    f"{name} x{cnt}" for name, cnt in top
+                )
+            else:
+                agg[Col.TOP_MISMATCHES] = ""
+
+            agg["_mismatch_fields"] = all_fields
+            aggregated.append(agg)
+
+        self.data = aggregated
 
     # ── Grouping ─────────────────────────────────────────────────────
 
@@ -380,6 +472,7 @@ class AccuracyAnalysisReport:
             Col.PARTY: party,
             Col.PARTY_NAME: rows[0].get(Col.PARTY_NAME),
             Col.CURRENCY: rows[0].get(Col.CURRENCY),
+            Col.RUN_COUNT: sum(r.get(Col.RUN_COUNT, 1) for r in rows),
             "indent": 0,
         }
 
@@ -388,18 +481,21 @@ class AccuracyAnalysisReport:
             row[field] = round(sum(vals) / count, 2) if count else 0
 
         for field in _SUM_FIELDS:
-            row[field] = sum(r.get(field) or 0 for r in rows)
+            row[field] = round(sum(r.get(field) or 0 for r in rows), 6)
 
         # aggregate mismatch info across all child rows
         all_fields = []
         for r in rows:
             all_fields.extend(r.get("_mismatch_fields", []))
 
-        row[Col.MISMATCH_COUNT] = sum(r.get(Col.MISMATCH_COUNT, 0) for r in rows)
+        row[Col.MISMATCH_RATE] = round(100 - (row.get(Col.ACCURACY_SCORE) or 0), 2)
+        row[Col.UNIQUE_MISMATCHES] = round(
+            sum(r.get(Col.UNIQUE_MISMATCHES, 0) for r in rows) / count
+        )
 
         if all_fields:
             top = Counter(all_fields).most_common(5)
-            row[Col.TOP_MISMATCHES] = ", ".join(f"{name} ({cnt})" for name, cnt in top)
+            row[Col.TOP_MISMATCHES] = ", ".join(f"{name} x{cnt}" for name, cnt in top)
         else:
             row[Col.TOP_MISMATCHES] = ""
 
