@@ -93,7 +93,7 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "1",
+   "default": "0",
    "fieldname": "enabled",
    "fieldtype": "Check",
    "label": "Enabled"
@@ -101,7 +101,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-03-18 13:40:00.122632",
+ "modified": "2026-03-25 12:49:58.838421",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Settings",
