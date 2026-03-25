@@ -1,15 +1,406 @@
 # Copyright (c) 2026, Resilient Tech and contributors
 # For license information, please see license.txt
 
+import json
+from collections import Counter, defaultdict
+from enum import StrEnum
+
 import frappe
+from frappe import _
+
+PARTY_TYPE_MAP = {
+    "Sales Order": "Customer",
+    "Expense": "Supplier",
+}
+
+# Sorting order for child rows within each party group
+_AI_MODEL_ORDER = {
+    "OpenAI gpt-5": 0,
+    "OpenAI gpt-5-mini": 1,
+    "OpenAI gpt-4o": 2,
+    "OpenAI gpt-4o-mini": 3,
+    "Google Gemini Pro-2.5": 4,
+    "Google Gemini Flash-2.5": 5,
+    "DeepSeek Reasoner": 6,
+    "DeepSeek Chat": 7,
+}
+
+_PDF_PROCESSOR_ORDER = {
+    "OCRMyPDF": 0,
+    "Docling": 1,
+}
+
+_FILE_TYPE_ORDER = {
+    "PDF": 0,
+    "CSV": 1,
+    "XLSX": 2,
+    "XLS": 3,
+}
 
 
-class TransactionParserAccuracyAnalysis:
-    def execute(self, filters: frappe._dict = None):
-        columns, data = [], []
-        return columns, data
+class Col(StrEnum):
+    """Column fieldnames — single source of truth for the report."""
+
+    PARTY = "party"
+    PARTY_NAME = "party_name"
+    ACCURACY_SCORE = "accuracy_score"
+    AI_MODEL = "ai_model"
+    PDF_PROCESSOR = "pdf_processor"
+    FILE_TYPE = "file_type"
+    FILE_PARSE_TIME = "file_parse_time"
+    FILE_PARSE_MEMORY = "file_parse_memory"
+    AI_PARSE_TIME = "ai_parse_time"
+    TOTAL_TIME = "total_time"
+    TOTAL_COST = "total_cost"
+    PROMPT_TOKENS = "prompt_tokens"
+    COMPLETION_TOKENS = "completion_tokens"
+    TOTAL_TOKENS = "total_tokens"
+    CURRENCY = "currency"
+    DATASET = "dataset"
+    MISMATCH_COUNT = "mismatch_count"
+    TOP_MISMATCHES = "top_mismatches"
+
+
+# Fields averaged in party-group summary rows
+_AVG_FIELDS = (
+    Col.ACCURACY_SCORE,
+    Col.FILE_PARSE_TIME,
+    Col.FILE_PARSE_MEMORY,
+    Col.AI_PARSE_TIME,
+    Col.TOTAL_TIME,
+    Col.PROMPT_TOKENS,
+    Col.COMPLETION_TOKENS,
+    Col.TOTAL_TOKENS,
+)
+
+# Fields summed in party-group summary rows
+_SUM_FIELDS = (Col.TOTAL_COST,)
 
 
 def execute(filters=None):
     filters = frappe._dict(filters or {})
-    return TransactionParserAccuracyAnalysis().execute(filters)
+    return AccuracyAnalysisReport(filters).run()
+
+
+class AccuracyAnalysisReport:
+    def __init__(self, filters: frappe._dict):
+        self.filters = filters
+        self._set_party_type()
+        self.group_by_party = True  # Always group — even for a single party
+
+    def run(self):
+        self.data = [self._build_row(r) for r in self._fetch_logs()]
+
+        if self.group_by_party:
+            self._group_by_party()
+
+        return self._get_columns(), self.data
+
+    # ── Columns ──────────────────────────────────────────────────────
+
+    def _get_columns(self):
+        return [
+            {
+                "fieldname": Col.PARTY,
+                "label": _("Party"),
+                "fieldtype": "Data",
+                "width": 200,
+            },
+            {
+                "fieldname": Col.PARTY_NAME,
+                "label": _("Party Name"),
+                "fieldtype": "Data",
+                "width": 200,
+            },
+            {
+                "fieldname": Col.DATASET,
+                "label": _("Dataset"),
+                "fieldtype": "Link",
+                "options": "Parser Benchmark Dataset",
+                "width": 160,
+            },
+            {
+                "fieldname": Col.ACCURACY_SCORE,
+                "label": _("Accuracy (%)"),
+                "fieldtype": "Percent",
+                "width": 120,
+            },
+            {
+                "fieldname": Col.AI_MODEL,
+                "label": _("AI Model"),
+                "fieldtype": "Data",
+                "width": 180,
+            },
+            {
+                "fieldname": Col.PDF_PROCESSOR,
+                "label": _("Processor"),
+                "fieldtype": "Data",
+                "width": 110,
+            },
+            {
+                "fieldname": Col.FILE_TYPE,
+                "label": _("File Type"),
+                "fieldtype": "Data",
+                "width": 90,
+            },
+            {
+                "fieldname": Col.FILE_PARSE_TIME,
+                "label": _("File Parse (s)"),
+                "fieldtype": "Float",
+                "width": 120,
+                "precision": 2,
+            },
+            {
+                "fieldname": Col.FILE_PARSE_MEMORY,
+                "label": _("Memory (MB)"),
+                "fieldtype": "Float",
+                "width": 110,
+                "precision": 2,
+            },
+            {
+                "fieldname": Col.AI_PARSE_TIME,
+                "label": _("AI Parse (s)"),
+                "fieldtype": "Float",
+                "width": 110,
+                "precision": 2,
+            },
+            {
+                "fieldname": Col.TOTAL_TIME,
+                "label": _("Total (s)"),
+                "fieldtype": "Float",
+                "width": 100,
+                "precision": 2,
+            },
+            {
+                "fieldname": Col.TOTAL_COST,
+                "label": _("Total Cost"),
+                "fieldtype": "Currency",
+                "width": 110,
+                "options": Col.CURRENCY,
+            },
+            {
+                "fieldname": Col.PROMPT_TOKENS,
+                "label": _("Prompt Tokens"),
+                "fieldtype": "Int",
+                "width": 120,
+            },
+            {
+                "fieldname": Col.COMPLETION_TOKENS,
+                "label": _("Compl. Tokens"),
+                "fieldtype": "Int",
+                "width": 120,
+            },
+            {
+                "fieldname": Col.TOTAL_TOKENS,
+                "label": _("Total Tokens"),
+                "fieldtype": "Int",
+                "width": 110,
+            },
+            {
+                "fieldname": Col.MISMATCH_COUNT,
+                "label": _("Mismatches"),
+                "fieldtype": "Int",
+                "width": 100,
+            },
+            {
+                "fieldname": Col.TOP_MISMATCHES,
+                "label": _("Top Mismatched Fields"),
+                "fieldtype": "Data",
+                "width": 300,
+            },
+        ]
+
+    # ── SQL query ────────────────────────────────────────────────────
+
+    def _fetch_logs(self):
+        conditions, values = self._build_conditions()
+
+        return frappe.db.sql(
+            f"""
+            SELECT
+                log.ai_model,
+                log.pdf_processor,
+                log.accuracy_score,
+                log.file_parse_time,
+                log.file_parse_memory,
+                log.ai_parse_time,
+                log.total_time,
+                log.total_cost,
+                log.prompt_tokens,
+                log.completion_tokens,
+                log.total_tokens,
+                log.currency,
+                log.field_mismatches,
+                log.dataset,
+                ds.party,
+                ds.file_type,
+                COALESCE(cust.customer_name, supp.supplier_name, ds.party) AS party_name
+            FROM `tabParser Benchmark Log` log
+            JOIN `tabParser Benchmark Dataset` ds ON log.dataset = ds.name
+            LEFT JOIN `tabCustomer` cust
+                ON ds.party_type = 'Customer' AND ds.party = cust.name
+            LEFT JOIN `tabSupplier` supp
+                ON ds.party_type = 'Supplier' AND ds.party = supp.name
+            WHERE log.status = 'Completed'
+                {conditions}
+            ORDER BY ds.party, log.ai_model, ds.file_type
+            """,
+            values=values,
+            as_dict=True,
+        )
+
+    def _build_conditions(self):
+        conditions: list[str] = []
+        values: dict = {}
+
+        for column, key in (
+            ("ds.company", "company"),
+            ("ds.transaction_type", "transaction_type"),
+            ("ds.party_type", "party_type"),
+            ("ds.party", "party"),
+        ):
+            if self.filters.get(key):
+                conditions.append(f"AND {column} = %({key})s")
+                values[key] = self.filters[key]
+
+        for column, key in (
+            ("ds.file_type", "file_type"),
+            ("log.ai_model", "ai_model"),
+            ("log.pdf_processor", "pdf_processor"),
+        ):
+            self._add_in_condition(conditions, values, column, key)
+
+        return "\n                ".join(conditions), values
+
+    def _add_in_condition(self, conditions, values, column, key):
+        """Append an ``IN (...)`` clause for a multi-select filter."""
+        raw = self.filters.get(key)
+        if not raw:
+            return
+
+        items = raw if isinstance(raw, list) else [raw]
+        placeholders = []
+        for i, val in enumerate(items):
+            param = f"{key}_{i}"
+            placeholders.append(f"%({param})s")
+            values[param] = val
+
+        conditions.append(f"AND {column} IN ({', '.join(placeholders)})")
+
+    # ── Helpers ──────────────────────────────────────────────────────
+
+    def _set_party_type(self):
+        """Derive party_type from transaction_type when not explicitly set."""
+        transaction_type = self.filters.get("transaction_type")
+        if transaction_type and not self.filters.get("party_type"):
+            self.filters["party_type"] = PARTY_TYPE_MAP.get(transaction_type)
+
+    def _build_row(self, r):
+        """Build a single detail row from a log record."""
+        mismatches = self._parse_mismatches(r.field_mismatches)
+        mismatch_fields = [self._short_field_name(m["field"]) for m in mismatches]
+
+        return {
+            Col.PARTY: r.party or _("No Party"),
+            Col.PARTY_NAME: r.party_name or "",
+            Col.ACCURACY_SCORE: r.accuracy_score,
+            Col.AI_MODEL: r.ai_model,
+            Col.PDF_PROCESSOR: r.pdf_processor,
+            Col.FILE_TYPE: r.file_type,
+            Col.DATASET: r.dataset,
+            Col.FILE_PARSE_TIME: r.file_parse_time,
+            Col.FILE_PARSE_MEMORY: r.file_parse_memory,
+            Col.AI_PARSE_TIME: r.ai_parse_time,
+            Col.TOTAL_TIME: r.total_time,
+            Col.TOTAL_COST: r.total_cost,
+            Col.PROMPT_TOKENS: r.prompt_tokens,
+            Col.COMPLETION_TOKENS: r.completion_tokens,
+            Col.TOTAL_TOKENS: r.total_tokens,
+            Col.CURRENCY: r.currency,
+            Col.MISMATCH_COUNT: len(mismatches),
+            Col.TOP_MISMATCHES: ", ".join(mismatch_fields[:5])
+            if mismatch_fields
+            else "",
+            "_mismatch_fields": mismatch_fields,
+        }
+
+    @staticmethod
+    def _parse_mismatches(raw) -> list[dict]:
+        """Parse field_mismatches JSON string into a list."""
+        if not raw:
+            return []
+        try:
+            data = json.loads(raw) if isinstance(raw, str) else raw
+            return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, TypeError):
+            return []
+
+    @staticmethod
+    def _short_field_name(field: str) -> str:
+        """Extract a readable field name from DeepDiff path like root['items'][0]['qty']."""
+        import re
+
+        keys = re.findall(r"\['(.*?)'\]", field)
+        return ".".join(keys) if keys else field
+
+    # ── Grouping ─────────────────────────────────────────────────────
+
+    def _group_by_party(self):
+        """Group data by party, creating tree view with indent levels."""
+        if not self.data:
+            return
+
+        grouped = defaultdict(list)
+        for row in self.data:
+            party = row.get(Col.PARTY) or _("No Party")
+            row["indent"] = 1
+            grouped[party].append(row)
+
+        tree_data = []
+        for party, rows in grouped.items():
+            rows.sort(key=self._sort_key)
+            tree_data.append(self._group_row(party, rows))
+            tree_data.extend(rows)
+
+        self.data = tree_data
+
+    @staticmethod
+    def _sort_key(row):
+        """Sort key for child rows: AI Model → PDF Processor → File Type."""
+        return (
+            _AI_MODEL_ORDER.get(row.get(Col.AI_MODEL), 99),
+            _PDF_PROCESSOR_ORDER.get(row.get(Col.PDF_PROCESSOR), 99),
+            _FILE_TYPE_ORDER.get(row.get(Col.FILE_TYPE), 99),
+        )
+
+    def _group_row(self, party, rows):
+        """Aggregated summary row for a party group (indent 0)."""
+        count = len(rows)
+        row = {
+            Col.PARTY: party,
+            Col.PARTY_NAME: rows[0].get(Col.PARTY_NAME),
+            Col.CURRENCY: rows[0].get(Col.CURRENCY),
+            "indent": 0,
+        }
+
+        for field in _AVG_FIELDS:
+            vals = [r.get(field) or 0 for r in rows]
+            row[field] = round(sum(vals) / count, 2) if count else 0
+
+        for field in _SUM_FIELDS:
+            row[field] = sum(r.get(field) or 0 for r in rows)
+
+        # aggregate mismatch info across all child rows
+        all_fields = []
+        for r in rows:
+            all_fields.extend(r.get("_mismatch_fields", []))
+
+        row[Col.MISMATCH_COUNT] = sum(r.get(Col.MISMATCH_COUNT, 0) for r in rows)
+
+        if all_fields:
+            top = Counter(all_fields).most_common(5)
+            row[Col.TOP_MISMATCHES] = ", ".join(f"{name} ({cnt})" for name, cnt in top)
+        else:
+            row[Col.TOP_MISMATCHES] = ""
+
+        return row
