@@ -3,7 +3,7 @@ from timeit import default_timer
 
 import frappe
 from frappe.core.doctype.file.file import File
-from frappe.utils import flt
+from frappe.utils import cint, flt
 
 from transaction_parser.parser_benchmark.doctype.parser_benchmark_dataset.parser_benchmark_dataset import (
     ParserBenchmarkDataset,
@@ -36,6 +36,9 @@ class BenchmarkRunner:
             "Parser Benchmark Dataset", self.log.dataset
         )
         self.precision = 6  # to get 1-millionth of a token cost
+
+        # for accuracy score
+        self.significant_digits = cint(frappe.db.get_default("float_precision")) or 2
 
     def run(self):
         self.log.status = "Running"
@@ -181,6 +184,10 @@ class BenchmarkRunner:
         if isinstance(expected, str):
             expected = frappe.parse_json(expected)
 
-        result = score_response(expected, ai_content)
+        result = score_response(
+            expected,
+            ai_content,
+            significant_digits=self.significant_digits,
+        )
         self.log.accuracy_score = result["accuracy_score"]
         self.log.field_mismatches = frappe.as_json(result["mismatches"], indent=2)

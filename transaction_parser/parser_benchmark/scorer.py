@@ -20,7 +20,13 @@ def _normalize_empty(obj):
     return obj
 
 
-def score_response(expected: dict, actual: dict, max_diffs: int = 500) -> dict:
+def score_response(
+    expected: dict,
+    actual: dict,
+    *,
+    max_diffs: int = 500,
+    significant_digits: int = 2,
+) -> dict:
     """Compare AI response against expected result using DeepDiff."""
     expected = _normalize_empty(expected)
     actual = _normalize_empty(actual)
@@ -29,8 +35,9 @@ def score_response(expected: dict, actual: dict, max_diffs: int = 500) -> dict:
         expected,
         actual,
         ignore_string_case=True,
+        ignore_numeric_type_changes=True,
         ignore_type_in_groups=[(dict, frappe._dict)],
-        significant_digits=2,
+        significant_digits=significant_digits,
         verbose_level=2,
         max_diffs=max_diffs,
         log_frequency_in_sec=0,
