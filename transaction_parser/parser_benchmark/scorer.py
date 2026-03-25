@@ -29,7 +29,6 @@ def score_response(expected: dict, actual: dict, max_diffs: int = 500) -> dict:
         expected,
         actual,
         ignore_string_case=True,
-        ignore_order=True,
         ignore_type_in_groups=[(dict, frappe._dict)],
         significant_digits=2,
         verbose_level=2,
