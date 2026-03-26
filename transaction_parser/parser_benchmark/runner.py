@@ -107,7 +107,11 @@ class BenchmarkRunner:
         if self.log.file_type == "PDF" and self.log.pdf_processor:
             pdf_processor = get_pdf_processor(self.log.pdf_processor)
 
-        tracemalloc.start()
+        # to prevent stopping an already running tracemalloc instance
+        was_tracing = tracemalloc.is_tracing()
+        if not was_tracing:
+            tracemalloc.start()
+
         start = default_timer()
         try:
             content = FileProcessor().get_content(
@@ -118,7 +122,8 @@ class BenchmarkRunner:
         finally:
             self.log.file_parse_time = flt(default_timer() - start, self.precision)
             _, peak = tracemalloc.get_traced_memory()
-            tracemalloc.stop()
+            if not was_tracing:
+                tracemalloc.stop()
             self.log.file_parse_memory = flt(
                 peak / 1024 / 1024, self.precision
             )  # bytes → MB

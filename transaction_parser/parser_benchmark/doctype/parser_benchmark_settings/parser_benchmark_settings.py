@@ -66,4 +66,10 @@ def run_scheduled_benchmarks():
     )
 
     for dataset_name in datasets:
-        create_and_enqueue_benchmark_logs(dataset_name)
+        try:
+            create_and_enqueue_benchmark_logs(dataset_name)
+        except Exception:
+            frappe.log_error(
+                title=f"Failed to enqueue benchmark for dataset {dataset_name}",
+                message=frappe.get_traceback(),
+            )
