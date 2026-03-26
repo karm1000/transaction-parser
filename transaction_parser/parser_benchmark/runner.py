@@ -44,7 +44,7 @@ class BenchmarkRunner:
         self.log.status = "Running"
         self.log.currency = "USD"
         self.log.save(ignore_permissions=True)
-        frappe.db.commit()  # persist "Running" status
+        frappe.db.commit()  # nosemgrep -- persist "Running" status before long-running benchmark
 
         total_start = default_timer()
 
@@ -66,7 +66,7 @@ class BenchmarkRunner:
         finally:
             self.log.total_time = flt(default_timer() - total_start, self.precision)
             self.log.save(ignore_permissions=True)
-            frappe.db.commit()
+            frappe.db.commit()  # nosemgrep -- persist final results inside background job
 
         return self.log.name
 

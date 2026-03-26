@@ -162,14 +162,15 @@ def create_and_enqueue_benchmark_logs(dataset_name: str) -> list[str]:
             log.insert(ignore_permissions=True)
             log_names.append(log.name)
 
-    frappe.db.commit()
+    # commit before enqueuing so background jobs can read the inserted logs
+    frappe.db.commit()  # nosemgrep
 
     for log_name in log_names:
         try:
             frappe.enqueue(_run_benchmark, log_name=log_name, queue="long")
         except Exception:
             frappe.db.set_value("Parser Benchmark Log", log_name, "status", "Failed")
-            frappe.db.commit()
+            frappe.db.commit()  # nosemgrep -- persist Failed status when enqueue fails
 
     return log_names
 
