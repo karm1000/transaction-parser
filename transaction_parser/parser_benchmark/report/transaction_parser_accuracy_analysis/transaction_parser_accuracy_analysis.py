@@ -1,8 +1,11 @@
 # Copyright (c) 2026, Resilient Tech and contributors
 # For license information, please see license.txt
 
-import json
-from collections import Counter, defaultdict
+# TODO: Need to refactor and Test
+# TODO: Need to add, what does getting mismatched!!!
+# TODO: Need to create a other report as well like comparing with commits
+
+from collections import defaultdict
 from enum import StrEnum
 
 import frappe
@@ -59,9 +62,7 @@ class Col(StrEnum):
     CURRENCY = "currency"
     DATASET = "dataset"
     RUN_COUNT = "run_count"
-    MISMATCH_RATE = "mismatch_rate"
-    UNIQUE_MISMATCHES = "unique_mismatches"
-    TOP_MISMATCHES = "top_mismatches"
+    KEY_SCORES = "key_scores"
 
 
 # Fields averaged in party-group summary rows
@@ -89,10 +90,13 @@ class AccuracyAnalysisReport:
     def __init__(self, filters: frappe._dict):
         self.filters = filters
         self._set_party_type()
-        self.group_by_party = True  # Always group — even for a single party
+        self.group_by_party = True
 
     def run(self):
-        self.data = [self._build_row(r) for r in self._fetch_logs()]
+        logs = self._fetch_logs()
+        score_details_map = self._fetch_score_details([r.log_name for r in logs])
+
+        self.data = [self._build_row(r, score_details_map) for r in logs]
         self._aggregate_by_config()
 
         if self.group_by_party:
@@ -100,7 +104,7 @@ class AccuracyAnalysisReport:
 
         # strip internal keys before sending to client
         for row in self.data:
-            row.pop("_mismatch_fields", None)
+            row.pop("_key_accuracies", None)
 
         return self._get_columns(), self.data
 
@@ -211,22 +215,10 @@ class AccuracyAnalysisReport:
                 "width": 110,
             },
             {
-                "fieldname": Col.MISMATCH_RATE,
-                "label": _("Mismatch Rate (%)"),
-                "fieldtype": "Percent",
-                "width": 140,
-            },
-            {
-                "fieldname": Col.UNIQUE_MISMATCHES,
-                "label": _("Unique Fields"),
-                "fieldtype": "Int",
-                "width": 110,
-            },
-            {
-                "fieldname": Col.TOP_MISMATCHES,
-                "label": _("Top Mismatched Fields"),
+                "fieldname": Col.KEY_SCORES,
+                "label": _("Key Scores"),
                 "fieldtype": "Data",
-                "width": 300,
+                "width": 350,
             },
         ]
 
@@ -247,6 +239,7 @@ class AccuracyAnalysisReport:
             .left_join(supp)
             .on((ds.party_type == "Supplier") & (ds.party == supp.name))
             .select(
+                log.name.as_("log_name"),
                 log.ai_model,
                 log.pdf_processor,
                 log.accuracy_score,
@@ -259,7 +252,6 @@ class AccuracyAnalysisReport:
                 log.completion_tokens,
                 log.total_tokens,
                 log.currency,
-                log.field_mismatches,
                 log.dataset,
                 ds.party,
                 ds.file_type,
@@ -294,6 +286,26 @@ class AccuracyAnalysisReport:
 
         return query.run(as_dict=True)
 
+    def _fetch_score_details(self, log_names: list[str]) -> dict[str, list[dict]]:
+        """Fetch score_details child rows for all logs at once."""
+        if not log_names:
+            return {}
+
+        sd = frappe.qb.DocType("Parser Benchmark Score Detail")
+        rows = (
+            frappe.qb.from_(sd)
+            .select(sd.parent, sd.key, sd.matched, sd.total, sd.accuracy)
+            .where(sd.parent.isin(log_names))
+            .orderby(sd.idx)
+            .run(as_dict=True)
+        )
+
+        details_map: dict[str, list[dict]] = defaultdict(list)
+        for row in rows:
+            details_map[row.parent].append(row)
+
+        return details_map
+
     # ── Helpers ──────────────────────────────────────────────────────
 
     def _set_party_type(self):
@@ -302,16 +314,15 @@ class AccuracyAnalysisReport:
         if transaction_type and not self.filters.get("party_type"):
             self.filters["party_type"] = PARTY_TYPE_MAP.get(transaction_type)
 
-    def _build_row(self, r):
+    def _build_row(self, r, score_details_map):
         """Build a single detail row from a log record."""
-        mismatches = self._parse_mismatches(r.field_mismatches)
-        mismatch_fields = [self._short_field_name(m["field"]) for m in mismatches]
+        details = score_details_map.get(r.log_name, [])
+        key_accuracies = {d["key"]: d["accuracy"] for d in details}
 
-        if mismatch_fields:
-            top = Counter(mismatch_fields).most_common(5)
-            top_str = ", ".join(f"{name} x{cnt}" for name, cnt in top)
+        if key_accuracies:
+            key_str = ", ".join(f"{k}: {v:.0f}%" for k, v in key_accuracies.items())
         else:
-            top_str = ""
+            key_str = ""
 
         return {
             Col.PARTY: r.party or _("No Party"),
@@ -330,40 +341,14 @@ class AccuracyAnalysisReport:
             Col.COMPLETION_TOKENS: r.completion_tokens,
             Col.TOTAL_TOKENS: r.total_tokens,
             Col.CURRENCY: r.currency,
-            Col.MISMATCH_RATE: round(100 - (r.accuracy_score or 0), 2),
-            Col.UNIQUE_MISMATCHES: len(set(mismatch_fields)),
-            Col.TOP_MISMATCHES: top_str,
-            "_mismatch_fields": mismatch_fields,
+            Col.KEY_SCORES: key_str,
+            "_key_accuracies": key_accuracies,
         }
-
-    @staticmethod
-    def _parse_mismatches(raw) -> list[dict]:
-        """Parse field_mismatches JSON string into a list."""
-        if not raw:
-            return []
-        try:
-            data = json.loads(raw) if isinstance(raw, str) else raw
-            return data if isinstance(data, list) else []
-        except (json.JSONDecodeError, TypeError):
-            return []
-
-    @staticmethod
-    def _short_field_name(field: str) -> str:
-        """Extract a readable field name from DeepDiff path like root['items'][0]['qty']."""
-        import re
-
-        keys = re.findall(r"\['(.*?)'\]", field)
-        return ".".join(keys) if keys else field
 
     # ── Aggregation ──────────────────────────────────────────────────
 
     def _aggregate_by_config(self):
-        """Collapse multiple runs of the same config into one averaged row.
-
-        Groups by (party, ai_model, pdf_processor, file_type) and averages
-        numeric fields. The Dataset column shows the latest dataset if all
-        runs share one, otherwise left blank.
-        """
+        """Collapse multiple runs of the same config into one averaged row."""
         if not self.data:
             return
 
@@ -390,7 +375,6 @@ class AccuracyAnalysisReport:
                 Col.RUN_COUNT: count,
             }
 
-            # unique datasets — show if only one, else blank
             agg[Col.DATASET] = rows[0].get(Col.DATASET, "")
 
             for field in _AVG_FIELDS:
@@ -400,25 +384,22 @@ class AccuracyAnalysisReport:
             for field in _SUM_FIELDS:
                 agg[field] = round(sum(r.get(field) or 0 for r in rows) / count, 6)
 
-            # aggregate mismatches
-            all_fields = []
+            # aggregate per-key accuracies
+            all_key_accs: dict[str, list[float]] = defaultdict(list)
             for r in rows:
-                all_fields.extend(r.get("_mismatch_fields", []))
+                for k, v in r.get("_key_accuracies", {}).items():
+                    all_key_accs[k].append(v or 0)
 
-            agg[Col.MISMATCH_RATE] = round(100 - (agg.get(Col.ACCURACY_SCORE) or 0), 2)
-            agg[Col.UNIQUE_MISMATCHES] = round(
-                sum(r.get(Col.UNIQUE_MISMATCHES, 0) for r in rows) / count
+            avg_key_accs = {
+                k: round(sum(v) / len(v), 1) for k, v in all_key_accs.items()
+            }
+            agg[Col.KEY_SCORES] = (
+                ", ".join(f"{k}: {v:.0f}%" for k, v in avg_key_accs.items())
+                if avg_key_accs
+                else ""
             )
+            agg["_key_accuracies"] = avg_key_accs
 
-            if all_fields:
-                top = Counter(all_fields).most_common(5)
-                agg[Col.TOP_MISMATCHES] = ", ".join(
-                    f"{name} x{cnt}" for name, cnt in top
-                )
-            else:
-                agg[Col.TOP_MISMATCHES] = ""
-
-            agg["_mismatch_fields"] = all_fields
             aggregated.append(agg)
 
         self.data = aggregated
@@ -471,20 +452,17 @@ class AccuracyAnalysisReport:
         for field in _SUM_FIELDS:
             row[field] = round(sum(r.get(field) or 0 for r in rows), 6)
 
-        # aggregate mismatch info across all child rows
-        all_fields = []
+        # aggregate per-key accuracies across all child rows
+        all_key_accs: dict[str, list[float]] = defaultdict(list)
         for r in rows:
-            all_fields.extend(r.get("_mismatch_fields", []))
+            for k, v in r.get("_key_accuracies", {}).items():
+                all_key_accs[k].append(v or 0)
 
-        row[Col.MISMATCH_RATE] = round(100 - (row.get(Col.ACCURACY_SCORE) or 0), 2)
-        row[Col.UNIQUE_MISMATCHES] = round(
-            sum(r.get(Col.UNIQUE_MISMATCHES, 0) for r in rows) / count
+        avg_key_accs = {k: round(sum(v) / len(v), 1) for k, v in all_key_accs.items()}
+        row[Col.KEY_SCORES] = (
+            ", ".join(f"{k}: {v:.0f}%" for k, v in avg_key_accs.items())
+            if avg_key_accs
+            else ""
         )
-
-        if all_fields:
-            top = Counter(all_fields).most_common(5)
-            row[Col.TOP_MISMATCHES] = ", ".join(f"{name} x{cnt}" for name, cnt in top)
-        else:
-            row[Col.TOP_MISMATCHES] = ""
 
         return row

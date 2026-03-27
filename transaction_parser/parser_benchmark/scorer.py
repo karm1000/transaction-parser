@@ -1,111 +1,179 @@
 import frappe
-from deepdiff import DeepDiff
 from frappe.utils import flt
 
 
-def _normalize_empty(obj):
-    """Recursively convert empty strings to None so `""` vs `None` is not a mismatch.
+def _normalize(obj):
+    """Recursively normalize values for comparison.
 
-    Leaves `0`, `False`, and other falsy values untouched.
+    - Empty strings → None
+    - Strings → stripped and lowercased
+    - frappe._dict → plain dict
     """
     if isinstance(obj, dict):
-        return {k: _normalize_empty(v) for k, v in obj.items()}
+        return {k: _normalize(v) for k, v in obj.items()}
 
     if isinstance(obj, list):
-        return [_normalize_empty(v) for v in obj]
+        return [_normalize(v) for v in obj]
 
     if obj == "":
         return None
 
+    if isinstance(obj, str):
+        return obj.strip().lower()
+
     return obj
 
 
-def score_response(
-    expected: dict,
-    actual: dict,
-    *,
-    max_diffs: int = 500,
-    significant_digits: int = 2,
-) -> dict:
-    """Compare AI response against expected result using DeepDiff."""
-    expected = _normalize_empty(expected)
-    actual = _normalize_empty(actual)
+def _compare_scalar(
+    expected, actual, path: str, precision: int
+) -> tuple[int, int, list]:
+    """Compare two scalar (non-dict, non-list) values.
 
-    diff = DeepDiff(
-        expected,
-        actual,
-        ignore_string_case=True,
-        ignore_numeric_type_changes=True,
-        ignore_type_in_groups=[(dict, frappe._dict)],
-        significant_digits=significant_digits,
-        verbose_level=2,
-        max_diffs=max_diffs,
-        log_frequency_in_sec=0,
-        get_deep_distance=True,
+    Returns (matched, total, mismatches).
+    """
+    if expected is None and actual is None:
+        return 1, 1, []
+
+    if expected is None or actual is None:
+        return 0, 1, [{"field": path, "expected": expected, "actual": actual}]
+
+    # numeric comparison with tolerance
+    if isinstance(expected, int | float) and isinstance(actual, int | float):
+        if flt(expected, precision) == flt(actual, precision):
+            return 1, 1, []
+        return 0, 1, [{"field": path, "expected": expected, "actual": actual}]
+
+    # string comparison (already lowered by _normalize)
+    if str(expected) == str(actual):
+        return 1, 1, []
+
+    return 0, 1, [{"field": path, "expected": expected, "actual": actual}]
+
+
+def _compare(expected, actual, path: str, precision: int) -> tuple[int, int, list]:
+    """Recursively compare expected vs actual, counting leaf field matches.
+
+    Only keys/indices present in `expected` are scored — extra keys in
+    `actual` are ignored.  Lists are compared index-by-index (order matters).
+
+    Returns (matched, total, mismatches).
+    """
+    if isinstance(expected, dict):
+        matched = total = 0
+        mismatches = []
+
+        for key, exp_val in expected.items():
+            child_path = f"{path}.{key}" if path else key
+            act_val = actual.get(key) if isinstance(actual, dict) else None
+            m, t, mm = _compare(exp_val, act_val, child_path, precision)
+            matched += m
+            total += t
+            mismatches.extend(mm)
+
+        return matched, total, mismatches
+
+    if isinstance(expected, list):
+        matched = total = 0
+        mismatches = []
+        actual_list = actual if isinstance(actual, list) else []
+
+        for idx, exp_item in enumerate(expected):
+            child_path = f"{path}[{idx}]"
+            act_item = actual_list[idx] if idx < len(actual_list) else None
+
+            if act_item is None:
+                # missing actual item — count all leaves in expected as mismatched
+                m, t, mm = _compare(exp_item, None, child_path, precision)
+                mismatches.extend(mm)
+            else:
+                m, t, mm = _compare(exp_item, act_item, child_path, precision)
+                mismatches.extend(mm)
+
+            matched += m
+            total += t
+
+        return matched, total, mismatches
+
+    # scalar
+    return _compare_scalar(expected, actual, path, precision)
+
+
+def score_key(expected, actual, key: str, precision: int = 2) -> dict:
+    """Score a single top-level key.
+
+    Args:
+        expected: The expected value (parsed JSON) for this key.
+        actual: The actual AI response value for this key.
+        key: The key name (used as path prefix in mismatch reports).
+        precision: Decimal precision for numeric comparisons.
+
+    Returns:
+        {"key": str, "matched": int, "total": int, "accuracy": float, "mismatches": list}
+    """
+    exp_normalized = _normalize(expected)
+    act_normalized = _normalize(actual)
+
+    matched, total, mismatches = _compare(
+        exp_normalized, act_normalized, key, precision
     )
 
-    distance = diff.get("deep_distance", 0)
-    accuracy = flt((1 - distance) * 100, 2)
+    accuracy = flt((matched / total) * 100, 2) if total else 100.0
 
     return {
-        "accuracy_score": accuracy,
-        "mismatches": _format_mismatches(diff),
+        "key": key,
+        "matched": matched,
+        "total": total,
+        "accuracy": accuracy,
+        "mismatches": mismatches,
     }
 
 
-_CHANGED_TYPES = {"values_changed", "type_changes"}
-_REMOVED_TYPES = {"dictionary_item_removed", "iterable_item_removed"}
-_ADDED_TYPES = {"dictionary_item_added", "iterable_item_added"}
-_HANDLED_TYPES = _CHANGED_TYPES | _REMOVED_TYPES | _ADDED_TYPES | {"deep_distance"}
+def score_response(
+    expected_fields: list[dict],
+    actual: dict,
+    *,
+    weights: dict[str, float] | None = None,
+    precision: int = 2,
+) -> dict:
+    """Score AI response against expected fields with per-key breakdown.
 
+    Args:
+        expected_fields: List of {"key": str, "expected_json": str|dict} rows
+            from the Dataset child table.
+        actual: The full AI response dict.
+        weights: {key_name: weight} from Settings. Defaults to 1 for all keys.
+        precision: Decimal precision for numeric comparisons.
 
-def _format_mismatches(diff: DeepDiff) -> list[dict]:
-    """Flatten DeepDiff into a simple list of {field, expected, actual}."""
-    mismatches = []
+    Returns:
+        {"overall_accuracy": float, "details": list[dict]}
+        where each detail is the output of score_key().
+    """
+    weights = weights or {}
+    details = []
 
-    for path, change in diff.get("values_changed", {}).items():
-        mismatches.append(
-            {
-                "field": path,
-                "expected": change["old_value"],
-                "actual": change["new_value"],
-            }
-        )
+    weighted_matched = 0.0
+    weighted_total = 0.0
 
-    for path, change in diff.get("type_changes", {}).items():
-        mismatches.append(
-            {
-                "field": path,
-                "expected": change["old_value"],
-                "actual": change["new_value"],
-            }
-        )
+    for row in expected_fields:
+        key = row["key"]
+        expected = row["expected_json"]
 
-    for path, val in diff.get("dictionary_item_removed", {}).items():
-        mismatches.append({"field": path, "expected": val, "actual": None})
+        if isinstance(expected, str):
+            expected = frappe.parse_json(expected)
 
-    for path, val in diff.get("dictionary_item_added", {}).items():
-        mismatches.append({"field": path, "expected": None, "actual": val})
+        actual_value = actual.get(key) if isinstance(actual, dict) else None
+        result = score_key(expected, actual_value, key, precision)
+        details.append(result)
 
-    for path, val in diff.get("iterable_item_removed", {}).items():
-        mismatches.append({"field": path, "expected": val, "actual": None})
+        w = weights.get(key, 1.0)
+        weighted_matched += result["matched"] * w
+        weighted_total += result["total"] * w
 
-    for path, val in diff.get("iterable_item_added", {}).items():
-        mismatches.append({"field": path, "expected": None, "actual": val})
+    overall_accuracy = (
+        flt((weighted_matched / weighted_total) * 100, 2) if weighted_total else 0.0
+    )
 
-    # catch-all for unhandled DeepDiff change types
-    for change_type, changes in diff.items():
-        if change_type in _HANDLED_TYPES:
-            continue
-
-        if isinstance(changes, dict):
-            for path, val in changes.items():
-                mismatches.append(
-                    {"field": f"{change_type}: {path}", "expected": None, "actual": val}
-                )
-        else:
-            mismatches.append(
-                {"field": change_type, "expected": None, "actual": str(changes)}
-            )
-
-    return mismatches
+    return {
+        "overall_accuracy": overall_accuracy,
+        "details": details,
+    }

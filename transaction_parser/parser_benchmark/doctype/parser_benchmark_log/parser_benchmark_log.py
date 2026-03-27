@@ -14,6 +14,10 @@ class ParserBenchmarkLog(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
+        from transaction_parser.parser_benchmark.doctype.parser_benchmark_score_detail.parser_benchmark_score_detail import (
+            ParserBenchmarkScoreDetail,
+        )
+
         accuracy_score: DF.Percent
         ai_model: DF.Literal[
             "DeepSeek Chat",
@@ -35,7 +39,6 @@ class ParserBenchmarkLog(Document):
         currency: DF.Link | None
         dataset: DF.Link
         error: DF.Code | None
-        field_mismatches: DF.Code | None
         file_content: DF.Code | None
         file_parse_memory: DF.Float
         file_parse_time: DF.Float
@@ -48,6 +51,7 @@ class ParserBenchmarkLog(Document):
         party_type: DF.Link | None
         pdf_processor: DF.Literal["", "OCRMyPDF", "Docling"]
         prompt_tokens: DF.Int
+        score_details: DF.Table[ParserBenchmarkScoreDetail]
         status: DF.Literal["Queued", "Running", "Completed", "Failed"]
         total_cost: DF.Currency
         total_time: DF.Float

@@ -17,7 +17,9 @@
   "wednesday",
   "saturday",
   "section_break_kvgf",
-  "token_costs"
+  "token_costs",
+  "key_weights_section",
+  "key_weights"
  ],
  "fields": [
   {
@@ -83,7 +85,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval: doc.enabled",
    "fieldname": "section_break_kvgf",
    "fieldtype": "Section Break"
   },
@@ -95,12 +96,22 @@
    "default": "0",
    "fieldname": "enabled",
    "fieldtype": "Check",
-   "label": "Enabled"
+   "label": "Scheduling Enabled"
+  },
+  {
+   "fieldname": "key_weights_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "key_weights",
+   "fieldtype": "Table",
+   "label": "Key Weights",
+   "options": "Parser Benchmark Key Weight"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2026-03-25 12:53:24.601045",
+ "modified": "2026-03-27 12:19:19.982234",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Settings",

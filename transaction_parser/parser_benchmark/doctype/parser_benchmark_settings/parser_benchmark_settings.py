@@ -25,12 +25,16 @@ class ParserBenchmarkSettings(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
+        from transaction_parser.parser_benchmark.doctype.parser_benchmark_key_weight.parser_benchmark_key_weight import (
+            ParserBenchmarkKeyWeight,
+        )
         from transaction_parser.parser_benchmark.doctype.parser_benchmark_token_cost.parser_benchmark_token_cost import (
             ParserBenchmarkTokenCost,
         )
 
         enabled: DF.Check
         friday: DF.Check
+        key_weights: DF.Table[ParserBenchmarkKeyWeight]
         monday: DF.Check
         saturday: DF.Check
         sunday: DF.Check

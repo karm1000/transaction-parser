@@ -30,8 +30,10 @@ class BenchmarkRunner:
         2. AI parsing     → time, tokens, cost, AI response
     """
 
+    # TODO: can pass settings / dataset here?
     def __init__(self, log_name: str):
         self.log: ParserBenchmarkLog = frappe.get_doc("Parser Benchmark Log", log_name)
+        # TODO: can use cached doc...
         self.dataset: ParserBenchmarkDataset = frappe.get_doc(
             "Parser Benchmark Dataset", self.log.dataset
         )
@@ -182,17 +184,44 @@ class BenchmarkRunner:
     def _score_response(self, ai_content: dict):
         from transaction_parser.parser_benchmark.scorer import score_response
 
-        expected = self.dataset.expected_result
-        if not expected:
+        expected_fields = self.dataset.expected_fields
+        if not expected_fields:
             return
 
-        if isinstance(expected, str):
-            expected = frappe.parse_json(expected)
+        weights = self._get_key_weights()
 
         result = score_response(
-            expected,
-            ai_content,
-            significant_digits=self.significant_digits,
+            expected_fields=[
+                {"key": row.key, "expected_json": row.expected_json}
+                for row in expected_fields
+            ],
+            actual=ai_content,
+            weights=weights,
+            precision=self.significant_digits,
         )
-        self.log.accuracy_score = result["accuracy_score"]
-        self.log.field_mismatches = frappe.as_json(result["mismatches"], indent=2)
+
+        self.log.accuracy_score = result["overall_accuracy"]
+
+        for detail in result["details"]:
+            self.log.append(
+                "score_details",
+                {
+                    "key": detail["key"],
+                    "matched": detail["matched"],
+                    "total": detail["total"],
+                    "accuracy": detail["accuracy"],
+                    "mismatches": frappe.as_json(detail["mismatches"], indent=2)
+                    if detail["mismatches"]
+                    else None,
+                },
+            )
+
+    # TODO: settings can be in init...
+    def _get_key_weights(self) -> dict[str, float]:
+        """Load key weights from Parser Benchmark Settings."""
+        try:
+            settings = frappe.get_cached_doc("Parser Benchmark Settings")
+        except Exception:
+            return {}
+
+        return {row.key: row.weight for row in (settings.key_weights or [])}

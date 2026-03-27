@@ -32,6 +32,10 @@ class ParserBenchmarkDataset(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
+        from transaction_parser.parser_benchmark.doctype.parser_benchmark_expected_field.parser_benchmark_expected_field import (
+            ParserBenchmarkExpectedField,
+        )
+
         amended_from: DF.Link | None
         company: DF.Link | None
         country: DF.Literal["India", "Other"]
@@ -39,7 +43,7 @@ class ParserBenchmarkDataset(Document):
         deepseek_reasoner: DF.Check
         docling: DF.Check
         enabled: DF.Check
-        expected_result: DF.Code | None
+        expected_fields: DF.Table[ParserBenchmarkExpectedField]
         file: DF.Attach
         file_type: DF.Data | None
         google_gemini_flash_25: DF.Check
@@ -63,7 +67,7 @@ class ParserBenchmarkDataset(Document):
         self.validate_file_type()
         self.validate_selected_models()
         self.validate_selected_processors()
-        self.validate_expected_result()
+        self.validate_expected_fields()
 
     def set_file_type(self):
         if self.file_type and not self.has_value_changed("file"):
@@ -89,16 +93,29 @@ class ParserBenchmarkDataset(Document):
         if not self.get_selected_processors():
             frappe.throw(_("Please select at least one PDF Processor."))
 
-    def validate_expected_result(self):
-        if not self.expected_result:
+    def validate_expected_fields(self):
+        if not self.expected_fields:
             return
 
-        try:
-            frappe.parse_json(self.expected_result)
-        except Exception:
-            frappe.throw(
-                title=_("Invalid JSON"), msg=_("Expected Result must be valid JSON.")
-            )
+        seen_keys = set()
+        for row in self.expected_fields:
+            if row.key in seen_keys:
+                frappe.throw(
+                    _("Duplicate key '{0}' in Expected Fields row {1}").format(
+                        row.key, row.idx
+                    )
+                )
+            seen_keys.add(row.key)
+
+            try:
+                frappe.parse_json(row.expected_json)
+            except Exception:
+                frappe.throw(
+                    title=_("Invalid JSON"),
+                    msg=_(
+                        "Expected JSON in row {0} (key: {1}) must be valid JSON."
+                    ).format(row.idx, row.key),
+                )
 
     def get_selected_models(self) -> list[str]:
         """Return list of selected AI model names."""
@@ -165,6 +182,7 @@ def create_and_enqueue_benchmark_logs(dataset_name: str) -> list[str]:
     # commit before enqueuing so background jobs can read the inserted logs
     frappe.db.commit()  # nosemgrep
 
+    # TODO: pass a dataset doc and the settings...
     for log_name in log_names:
         try:
             frappe.enqueue(_run_benchmark, log_name=log_name, queue="long")

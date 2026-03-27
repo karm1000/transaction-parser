@@ -37,8 +37,8 @@
   "other_config_section",
   "page_limit",
   "column_break_jjht",
-  "expected_result_section",
-  "expected_result",
+  "expected_fields_section",
+  "expected_fields",
   "section_break_bhsg",
   "naming_series",
   "column_break_aoce",
@@ -217,17 +217,17 @@
    "non_negative": 1
   },
   {
-   "fieldname": "expected_result_section",
+   "fieldname": "expected_fields_section",
    "fieldtype": "Section Break",
-   "label": "Expected Result"
+   "label": "Expected Fields"
   },
   {
    "allow_on_submit": 1,
-   "description": "The correct/expected parsed output JSON for this dataset. Used to score AI accuracy.",
-   "fieldname": "expected_result",
-   "fieldtype": "Code",
-   "label": "Expected Result",
-   "options": "JSON"
+   "description": "Add one row per response key you want to score. Pick the key and paste only its expected JSON value.",
+   "fieldname": "expected_fields",
+   "fieldtype": "Table",
+   "label": "Expected Fields",
+   "options": "Parser Benchmark Expected Field"
   },
   {
    "collapsible": 1,
@@ -283,7 +283,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-24 14:57:58.689734",
+ "modified": "2026-03-27 10:32:46.620190",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
