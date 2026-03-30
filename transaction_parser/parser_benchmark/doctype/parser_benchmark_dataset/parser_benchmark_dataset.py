@@ -34,6 +34,9 @@ class ParserBenchmarkDataset(Document):
     if TYPE_CHECKING:
         from frappe.types import DF
 
+        from transaction_parser.parser_benchmark.doctype.parser_benchmark_dataset_file.parser_benchmark_dataset_file import (
+            ParserBenchmarkDatasetFile,
+        )
         from transaction_parser.parser_benchmark.doctype.parser_benchmark_expected_field.parser_benchmark_expected_field import (
             ParserBenchmarkExpectedField,
         )
@@ -46,10 +49,10 @@ class ParserBenchmarkDataset(Document):
         docling: DF.Check
         enabled: DF.Check
         expected_fields: DF.Table[ParserBenchmarkExpectedField]
-        file: DF.Attach
-        file_type: DF.Data | None
+        files: DF.Table[ParserBenchmarkDatasetFile]
         google_gemini_flash_25: DF.Check
         google_gemini_pro_25: DF.Check
+        is_multiple_files: DF.Check
         naming_series: DF.Literal["PAR-BM-DTS-"]
         ocrmypdf: DF.Check
         openai_gpt_4o: DF.Check
@@ -62,38 +65,23 @@ class ParserBenchmarkDataset(Document):
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
-    SUPPORTED_FILE_TYPES = ("PDF", "CSV", "XLSX", "XLS")
-
     def validate(self):
-        self.set_file_type()
-        self.validate_file_type()
+        self.validate_files()
         self.validate_selected_models()
-        self.validate_selected_processors()
         self.validate_expected_fields()
 
-    def set_file_type(self):
-        if self.file_type and not self.has_value_changed("file"):
-            return
+    def validate_files(self):
+        """Set file_type for each row and auto-set is_multiple_files."""
+        for row in self.files:
+            if row.file and (not row.file_type or row.has_value_changed("file")):
+                file_doc = frappe.get_last_doc("File", filters={"file_url": row.file})
+                row.file_type = file_doc.file_type
 
-        file_doc = frappe.get_last_doc("File", filters={"file_url": self.file})
-        self.file_type = file_doc.file_type
-
-    def validate_file_type(self):
-        if self.file_type not in self.SUPPORTED_FILE_TYPES:
-            frappe.throw(_("Unsupported file type: {0}").format(self.file_type))
+        self.is_multiple_files = len(self.files) > 1
 
     def validate_selected_models(self):
         if not self.get_selected_models():
             frappe.throw(_("Please select at least one AI Model."))
-
-    def validate_selected_processors(self):
-        if self.file_type != "PDF":
-            for field in PDF_PROCESSOR_FIELD_MAP:
-                self.set(field, 0)
-            return
-
-        if not self.get_selected_processors():
-            frappe.throw(_("Please select at least one PDF Processor."))
 
     def validate_expected_fields(self):
         if not self.expected_fields:
@@ -129,6 +117,18 @@ class ParserBenchmarkDataset(Document):
             label for field, label in PDF_PROCESSOR_FIELD_MAP.items() if self.get(field)
         ]
 
+    def has_pdf_file(self) -> bool:
+        """Check if any file in the child table is a PDF."""
+        return any(row.file_type == "PDF" for row in self.files)
+
+    def get_file_docs(self) -> list:
+        """Return File documents for each row in the files child table."""
+        file_docs = []
+        for row in self.files:
+            file_doc = frappe.get_last_doc("File", filters={"file_url": row.file})
+            file_docs.append(file_doc)
+        return file_docs
+
 
 @frappe.whitelist()
 def run_benchmark(dataset_name: str):
@@ -156,7 +156,7 @@ def create_and_enqueue_benchmark_logs(dataset_name: str) -> list[str]:
     models = dataset.get_selected_models()
     processors = (
         (dataset.get_selected_processors() or [None])
-        if dataset.file_type == "PDF"
+        if dataset.has_pdf_file()
         else [None]
     )
 

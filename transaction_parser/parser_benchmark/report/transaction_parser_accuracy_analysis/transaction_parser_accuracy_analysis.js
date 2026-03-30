@@ -12,8 +12,6 @@ const AI_MODELS = [
 	"Google Gemini Flash-2.5",
 ];
 
-const FILE_TYPES = ["PDF", "CSV", "XLSX", "XLS"];
-
 const PDF_PROCESSORS = ["OCRMyPDF", "Docling"];
 
 const PARTY_TYPE_MAP = {
@@ -69,12 +67,6 @@ frappe.query_reports["Transaction Parser Accuracy Analysis"] = {
 			options: "party_type",
 		},
 		{
-			fieldname: "file_type",
-			label: __("File Type"),
-			fieldtype: "MultiSelectList",
-			get_data: (txt) => make_options(FILE_TYPES, txt),
-		},
-		{
 			fieldname: "ai_model",
 			label: __("AI Model"),
 			fieldtype: "MultiSelectList",
@@ -89,6 +81,12 @@ frappe.query_reports["Transaction Parser Accuracy Analysis"] = {
 		{
 			fieldname: "include_disabled_datasets",
 			label: __("Include Disabled Datasets"),
+			fieldtype: "Check",
+			default: 0,
+		},
+		{
+			fieldname: "is_multiple_files",
+			label: __("Multiple Files Only"),
 			fieldtype: "Check",
 			default: 0,
 		},

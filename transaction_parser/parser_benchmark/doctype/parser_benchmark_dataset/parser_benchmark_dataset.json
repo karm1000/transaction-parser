@@ -6,11 +6,8 @@
  "engine": "InnoDB",
  "field_order": [
   "enabled",
+  "is_multiple_files",
   "column_break_title",
-  "section_break_file",
-  "file",
-  "file_type",
-  "column_break_gbap",
   "transaction_type",
   "country",
   "section_break_sobg",
@@ -18,6 +15,8 @@
   "column_break_qccq",
   "party_type",
   "party",
+  "files_section",
+  "files",
   "processing_section",
   "column_break_ai_models",
   "openai_gpt_4o_mini",
@@ -59,20 +58,12 @@
    "label": "Enabled"
   },
   {
-   "fieldname": "section_break_file",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "file",
-   "fieldtype": "Attach",
-   "label": "File",
-   "print_hide": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "file_type",
-   "fieldtype": "Data",
-   "label": "File Type",
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "is_multiple_files",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Multiple Files",
    "read_only": 1
   },
   {
@@ -91,10 +82,7 @@
    "options": "India\nOther",
    "reqd": 1
   },
-  {
-   "fieldname": "column_break_gbap",
-   "fieldtype": "Column Break"
-  },
+
   {
    "fieldname": "company",
    "fieldtype": "Link",
@@ -114,6 +102,19 @@
    "fieldtype": "Dynamic Link",
    "label": "Party",
    "options": "party_type"
+  },
+  {
+   "fieldname": "files_section",
+   "fieldtype": "Section Break",
+   "label": "Files"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "files",
+   "fieldtype": "Table",
+   "label": "Files",
+   "options": "Parser Benchmark Dataset File",
+   "reqd": 1
   },
   {
    "fieldname": "processing_section",
@@ -181,7 +182,6 @@
    "label": "Google Gemini Flash-2.5"
   },
   {
-   "depends_on": "eval: doc.file_type === \"PDF\"",
    "fieldname": "pdf_processor_section",
    "fieldtype": "Section Break",
    "label": "PDF Processors"

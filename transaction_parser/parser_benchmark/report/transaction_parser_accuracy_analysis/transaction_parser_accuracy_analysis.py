@@ -34,13 +34,6 @@ _PDF_PROCESSOR_ORDER = {
     "Docling": 1,
 }
 
-_FILE_TYPE_ORDER = {
-    "PDF": 0,
-    "CSV": 1,
-    "XLSX": 2,
-    "XLS": 3,
-}
-
 
 class Col(StrEnum):
     """Column fieldnames — single source of truth for the report."""
@@ -50,7 +43,6 @@ class Col(StrEnum):
     ACCURACY_SCORE = "accuracy_score"
     AI_MODEL = "ai_model"
     PDF_PROCESSOR = "pdf_processor"
-    FILE_TYPE = "file_type"
     FILE_PARSE_TIME = "file_parse_time"
     FILE_PARSE_MEMORY = "file_parse_memory"
     AI_PARSE_TIME = "ai_parse_time"
@@ -156,12 +148,6 @@ class AccuracyAnalysisReport:
                 "width": 110,
             },
             {
-                "fieldname": Col.FILE_TYPE,
-                "label": _("File Type"),
-                "fieldtype": "Data",
-                "width": 90,
-            },
-            {
                 "fieldname": Col.FILE_PARSE_TIME,
                 "label": _("File Parse (s)"),
                 "fieldtype": "Float",
@@ -254,17 +240,19 @@ class AccuracyAnalysisReport:
                 log.currency,
                 log.dataset,
                 ds.party,
-                ds.file_type,
                 Coalesce(cust.customer_name, supp.supplier_name, ds.party).as_(
                     "party_name"
                 ),
             )
             .where(log.status == "Completed")
-            .orderby(ds.party, log.ai_model, ds.file_type)
+            .orderby(ds.party, log.ai_model)
         )
 
         if not self.filters.get("include_disabled_datasets"):
             query = query.where(ds.enabled == 1)
+
+        if self.filters.get("is_multiple_files"):
+            query = query.where(ds.is_multiple_files == 1)
 
         # exact-match filters
         for column, key in (
@@ -278,7 +266,6 @@ class AccuracyAnalysisReport:
 
         # multi-select IN filters
         for column, key in (
-            (ds.file_type, "file_type"),
             (log.ai_model, "ai_model"),
             (log.pdf_processor, "pdf_processor"),
         ):
@@ -333,7 +320,6 @@ class AccuracyAnalysisReport:
             Col.ACCURACY_SCORE: r.accuracy_score,
             Col.AI_MODEL: r.ai_model,
             Col.PDF_PROCESSOR: r.pdf_processor,
-            Col.FILE_TYPE: r.file_type,
             Col.DATASET: r.dataset,
             Col.FILE_PARSE_TIME: r.file_parse_time,
             Col.FILE_PARSE_MEMORY: r.file_parse_memory,
@@ -361,7 +347,6 @@ class AccuracyAnalysisReport:
                 row.get(Col.DATASET),
                 row.get(Col.AI_MODEL),
                 row.get(Col.PDF_PROCESSOR) or "",
-                row.get(Col.FILE_TYPE),
             )
             groups[key].append(row)
 
@@ -373,7 +358,6 @@ class AccuracyAnalysisReport:
                 Col.PARTY_NAME: rows[0].get(Col.PARTY_NAME),
                 Col.AI_MODEL: rows[0].get(Col.AI_MODEL),
                 Col.PDF_PROCESSOR: rows[0].get(Col.PDF_PROCESSOR),
-                Col.FILE_TYPE: rows[0].get(Col.FILE_TYPE),
                 Col.CURRENCY: rows[0].get(Col.CURRENCY),
                 Col.RUN_COUNT: count,
             }
@@ -430,11 +414,10 @@ class AccuracyAnalysisReport:
 
     @staticmethod
     def _sort_key(row):
-        """Sort key for child rows: AI Model → PDF Processor → File Type."""
+        """Sort key for child rows: AI Model → PDF Processor."""
         return (
             _AI_MODEL_ORDER.get(row.get(Col.AI_MODEL), 99),
             _PDF_PROCESSOR_ORDER.get(row.get(Col.PDF_PROCESSOR), 99),
-            _FILE_TYPE_ORDER.get(row.get(Col.FILE_TYPE), 99),
         )
 
     def _group_row(self, party, rows):
