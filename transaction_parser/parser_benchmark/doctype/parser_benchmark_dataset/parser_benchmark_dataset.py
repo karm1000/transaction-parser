@@ -22,6 +22,8 @@ PDF_PROCESSOR_FIELD_MAP = {
     "docling": "Docling",
 }
 
+DOCTYPE = "Parser Benchmark Dataset"
+
 
 class ParserBenchmarkDataset(Document):
     # begin: auto-generated types
@@ -131,9 +133,9 @@ class ParserBenchmarkDataset(Document):
 @frappe.whitelist()
 def run_benchmark(dataset_name: str):
     """Create Benchmark Logs for each model x processor combo and enqueue runs."""
-    frappe.has_permission("Parser Benchmark Dataset", "write", throw=True)
+    frappe.has_permission(DOCTYPE, "write", throw=True)
 
-    if frappe.db.get_value("Parser Benchmark Dataset", dataset_name, "docstatus") != 1:
+    if frappe.db.get_value(DOCTYPE, dataset_name, "docstatus") != 1:
         frappe.throw(_("Dataset must be submitted before running benchmarks."))
 
     log_names = create_and_enqueue_benchmark_logs(dataset_name)
@@ -150,12 +152,10 @@ def run_benchmark(dataset_name: str):
 
 def create_and_enqueue_benchmark_logs(dataset_name: str) -> list[str]:
     """Create one log per model x processor combo and enqueue each for background execution."""
-    dataset: ParserBenchmarkDataset = frappe.get_cached_doc(
-        "Parser Benchmark Dataset", dataset_name
-    )
+    dataset: ParserBenchmarkDataset = frappe.get_cached_doc(DOCTYPE, dataset_name)
     models = dataset.get_selected_models()
     processors = (
-        dataset.get_selected_processors() or [None]
+        (dataset.get_selected_processors() or [None])
         if dataset.file_type == "PDF"
         else [None]
     )
@@ -182,10 +182,13 @@ def create_and_enqueue_benchmark_logs(dataset_name: str) -> list[str]:
     # commit before enqueuing so background jobs can read the inserted logs
     frappe.db.commit()  # nosemgrep
 
-    # TODO: pass a dataset doc and the settings...
     for log_name in log_names:
         try:
-            frappe.enqueue(_run_benchmark, log_name=log_name, queue="long")
+            frappe.enqueue(
+                _run_benchmark,
+                log_name=log_name,
+                queue="long",
+            )
         except Exception:
             frappe.db.set_value("Parser Benchmark Log", log_name, "status", "Failed")
             frappe.db.commit()  # nosemgrep -- persist Failed status when enqueue fails

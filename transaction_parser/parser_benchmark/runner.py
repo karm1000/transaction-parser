@@ -30,12 +30,18 @@ class BenchmarkRunner:
         2. AI parsing     → time, tokens, cost, AI response
     """
 
-    # TODO: can pass settings / dataset here?
-    def __init__(self, log_name: str):
+    def __init__(
+        self,
+        log_name: str,
+        dataset: ParserBenchmarkDataset | None = None,
+        settings: ParserBenchmarkSettings | None = None,
+    ):
         self.log: ParserBenchmarkLog = frappe.get_doc("Parser Benchmark Log", log_name)
-        # TODO: can use cached doc...
-        self.dataset: ParserBenchmarkDataset = frappe.get_doc(
+        self.dataset: ParserBenchmarkDataset = dataset or frappe.get_cached_doc(
             "Parser Benchmark Dataset", self.log.dataset
+        )
+        self.settings: ParserBenchmarkSettings = settings or frappe.get_cached_doc(
+            "Parser Benchmark Settings"
         )
         self.precision = 6  # to get 1-millionth of a token cost
 
@@ -89,14 +95,7 @@ class BenchmarkRunner:
         return controller
 
     def _get_cost_row(self):
-        try:
-            settings: ParserBenchmarkSettings = frappe.get_cached_doc(
-                "Parser Benchmark Settings"
-            )
-        except Exception:
-            return None
-
-        for row in settings.token_costs:
+        for row in self.settings.token_costs:
             if row.ai_model == self.log.ai_model:
                 return row
 
@@ -216,12 +215,6 @@ class BenchmarkRunner:
                 },
             )
 
-    # TODO: settings can be in init...
     def _get_key_weights(self) -> dict[str, float]:
         """Load key weights from Parser Benchmark Settings."""
-        try:
-            settings = frappe.get_cached_doc("Parser Benchmark Settings")
-        except Exception:
-            return {}
-
-        return {row.key: row.weight for row in (settings.key_weights or [])}
+        return {row.key: row.weight for row in (self.settings.key_weights or [])}
