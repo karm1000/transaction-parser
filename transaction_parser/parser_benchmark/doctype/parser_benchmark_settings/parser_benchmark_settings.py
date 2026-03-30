@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import getdate
 
@@ -43,6 +44,23 @@ class ParserBenchmarkSettings(Document):
         tuesday: DF.Check
         wednesday: DF.Check
     # end: auto-generated types
+
+    def validate(self):
+        self.validate_wights()
+
+    def validate_wights(self):
+        if not self.key_weights:
+            return
+
+        seen_keys = set()
+        for row in self.key_weights:
+            if row.key in seen_keys:
+                frappe.throw(
+                    _("Duplicate key '{0}' in Key Weights row {1}").format(
+                        row.key, row.idx
+                    )
+                )
+            seen_keys.add(row.key)
 
     def is_scheduled_today(self) -> bool:
         """Check if today's weekday is enabled in the schedule."""
