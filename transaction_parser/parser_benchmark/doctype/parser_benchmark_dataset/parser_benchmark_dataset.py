@@ -70,6 +70,9 @@ class ParserBenchmarkDataset(Document):
         self.validate_selected_models()
         self.validate_expected_fields()
 
+    def before_update_after_submit(self):
+        self.validate_files()
+
     def validate_files(self):
         """Set file_type for each row and auto-set is_multiple_files."""
         for row in self.files:

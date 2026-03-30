@@ -6,17 +6,19 @@
  "engine": "InnoDB",
  "field_order": [
   "enabled",
-  "is_multiple_files",
   "column_break_title",
+  "files_section",
+  "files",
+  "is_multiple_files",
+  "section_break_txfs",
   "transaction_type",
+  "column_break_xusg",
   "country",
   "section_break_sobg",
   "company",
   "column_break_qccq",
   "party_type",
   "party",
-  "files_section",
-  "files",
   "processing_section",
   "column_break_ai_models",
   "openai_gpt_4o_mini",
@@ -82,7 +84,6 @@
    "options": "India\nOther",
    "reqd": 1
   },
-
   {
    "fieldname": "company",
    "fieldtype": "Link",
@@ -273,6 +274,15 @@
   {
    "fieldname": "column_break_aoce",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_txfs",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "column_break_xusg",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -283,7 +293,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-27 10:32:46.620190",
+ "modified": "2026-03-30 15:01:03.977940",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
