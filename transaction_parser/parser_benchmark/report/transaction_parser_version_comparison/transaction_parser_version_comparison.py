@@ -170,6 +170,7 @@ class VersionComparisonReport:
                 ),
             )
             .where(log.status == "Completed")
+            .where(ds.docstatus == 1)
             .where(Coalesce(log.commit_hash, "") != "")
             .orderby(ds.party, log.ai_model)
         )
