@@ -30,13 +30,6 @@ _PDF_PROCESSOR_ORDER = {
     "Docling": 1,
 }
 
-_FILE_TYPE_ORDER = {
-    "PDF": 0,
-    "CSV": 1,
-    "XLSX": 2,
-    "XLS": 3,
-}
-
 
 class Col(StrEnum):
     """Column fieldnames — single source of truth for the report."""
@@ -46,7 +39,6 @@ class Col(StrEnum):
     DATASET = "dataset"
     AI_MODEL = "ai_model"
     PDF_PROCESSOR = "pdf_processor"
-    FILE_TYPE = "file_type"
     COMMIT_HASH = "commit_hash"
     COMMIT_MESSAGE = "commit_message"
     ACCURACY_SCORE = "accuracy_score"
@@ -117,12 +109,6 @@ class VersionComparisonReport:
                 "width": 110,
             },
             {
-                "fieldname": Col.FILE_TYPE,
-                "label": _("File Type"),
-                "fieldtype": "Data",
-                "width": 90,
-            },
-            {
                 "fieldname": Col.COMMIT_HASH,
                 "label": _("Commit"),
                 "fieldtype": "Data",
@@ -179,7 +165,6 @@ class VersionComparisonReport:
                 log.commit_hash,
                 log.commit_message,
                 ds.party,
-                ds.file_type,
                 Coalesce(cust.customer_name, supp.supplier_name, ds.party).as_(
                     "party_name"
                 ),
@@ -187,11 +172,14 @@ class VersionComparisonReport:
             .where(log.status == "Completed")
             .where(ds.docstatus == 1)
             .where(Coalesce(log.commit_hash, "") != "")
-            .orderby(ds.party, log.ai_model, ds.file_type)
+            .orderby(ds.party, log.ai_model)
         )
 
         if not self.filters.get("include_disabled_datasets"):
             query = query.where(ds.enabled == 1)
+
+        if self.filters.get("is_multiple_files"):
+            query = query.where(ds.is_multiple_files == 1)
 
         # exact-match filters
         for column, key in (
@@ -205,7 +193,6 @@ class VersionComparisonReport:
 
         # multi-select IN filters
         for column, key in (
-            (ds.file_type, "file_type"),
             (log.ai_model, "ai_model"),
             (log.pdf_processor, "pdf_processor"),
         ):
@@ -264,7 +251,6 @@ class VersionComparisonReport:
             Col.DATASET: r.dataset,
             Col.AI_MODEL: r.ai_model,
             Col.PDF_PROCESSOR: r.pdf_processor,
-            Col.FILE_TYPE: r.file_type,
             Col.COMMIT_HASH: short_hash,
             Col.COMMIT_MESSAGE: commit_msg,
             Col.ACCURACY_SCORE: r.accuracy_score,
@@ -286,7 +272,6 @@ class VersionComparisonReport:
                 row.get(Col.DATASET),
                 row.get(Col.AI_MODEL),
                 row.get(Col.PDF_PROCESSOR) or "",
-                row.get(Col.FILE_TYPE),
                 row.get(Col.COMMIT_HASH),
             )
             groups[key].append(row)
@@ -300,7 +285,6 @@ class VersionComparisonReport:
                 Col.DATASET: rows[0].get(Col.DATASET),
                 Col.AI_MODEL: rows[0].get(Col.AI_MODEL),
                 Col.PDF_PROCESSOR: rows[0].get(Col.PDF_PROCESSOR),
-                Col.FILE_TYPE: rows[0].get(Col.FILE_TYPE),
                 Col.COMMIT_HASH: rows[0].get(Col.COMMIT_HASH),
                 Col.COMMIT_MESSAGE: rows[0].get(Col.COMMIT_MESSAGE),
                 Col.RUN_COUNT: count,
@@ -353,11 +337,10 @@ class VersionComparisonReport:
 
     @staticmethod
     def _sort_key(row):
-        """Sort: AI Model → PDF Processor → File Type → Commit Hash."""
+        """Sort: AI Model → PDF Processor → Commit Hash."""
         return (
             _AI_MODEL_ORDER.get(row.get(Col.AI_MODEL), 99),
             _PDF_PROCESSOR_ORDER.get(row.get(Col.PDF_PROCESSOR), 99),
-            _FILE_TYPE_ORDER.get(row.get(Col.FILE_TYPE), 99),
             row.get(Col.COMMIT_HASH) or "",
         )
 

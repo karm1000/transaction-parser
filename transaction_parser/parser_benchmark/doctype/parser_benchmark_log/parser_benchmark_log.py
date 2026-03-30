@@ -97,7 +97,3 @@ class ParserBenchmarkLog(Document):
     @property
     def page_limit(self):
         return self.get_from_dataset("page_limit") or 0
-
-    @property
-    def file_type(self):
-        return self.get_from_dataset("file_type")

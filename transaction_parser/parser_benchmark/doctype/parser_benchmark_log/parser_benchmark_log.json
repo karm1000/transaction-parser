@@ -26,7 +26,6 @@
   "column_break_ubhs",
   "file_parsing_tab",
   "pdf_processor",
-  "file_type",
   "column_break_file_metrics",
   "page_limit",
   "section_break_umzr",
@@ -107,7 +106,6 @@
    "read_only": 1
   },
   {
-   "depends_on": "eval: doc.file_type === \"PDF\"",
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
@@ -121,13 +119,7 @@
    "label": "Total Time (s)",
    "read_only": 1
   },
-  {
-   "fieldname": "file_type",
-   "fieldtype": "Data",
-   "is_virtual": 1,
-   "label": "File Type",
-   "read_only": 1
-  },
+
   {
    "fieldname": "file_parsing_tab",
    "fieldtype": "Tab Break",

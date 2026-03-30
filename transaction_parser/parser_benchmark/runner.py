@@ -2,6 +2,7 @@ import tracemalloc
 from timeit import default_timer
 
 import frappe
+from frappe import _
 from frappe.core.doctype.file.file import File
 from frappe.utils import cint, flt
 
@@ -57,11 +58,11 @@ class BenchmarkRunner:
         total_start = default_timer()
 
         try:
-            file_doc: File = self._get_file_doc()
-            self.controller: Transaction = self._get_controller(file_doc)
+            file_docs: list[File] = self._get_file_docs()
+            self.controller: Transaction = self._get_controller(file_docs[0])
 
-            file_content = self._run_file_parsing(file_doc)
-            ai_content = self._run_ai_parsing(file_content, file_doc.name)
+            file_content = self._run_file_parsing(file_docs)
+            ai_content = self._run_ai_parsing(file_content, file_docs[0].name)
             self._calculate_cost()
             self._score_response(ai_content)
 
@@ -80,8 +81,11 @@ class BenchmarkRunner:
 
     # ── helpers ──────────────────────────────────────────────
 
-    def _get_file_doc(self):
-        return frappe.get_last_doc("File", filters={"file_url": self.dataset.file})
+    def _get_file_docs(self) -> list[File]:
+        file_docs = self.dataset.get_file_docs()
+        if not file_docs:
+            frappe.throw(_("No files in dataset {0}").format(self.dataset.name))
+        return file_docs
 
     def _get_controller(self, file_doc: File) -> Transaction:
         ds = self.dataset
@@ -103,11 +107,7 @@ class BenchmarkRunner:
 
     # ── step 1: file parsing ────────────────────────────────
 
-    def _run_file_parsing(self, file_doc: File) -> str:
-        pdf_processor = None
-        if self.log.file_type == "PDF" and self.log.pdf_processor:
-            pdf_processor = get_pdf_processor(self.log.pdf_processor)
-
+    def _run_file_parsing(self, file_docs: list[File]) -> str:
         # to prevent stopping an already running tracemalloc instance
         was_tracing = tracemalloc.is_tracing()
         if not was_tracing:
@@ -115,10 +115,23 @@ class BenchmarkRunner:
 
         start = default_timer()
         try:
-            content = FileProcessor().get_content(
-                file_doc,
-                self.dataset.page_limit or None,
-                pdf_processor,
+            contents = []
+            for file_doc in file_docs:
+                pdf_processor = None
+                if file_doc.file_type == "PDF" and self.log.pdf_processor:
+                    pdf_processor = get_pdf_processor(self.log.pdf_processor)
+
+                content = FileProcessor().get_content(
+                    file_doc,
+                    self.dataset.page_limit or None,
+                    pdf_processor,
+                )
+                contents.append(content)
+
+            combined = (
+                "\n\n--- Document Separator ---\n\n".join(contents)
+                if len(contents) > 1
+                else contents[0]
             )
         finally:
             self.log.file_parse_time = flt(default_timer() - start, self.precision)
@@ -129,8 +142,8 @@ class BenchmarkRunner:
                 peak / 1024 / 1024, self.precision
             )  # bytes → MB
 
-        self.log.file_content = content
-        return content
+        self.log.file_content = combined
+        return combined
 
     # ── step 2: AI parsing ──────────────────────────────────
 

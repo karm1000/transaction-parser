@@ -7,11 +7,12 @@
  "field_order": [
   "enabled",
   "column_break_title",
-  "section_break_file",
-  "file",
-  "file_type",
-  "column_break_gbap",
+  "files_section",
+  "files",
+  "is_multiple_files",
+  "section_break_txfs",
   "transaction_type",
+  "column_break_xusg",
   "country",
   "section_break_sobg",
   "company",
@@ -59,20 +60,12 @@
    "label": "Enabled"
   },
   {
-   "fieldname": "section_break_file",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "file",
-   "fieldtype": "Attach",
-   "label": "File",
-   "print_hide": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "file_type",
-   "fieldtype": "Data",
-   "label": "File Type",
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "is_multiple_files",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Multiple Files",
    "read_only": 1
   },
   {
@@ -90,10 +83,6 @@
    "label": "Country",
    "options": "India\nOther",
    "reqd": 1
-  },
-  {
-   "fieldname": "column_break_gbap",
-   "fieldtype": "Column Break"
   },
   {
    "fieldname": "company",
@@ -114,6 +103,19 @@
    "fieldtype": "Dynamic Link",
    "label": "Party",
    "options": "party_type"
+  },
+  {
+   "fieldname": "files_section",
+   "fieldtype": "Section Break",
+   "label": "Files"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "files",
+   "fieldtype": "Table",
+   "label": "Files",
+   "options": "Parser Benchmark Dataset File",
+   "reqd": 1
   },
   {
    "fieldname": "processing_section",
@@ -181,7 +183,6 @@
    "label": "Google Gemini Flash-2.5"
   },
   {
-   "depends_on": "eval: doc.file_type === \"PDF\"",
    "fieldname": "pdf_processor_section",
    "fieldtype": "Section Break",
    "label": "PDF Processors"
@@ -273,6 +274,15 @@
   {
    "fieldname": "column_break_aoce",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_txfs",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "column_break_xusg",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -283,7 +293,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-27 10:32:46.620190",
+ "modified": "2026-03-30 15:01:03.977940",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
