@@ -86,6 +86,12 @@ frappe.query_reports["Transaction Parser Version Comparison"] = {
 			fieldtype: "MultiSelectList",
 			get_data: (txt) => make_options(PDF_PROCESSORS, txt),
 		},
+		{
+			fieldname: "include_disabled_datasets",
+			label: __("Include Disabled Datasets"),
+			fieldtype: "Check",
+			default: 0,
+		},
 	],
 };
 

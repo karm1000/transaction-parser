@@ -189,6 +189,9 @@ class VersionComparisonReport:
             .orderby(ds.party, log.ai_model, ds.file_type)
         )
 
+        if not self.filters.get("include_disabled_datasets"):
+            query = query.where(ds.enabled == 1)
+
         # exact-match filters
         for column, key in (
             (ds.company, "company"),
