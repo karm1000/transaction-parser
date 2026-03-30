@@ -260,6 +260,7 @@ class AccuracyAnalysisReport:
                 ),
             )
             .where(log.status == "Completed")
+            .where(ds.docstatus == 1)
             .orderby(ds.party, log.ai_model, ds.file_type)
         )
 
