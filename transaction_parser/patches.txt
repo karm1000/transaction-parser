@@ -7,3 +7,4 @@ transaction_parser.patches.rename_gemini_models
 # Patches added in this section will be executed after doctypes are migrated
 execute:from transaction_parser.install import after_install; after_install() #2
 transaction_parser.patches.set_default_pdf_processor #1
+transaction_parser.patches.recalculate_accuracy
