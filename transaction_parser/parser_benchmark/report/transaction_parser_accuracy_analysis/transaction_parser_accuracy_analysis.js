@@ -33,6 +33,20 @@ frappe.query_reports["Transaction Parser Accuracy Analysis"] = {
 		set_party_type(report);
 	},
 
+	formatter(value, row, column, data, default_formatter) {
+		if (column.fieldname === "log_names" && value) {
+			const names = value.split(",").filter(Boolean);
+			if (!names.length) return value;
+
+			const filters = frappe.utils.get_url_from_dict({
+				name: JSON.stringify(["in", names]),
+			});
+			const url = `/app/parser-benchmark-log?${filters}`;
+			return `<a href="${url}" target="_blank">See Logs (${names.length})</a>`;
+		}
+		return default_formatter(value, row, column, data);
+	},
+
 	filters: [
 		{
 			fieldname: "company",

@@ -44,6 +44,7 @@ class Col(StrEnum):
     ACCURACY_SCORE = "accuracy_score"
     KEY_SCORES = "key_scores"
     RUN_COUNT = "run_count"
+    LOG_NAMES = "log_names"
 
 
 def execute(filters=None):
@@ -67,16 +68,21 @@ class VersionComparisonReport:
         self._aggregate_by_config()
         self._group_by_party()
 
+        # discover all unique key names for dynamic columns
+        all_keys = dict.fromkeys(
+            k for row in self.data for k in (row.get("_key_accuracies") or {})
+        )
+
         # strip internal keys
         for row in self.data:
             row.pop("_key_accuracies", None)
 
-        return self._get_columns(), self.data
+        return self._get_columns(list(all_keys)), self.data
 
     # ── Columns ──────────────────────────────────────────────────────
 
-    def _get_columns(self):
-        return [
+    def _get_columns(self, key_names=None):
+        columns = [
             {
                 "fieldname": Col.PARTY,
                 "label": _("Party"),
@@ -132,13 +138,29 @@ class VersionComparisonReport:
                 "fieldtype": "Percent",
                 "width": 120,
             },
-            {
-                "fieldname": Col.KEY_SCORES,
-                "label": _("Key Scores"),
-                "fieldtype": "Data",
-                "width": 350,
-            },
         ]
+
+        # dynamic per-key accuracy columns
+        for key in key_names or []:
+            columns.append(
+                {
+                    "fieldname": f"key_{key}",
+                    "label": _(key.replace("_", " ").title() + " (%)"),
+                    "fieldtype": "Percent",
+                    "width": 120,
+                }
+            )
+
+        columns.append(
+            {
+                "fieldname": Col.LOG_NAMES,
+                "label": _("Logs"),
+                "fieldtype": "Data",
+                "width": 100,
+            }
+        )
+
+        return columns
 
     # ── Query ────────────────────────────────────────────────────────
 
@@ -236,16 +258,10 @@ class VersionComparisonReport:
         details = score_details_map.get(r.log_name, [])
         key_accuracies = {d["key"]: d["accuracy"] for d in details}
 
-        key_str = (
-            ", ".join(f"{k}: {v:.0f}%" for k, v in key_accuracies.items())
-            if key_accuracies
-            else ""
-        )
-
         short_hash = (r.commit_hash or "")[:7]
         commit_msg = (r.commit_message or "").split("\n")[0][:80]
 
-        return {
+        row = {
             Col.PARTY: r.party or _("No Party"),
             Col.PARTY_NAME: r.party_name or "",
             Col.DATASET: r.dataset,
@@ -254,10 +270,16 @@ class VersionComparisonReport:
             Col.COMMIT_HASH: short_hash,
             Col.COMMIT_MESSAGE: commit_msg,
             Col.ACCURACY_SCORE: r.accuracy_score,
-            Col.KEY_SCORES: key_str,
+            Col.LOG_NAMES: r.log_name,
             Col.RUN_COUNT: 1,
             "_key_accuracies": key_accuracies,
         }
+
+        # per-key accuracy as separate fields
+        for k, v in key_accuracies.items():
+            row[f"key_{k}"] = v
+
+        return row
 
     # ── Aggregation ──────────────────────────────────────────────────
 
@@ -290,6 +312,11 @@ class VersionComparisonReport:
                 Col.RUN_COUNT: count,
             }
 
+            # collect all log names used
+            agg[Col.LOG_NAMES] = ",".join(
+                r.get(Col.LOG_NAMES) for r in rows if r.get(Col.LOG_NAMES)
+            )
+
             # average accuracy
             vals = [r.get(Col.ACCURACY_SCORE) or 0 for r in rows]
             agg[Col.ACCURACY_SCORE] = round(sum(vals) / count, 2) if count else 0
@@ -303,12 +330,10 @@ class VersionComparisonReport:
             avg_key_accs = {
                 k: round(sum(v) / len(v), 1) for k, v in all_key_accs.items()
             }
-            agg[Col.KEY_SCORES] = (
-                ", ".join(f"{k}: {v:.0f}%" for k, v in avg_key_accs.items())
-                if avg_key_accs
-                else ""
-            )
             agg["_key_accuracies"] = avg_key_accs
+
+            for k, v in avg_key_accs.items():
+                agg[f"key_{k}"] = v
 
             aggregated.append(agg)
 
@@ -354,6 +379,11 @@ class VersionComparisonReport:
             "indent": 0,
         }
 
+        # collect all log names from children
+        row[Col.LOG_NAMES] = ",".join(
+            r.get(Col.LOG_NAMES) for r in rows if r.get(Col.LOG_NAMES)
+        )
+
         # average accuracy across all child rows
         vals = [r.get(Col.ACCURACY_SCORE) or 0 for r in rows]
         row[Col.ACCURACY_SCORE] = round(sum(vals) / count, 2) if count else 0
@@ -365,10 +395,9 @@ class VersionComparisonReport:
                 all_key_accs[k].append(v or 0)
 
         avg_key_accs = {k: round(sum(v) / len(v), 1) for k, v in all_key_accs.items()}
-        row[Col.KEY_SCORES] = (
-            ", ".join(f"{k}: {v:.0f}%" for k, v in avg_key_accs.items())
-            if avg_key_accs
-            else ""
-        )
+        for k, v in avg_key_accs.items():
+            row[f"key_{k}"] = v
+
+        row["_key_accuracies"] = avg_key_accs
 
         return row
