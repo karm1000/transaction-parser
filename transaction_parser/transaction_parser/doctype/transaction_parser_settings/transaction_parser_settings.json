@@ -15,6 +15,7 @@
   "email_configuration_section",
   "parse_incoming_emails",
   "parse_party_emails",
+  "process_one_document_per_communication",
   "incoming_email_accounts",
   "party_emails",
   "custom_fields_tab",
@@ -112,6 +113,14 @@
    "fieldname": "parse_party_emails",
    "fieldtype": "Check",
    "label": "Parse Party Emails"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval: doc.parse_incoming_emails",
+   "description": "When enabled, all attachments from a communication are combined to create a single document. When disabled, each attachment creates a separate document.",
+   "fieldname": "process_one_document_per_communication",
+   "fieldtype": "Check",
+   "label": "Process One Document Per Communication"
   },
   {
    "fieldname": "email_configuration_section",

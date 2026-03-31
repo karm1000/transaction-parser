@@ -34,30 +34,49 @@ def parse(transaction, country, file_url, ai_model=None, page_limit=None):
 def _parse(
     country,
     transaction,
-    file_url,
+    file_urls,
     ai_model=None,
     page_limit=None,
     user=None,
     party=None,
     company=None,
+    communication_name=None,
 ):
     try:
-        file = None
-        filename = file_url.split("/")[-1]
+        if (
+            isinstance(file_urls, str)
+            and file_urls.startswith("[")
+            and file_urls.endswith("]")
+        ):
+            file_urls = frappe.parse_json(file_urls)
 
-        file = frappe.get_last_doc("File", filters={"file_url": file_url})
-        filename = file.file_name
+        elif isinstance(file_urls, str):
+            file_urls = [file_urls]
+
+        file_names = frappe.get_list(
+            "File", filters={"file_url": ("in", file_urls)}, pluck="name"
+        )
+
+        files = []
+        for file_name in file_names:
+            file = frappe.get_doc("File", file_name)
+            files.append(file)
 
         controller = get_controller(country, transaction)(party=party, company=company)
-        doc = controller.generate(file, ai_model, page_limit)
+        doc = controller.generate(files, ai_model, page_limit, communication_name)
 
+        filenames = (
+            ", ".join([f.file_name for f in files])
+            if len(files) > 1
+            else files[0].file_name
+        )
         notification = {
             "document_type": TRANSACTION_MAP[transaction],
             "document_name": doc.name,
             "subject": _("{0} {1} generated from {2}").format(
                 _(TRANSACTION_MAP[transaction]),
                 doc.name,
-                filename,
+                filenames,
             ),
         }
 
@@ -69,19 +88,27 @@ def _parse(
             and frappe.flags.skip_duplicate_error
         ):
             notification = {
-                "document_type": "File",
-                "document_name": file.name if file else filename,
-                "subject": _("Duplicate entry found for {0}").format(filename),
+                "document_type": "Communication" if communication_name else "File",
+                "document_name": (
+                    communication_name if communication_name else files[0].name
+                ),
+                "subject": _("Duplicate entry found for {0}").format(file_urls),
                 "message": str(e),
             }
             return
 
         error_log = frappe.log_error(
             "Transaction Parser API Error",
-            reference_doctype="File",
-            reference_name=file.name if file else filename,
+            reference_doctype="Communication" if communication_name else "File",
+            reference_name=(
+                communication_name
+                if communication_name
+                else files[0].name
+                if files
+                else None
+            ),
         )
-        message = _("Failed to generate {0} from {1}").format(_(transaction), filename)
+        message = _("Failed to generate {0} from {1}").format(_(transaction), file_urls)
 
         notification = {
             "document_type": error_log.doctype,
@@ -90,7 +117,7 @@ def _parse(
             "message": str(e),
         }
 
-        email_failure(user, message, str(e), file_url)
+        email_failure(user, message, str(e), file_urls)
 
     finally:
         if notification:

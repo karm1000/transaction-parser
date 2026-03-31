@@ -34,18 +34,32 @@ class AIParser:
         document_type: str,
         document_schema: dict,
         document_data: str,
-        file_doc_name: str | None = None,
+        doc_name: str | None = None,
+        file_count: int = 1,
+        is_communication: bool = False,
     ) -> dict:
-        messages = self._build_messages(document_type, document_schema, document_data)
-        response = self.send_message(messages=messages, file_doc_name=file_doc_name)
+        messages = self._build_messages(
+            document_type, document_schema, document_data, file_count
+        )
+
+        response = self.send_message(
+            messages=messages,
+            doc_name=doc_name,
+            is_communication=is_communication,
+        )
+
         return self.get_content(response)
 
     def _build_messages(
-        self, document_type: str, document_schema: dict, document_data: str
+        self,
+        document_type: str,
+        document_schema: dict,
+        document_data: str,
+        file_count: int = 1,
     ) -> tuple:
         """Build the message structure for AI API call."""
         system_prompt = get_system_prompt(document_schema)
-        user_prompt = get_user_prompt(document_type, document_data)
+        user_prompt = get_user_prompt(document_type, document_data, file_count)
 
         return (
             {
@@ -58,9 +72,14 @@ class AIParser:
             },
         )
 
-    def send_message(self, messages: tuple, file_doc_name: str | None = None) -> dict:
+    def send_message(
+        self,
+        messages: tuple,
+        doc_name: str | None = None,
+        is_communication: bool = False,
+    ) -> dict:
         """Send messages to AI API and handle the response."""
-        log = self._create_log_entry(file_doc_name)
+        log = self._create_log_entry(doc_name, is_communication)
 
         try:
             response = self._make_api_call(messages)
@@ -81,16 +100,19 @@ class AIParser:
         finally:
             enqueue_integration_request(**log)
 
-    def _create_log_entry(self, file_doc_name: str | None) -> frappe._dict:
+    def _create_log_entry(
+        self, doc_name: str | None, is_communication: bool = False
+    ) -> frappe._dict:
         """Create a log entry for the API call."""
         log = frappe._dict(url=self.model.base_url)
-        if file_doc_name:
-            log.update(
-                {
-                    "reference_doctype": "File",
-                    "reference_name": file_doc_name,
-                }
-            )
+
+        log.update(
+            {
+                "reference_doctype": "Communication" if is_communication else "File",
+                "reference_name": doc_name,
+            }
+        )
+
         return log
 
     def _make_api_call(self, messages: tuple) -> Any:
