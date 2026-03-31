@@ -65,6 +65,8 @@ class ParserBenchmarkDataset(Document):
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
+    SUPPORTED_FILE_TYPES = ("PDF", "CSV", "XLSX", "XLS")
+
     def validate(self):
         self.validate_files()
         self.validate_selected_models()
@@ -79,6 +81,17 @@ class ParserBenchmarkDataset(Document):
             if row.file and (not row.file_type or row.has_value_changed("file")):
                 file_doc = frappe.get_last_doc("File", filters={"file_url": row.file})
                 row.file_type = file_doc.file_type
+
+                if row.file_type not in self.SUPPORTED_FILE_TYPES:
+                    frappe.throw(
+                        _(
+                            "File '{0}' has unsupported type '{1}'. Supported types are:<br>{2}."
+                        ).format(
+                            file_doc.file_name,
+                            row.file_type,
+                            "<br>".join(self.SUPPORTED_FILE_TYPES),
+                        )
+                    )
 
         self.is_multiple_files = len(self.files) > 1
 
