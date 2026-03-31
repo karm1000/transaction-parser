@@ -29,12 +29,20 @@ class Transaction:
         self.company = company
 
     def generate(
-        self, file, ai_model: str | None = None, page_limit: int | None = None
+        self,
+        files,
+        ai_model: str | None = None,
+        page_limit: int | None = None,
+        communication_name: str | None = None,
     ):
         self.initialize()
 
-        self.file = file
+        if isinstance(files, str):
+            files = [files]
+
+        self.files = files
         self.ai_model = ai_model
+        self.communication_name = communication_name
         self.data = self._parse_file_content(ai_model, page_limit)
         self.doc = frappe.get_doc({"doctype": self.DOCTYPE})
         self.doc.is_created_by_transaction_parser = 1
@@ -49,7 +57,8 @@ class Transaction:
 
     def initialize(self) -> None:
         # file processing
-        self.file = None
+        self.files = None
+        self.communication_name = None
 
         # output schema
         self.schema = None
@@ -72,14 +81,27 @@ class Transaction:
     def _parse_file_content(
         self, ai_model: str | None = None, page_limit: int | None = None
     ) -> dict:
-        content = FileProcessor().get_content(self.file, page_limit)
+        file_processor = FileProcessor()
+        doc_name = None
+        file_count = len(self.files)
+
+        if len(self.files) > 1:
+            content = file_processor.get_combined_content(self.files, page_limit)
+            doc_name = self.communication_name
+
+        else:
+            content = file_processor.get_content(self.files, page_limit)
+            doc_name = self.files[0].name
+
         schema = self.get_schema()
 
         return AIParser(ai_model, self.settings).parse(
             document_type=self.DOCTYPE,
             document_schema=schema,
             document_data=content,
-            file_doc_name=self.file.name,
+            doc_name=doc_name,
+            file_count=file_count,
+            is_communication=bool(self.communication_name),
         )
 
     ###################################
@@ -271,9 +293,12 @@ class Transaction:
         self.doc.flags.ignore_links = True
 
     def _attach_file(self) -> None:
-        self.file.attached_to_doctype = self.DOCTYPE
-        self.file.attached_to_name = self.doc.name
-        self.file.save()
+        files_to_attach = self.files if isinstance(self.files, list) else [self.files]
+
+        for file_doc in files_to_attach:
+            file_doc.attached_to_doctype = self.DOCTYPE
+            file_doc.attached_to_name = self.doc.name
+            file_doc.save()
 
     def set_exchange_rate(self, from_currency, date, args):
         company_currency = erpnext.get_company_currency(self.doc.company)
