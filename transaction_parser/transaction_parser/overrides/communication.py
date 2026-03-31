@@ -126,6 +126,7 @@ def _process_attachments(
         party=party,
         company=default_company if not company else company,
         queue="long",
+        now=True,
     )
 
 

@@ -1,189 +1,189 @@
 {
- "actions": [],
- "allow_rename": 1,
- "creation": "2025-03-11 16:54:51.622854",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "api_tab",
-  "enabled",
-  "ai_model_section",
-  "default_ai_model",
-  "api_keys",
-  "transaction_configurations_section",
-  "invoice_lookback_count",
-  "email_configuration_section",
-  "parse_incoming_emails",
-  "parse_party_emails",
-  "process_one_document_per_communication",
-  "incoming_email_accounts",
-  "party_emails",
-  "custom_fields_tab",
-  "custom_fields_section",
-  "column_break_kdtw",
-  "base_schema",
-  "tax_schema",
-  "address_schema",
-  "party_schema",
-  "item_schema"
- ],
- "fields": [
-  {
-   "fieldname": "api_tab",
-   "fieldtype": "Tab Break",
-   "label": "API"
-  },
-  {
-   "default": "0",
-   "fieldname": "enabled",
-   "fieldtype": "Check",
-   "label": "Enabled"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "custom_fields_tab",
-   "fieldtype": "Tab Break",
-   "label": "Customizations"
-  },
-  {
-   "fieldname": "custom_fields_section",
-   "fieldtype": "Section Break",
-   "label": "Custom Fields"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "column_break_kdtw",
-   "fieldtype": "Column Break"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "base_schema",
-   "fieldtype": "JSON",
-   "label": "Base Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "tax_schema",
-   "fieldtype": "JSON",
-   "label": "Tax Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "address_schema",
-   "fieldtype": "JSON",
-   "label": "Address Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "party_schema",
-   "fieldtype": "JSON",
-   "label": "Party Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "item_schema",
-   "fieldtype": "JSON",
-   "label": "Item Schema"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "default_ai_model",
-   "fieldtype": "Select",
-   "label": "Default AI Model",
-   "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
-  },
-  {
-   "depends_on": "eval: doc.enabled",
-   "fieldname": "api_keys",
-   "fieldtype": "Table",
-   "label": "API Keys",
-   "options": "Transaction Parser API Key Item"
-  },
-  {
-   "default": "0",
-   "fieldname": "parse_incoming_emails",
-   "fieldtype": "Check",
-   "label": "Parse Incoming Emails"
-  },
-  {
-   "default": "0",
-   "depends_on": "eval: doc.parse_incoming_emails",
-   "description": "Directly Parse Emails from Party",
-   "fieldname": "parse_party_emails",
-   "fieldtype": "Check",
-   "label": "Parse Party Emails"
-  },
-  {
-   "default": "1",
-   "depends_on": "eval: doc.parse_incoming_emails",
-   "description": "When enabled, all attachments from a communication are combined to create a single document. When disabled, each attachment creates a separate document.",
-   "fieldname": "process_one_document_per_communication",
-   "fieldtype": "Check",
-   "label": "Process One Document Per Communication"
-  },
-  {
-   "fieldname": "email_configuration_section",
-   "fieldtype": "Section Break",
-   "label": "Incoming Email Configurations"
-  },
-  {
-   "fieldname": "ai_model_section",
-   "fieldtype": "Section Break",
-   "label": "AI Model Configurations"
-  },
-  {
-   "depends_on": "eval: doc.parse_incoming_emails",
-   "description": "If an email is received on any of these Email Accounts, an attempt will be made to generate the specified Transaction from its attachments.",
-   "fieldname": "incoming_email_accounts",
-   "fieldtype": "Table",
-   "label": "Incoming Email Accounts",
-   "mandatory_depends_on": "eval: doc.parse_incoming_emails && !doc.parse_party_emails",
-   "options": "Transaction Parser Email Account"
-  },
-  {
-   "depends_on": "eval: doc.parse_incoming_emails",
-   "description": "Mapping Party based on Email Address",
-   "fieldname": "party_emails",
-   "fieldtype": "Table",
-   "label": "Party Emails",
-   "options": "Transaction Parser Party Email"
-  },
-  {
-   "fieldname": "invoice_lookback_count",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Number of Past Invoices to Consider for Item Code Selection",
-   "reqd": 1
-  },
-  {
-   "fieldname": "transaction_configurations_section",
-   "fieldtype": "Section Break",
-   "label": "Transaction Configurations"
-  }
- ],
- "index_web_pages_for_search": 1,
- "issingle": 1,
- "links": [],
- "modified": "2025-09-08 08:48:58.870032",
- "modified_by": "Administrator",
- "module": "Transaction Parser",
- "name": "Transaction Parser Settings",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": []
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2025-03-11 16:54:51.622854",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "api_tab",
+        "enabled",
+        "ai_model_section",
+        "default_ai_model",
+        "api_keys",
+        "transaction_configurations_section",
+        "invoice_lookback_count",
+        "email_configuration_section",
+        "parse_incoming_emails",
+        "parse_party_emails",
+        "process_one_document_per_communication",
+        "incoming_email_accounts",
+        "party_emails",
+        "custom_fields_tab",
+        "custom_fields_section",
+        "column_break_kdtw",
+        "base_schema",
+        "tax_schema",
+        "address_schema",
+        "party_schema",
+        "item_schema"
+    ],
+    "fields": [
+        {
+            "fieldname": "api_tab",
+            "fieldtype": "Tab Break",
+            "label": "API"
+        },
+        {
+            "default": "0",
+            "fieldname": "enabled",
+            "fieldtype": "Check",
+            "label": "Enabled"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "custom_fields_tab",
+            "fieldtype": "Tab Break",
+            "label": "Customizations"
+        },
+        {
+            "fieldname": "custom_fields_section",
+            "fieldtype": "Section Break",
+            "label": "Custom Fields"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "column_break_kdtw",
+            "fieldtype": "Column Break"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "base_schema",
+            "fieldtype": "JSON",
+            "label": "Base Schema"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "tax_schema",
+            "fieldtype": "JSON",
+            "label": "Tax Schema"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "address_schema",
+            "fieldtype": "JSON",
+            "label": "Address Schema"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "party_schema",
+            "fieldtype": "JSON",
+            "label": "Party Schema"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "item_schema",
+            "fieldtype": "JSON",
+            "label": "Item Schema"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "default_ai_model",
+            "fieldtype": "Select",
+            "label": "Default AI Model",
+            "mandatory_depends_on": "eval: doc.enabled",
+            "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
+        },
+        {
+            "depends_on": "eval: doc.enabled",
+            "fieldname": "api_keys",
+            "fieldtype": "Table",
+            "label": "API Keys",
+            "options": "Transaction Parser API Key Item"
+        },
+        {
+            "default": "0",
+            "fieldname": "parse_incoming_emails",
+            "fieldtype": "Check",
+            "label": "Parse Incoming Emails"
+        },
+        {
+            "default": "0",
+            "depends_on": "eval: doc.parse_incoming_emails",
+            "description": "Directly Parse Emails from Party",
+            "fieldname": "parse_party_emails",
+            "fieldtype": "Check",
+            "label": "Parse Party Emails"
+        },
+        {
+            "default": "1",
+            "depends_on": "eval: doc.parse_incoming_emails",
+            "description": "When enabled, all attachments from a communication are combined to create a single document. When disabled, each attachment creates a separate document.",
+            "fieldname": "process_one_document_per_communication",
+            "fieldtype": "Check",
+            "label": "Process One Document Per Communication"
+        },
+        {
+            "fieldname": "email_configuration_section",
+            "fieldtype": "Section Break",
+            "label": "Incoming Email Configurations"
+        },
+        {
+            "fieldname": "ai_model_section",
+            "fieldtype": "Section Break",
+            "label": "AI Model Configurations"
+        },
+        {
+            "depends_on": "eval: doc.parse_incoming_emails",
+            "description": "If an email is received on any of these Email Accounts, an attempt will be made to generate the specified Transaction from its attachments.",
+            "fieldname": "incoming_email_accounts",
+            "fieldtype": "Table",
+            "label": "Incoming Email Accounts",
+            "mandatory_depends_on": "eval: doc.parse_incoming_emails && !doc.parse_party_emails",
+            "options": "Transaction Parser Email Account"
+        },
+        {
+            "depends_on": "eval: doc.parse_incoming_emails",
+            "description": "Mapping Party based on Email Address",
+            "fieldname": "party_emails",
+            "fieldtype": "Table",
+            "label": "Party Emails",
+            "options": "Transaction Parser Party Email"
+        },
+        {
+            "fieldname": "invoice_lookback_count",
+            "fieldtype": "Int",
+            "in_list_view": 1,
+            "label": "Number of Past Invoices to Consider for Item Code Selection",
+            "reqd": 1
+        },
+        {
+            "fieldname": "transaction_configurations_section",
+            "fieldtype": "Section Break",
+            "label": "Transaction Configurations"
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "issingle": 1,
+    "links": [],
+    "modified": "2025-09-08 08:48:58.870032",
+    "modified_by": "Administrator",
+    "module": "Transaction Parser",
+    "name": "Transaction Parser Settings",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "print": 1,
+            "read": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1
+        }
+    ],
+    "row_format": "Dynamic",
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
 }

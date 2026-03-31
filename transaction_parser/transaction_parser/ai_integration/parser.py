@@ -35,12 +35,9 @@ class AIParser:
         document_schema: dict,
         document_data: str,
         doc_name: str | None = None,
-        file_count: int = 1,
         is_communication: bool = False,
     ) -> dict:
-        messages = self._build_messages(
-            document_type, document_schema, document_data, file_count
-        )
+        messages = self._build_messages(document_type, document_schema, document_data)
 
         response = self.send_message(
             messages=messages,
@@ -55,11 +52,10 @@ class AIParser:
         document_type: str,
         document_schema: dict,
         document_data: str,
-        file_count: int = 1,
     ) -> tuple:
         """Build the message structure for AI API call."""
         system_prompt = get_system_prompt(document_schema)
-        user_prompt = get_user_prompt(document_type, document_data, file_count)
+        user_prompt = get_user_prompt(document_type, document_data)
 
         return (
             {

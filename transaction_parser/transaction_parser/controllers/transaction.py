@@ -7,6 +7,9 @@ from rapidfuzz import fuzz, process
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
 from transaction_parser.transaction_parser.utils import to_dict
 from transaction_parser.transaction_parser.utils.file_processor import FileProcessor
+from transaction_parser.transaction_parser.utils.response_merger import (
+    ResponseMerger,
+)
 
 
 class Transaction:
@@ -81,28 +84,45 @@ class Transaction:
     def _parse_file_content(
         self, ai_model: str | None = None, page_limit: int | None = None
     ) -> dict:
-        file_processor = FileProcessor()
-        doc_name = None
-        file_count = len(self.files)
-
         if len(self.files) > 1:
-            content = file_processor.get_combined_content(self.files, page_limit)
-            doc_name = self.communication_name
+            return self._parse_multiple_files(ai_model, page_limit)
 
-        else:
-            content = file_processor.get_content(self.files, page_limit)
-            doc_name = self.files[0].name
+        return self._parse_single_file(self.files[0], ai_model, page_limit)
 
+    def _parse_single_file(
+        self,
+        file,
+        ai_model: str | None = None,
+        page_limit: int | None = None,
+    ) -> dict:
+        content = FileProcessor().get_content(file, page_limit)
         schema = self.get_schema()
 
         return AIParser(ai_model, self.settings).parse(
             document_type=self.DOCTYPE,
             document_schema=schema,
             document_data=content,
-            doc_name=doc_name,
-            file_count=file_count,
+            doc_name=self.communication_name or file.name,
             is_communication=bool(self.communication_name),
         )
+
+    def _parse_multiple_files(
+        self, ai_model: str | None = None, page_limit: int | None = None
+    ) -> dict:
+        response = self._parse_single_file(self.files[0], ai_model, page_limit)
+        merger = ResponseMerger(
+            response,
+            schema=self.get_schema(),
+        )
+
+        for file in self.files[1:]:
+            if merger.is_complete():
+                break
+
+            new_response = self._parse_single_file(file, ai_model, page_limit)
+            merger.merge(new_response)
+
+        return merger.response
 
     ###################################
     ########## Output Schema ##########

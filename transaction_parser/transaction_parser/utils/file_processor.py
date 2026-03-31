@@ -22,25 +22,6 @@ class FileProcessor:
         else:
             frappe.throw(_("Only PDF, CSV, and Excel files are supported"))
 
-    def get_combined_content(self, docs, page_limit=None):
-        """Combine content from multiple files with clear separators."""
-        if not docs:
-            frappe.throw(_("No files provided for processing"))
-
-        if not isinstance(docs, list):
-            docs = [docs]
-
-        if len(docs) == 1:
-            return self.get_content(docs[0], page_limit)
-
-        combined_parts = []
-        for index, doc in enumerate(docs, 1):
-            separator = f"{'=' * 60}\nDocument {index}: {doc.file_name} ({doc.file_type})\n{'=' * 60}"
-            content = self.get_content(doc, page_limit)
-            combined_parts.append(f"{separator}\n\n{content}")
-
-        return "\n\n".join(combined_parts)
-
     def _process_pdf(self, doc, page_limit=None):
         """Process PDF files with OCR and page limiting."""
         self.file = io.BytesIO(doc.get_content())

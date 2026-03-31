@@ -34,16 +34,10 @@ JSON schema is given below:
 {document_schema}"""
 
 
-def get_user_prompt(document_type: str, document_data: str, file_count: int = 1) -> str:
+def get_user_prompt(document_type: str, document_data: str) -> str:
     input_doc_type = INPUT_DOCUMENTS.get(document_type, "document")
 
-    base_instruction = f"Generate {document_type} for given {input_doc_type} according to above JSON schema."
-
-    if file_count > 1:
-        multi_file_instruction = f"\n\nIMPORTANT: The data below contains information from {file_count} related documents. Consolidate and merge the information from all documents to create a single unified {document_type}. Combine item lists, sum totals appropriately, and merge party/address information."
-        base_instruction += multi_file_instruction
-
-    return f"""{base_instruction}
+    return f"""Generate {document_type} for given {input_doc_type} according to above JSON schema.
 Document data is given below:
 {document_data}"""
 
