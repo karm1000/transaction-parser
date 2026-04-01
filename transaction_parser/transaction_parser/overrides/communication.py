@@ -99,19 +99,22 @@ def _process_attachments(
     else:
         country = frappe.db.get_value("Company", company, "country")
 
-    sorted_attachments = sorted(
-        attachments,
-        key=lambda attachment: {"xlsx": 0, "csv": 1, "pdf": 2}.get(
-            attachment.file_url.split(".")[-1].lower(), 3
-        ),
-    )
+    supported_extensions = {"pdf", "xlsx", "xls", "csv"}
+    filtered_attachments = [
+        attachment
+        for attachment in attachments
+        if attachment.file_url.split(".")[-1].lower() in supported_extensions
+    ]
+
+    if not filtered_attachments:
+        return
 
     frappe.enqueue(
         "transaction_parser.transaction_parser.overrides.communication._parse_attachments",
         doc=doc,
         country=country,
         transaction_type=transaction_type,
-        attachments=sorted_attachments,
+        attachments=filtered_attachments,
         ai_model=settings.default_ai_model,
         user=user,
         party=party,
@@ -123,16 +126,31 @@ def _process_attachments(
 def _parse_attachments(
     doc, country, transaction_type, attachments, ai_model, user, party, company
 ):
-    for attachment in attachments:
+    settings = frappe.get_cached_doc("Transaction Parser Settings")
+
+    if settings.process_one_document_per_communication:
+        file_urls = [attachment.file_url for attachment in attachments]
         _parse(
             country=country,
             transaction=transaction_type,
-            file_url=attachment.file_url,
+            file_urls=file_urls,
             ai_model=ai_model,
             user=user,
             party=party,
             company=company,
         )
         frappe.db.commit()
+    else:
+        for attachment in attachments:
+            _parse(
+                country=country,
+                transaction=transaction_type,
+                file_urls=attachment.file_url,
+                ai_model=ai_model,
+                user=user,
+                party=party,
+                company=company,
+            )
+            frappe.db.commit()
 
     doc.db_set("is_processed_by_transaction_parser", 1)

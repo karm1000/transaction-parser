@@ -109,16 +109,17 @@ class AIParser:
         finally:
             enqueue_integration_request(**log)
 
-    def _create_log_entry(self, file_doc_name: str | None) -> frappe._dict:
+    def _create_log_entry(self, doc_name: str | None) -> frappe._dict:
         """Create a log entry for the API call."""
         log = frappe._dict(url=self.model.base_url)
-        if file_doc_name:
-            log.update(
-                {
-                    "reference_doctype": "File",
-                    "reference_name": file_doc_name,
-                }
-            )
+
+        log.update(
+            {
+                "reference_doctype": "File",
+                "reference_name": doc_name,
+            }
+        )
+
         return log
 
     def _make_api_call(self, messages: tuple) -> Any:

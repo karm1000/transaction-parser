@@ -16,6 +16,7 @@
   "email_configuration_section",
   "parse_incoming_emails",
   "parse_party_emails",
+  "process_one_document_per_communication",
   "incoming_email_accounts",
   "party_emails",
   "custom_fields_tab",
@@ -91,16 +92,16 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
   },
   {
-   "default": "OCRMyPDF",
+   "default": "OCR",
    "depends_on": "eval: doc.enabled",
-   "description": "Select the library to use for PDF text extraction",
+   "description": "Select the library to use for PDF text extraction. OCR uses PyMuPDF + OCRmyPDF. Docling provides advanced document understanding.",
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
-   "options": "OCRMyPDF\nDocling"
+   "options": "OCR\nDocling"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -161,12 +162,19 @@
    "fieldname": "transaction_configurations_section",
    "fieldtype": "Section Break",
    "label": "Transaction Configurations"
+  },
+  {
+   "default": "0",
+   "description": "When enabled, all attachments from a communication are combined to create a single document. When disabled, each attachment creates a separate document.",
+   "fieldname": "process_one_document_per_communication",
+   "fieldtype": "Check",
+   "label": "Process One Document Per Communication"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-18 08:14:24.869817",
+ "modified": "2026-04-01 09:23:24.896779",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

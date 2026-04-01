@@ -40,8 +40,8 @@ class TransactionParserSettings(Document):
             "OpenAI gpt-4o-mini",
             "OpenAI gpt-5",
             "OpenAI gpt-5-mini",
-            "Google Gemini Pro-2.5",
-            "Google Gemini Flash-2.5",
+            "Google Gemini Pro",
+            "Google Gemini Flash",
         ]
         enabled: DF.Check
         incoming_email_accounts: DF.Table[TransactionParserEmailAccount]
@@ -51,7 +51,8 @@ class TransactionParserSettings(Document):
         parse_party_emails: DF.Check
         party_emails: DF.Table[TransactionParserPartyEmail]
         party_schema: DF.JSON | None
-        pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
+        pdf_processor: DF.Literal["OCR", "Docling"]
+        process_one_document_per_communication: DF.Check
         tax_schema: DF.JSON | None
 
     # end: auto-generated types
