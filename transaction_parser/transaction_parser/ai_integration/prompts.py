@@ -3,6 +3,8 @@
 # Mapping of output document types to their corresponding input document types
 INPUT_DOCUMENTS = {"Sales Order": "Purchase Order", "Purchase Invoice": "Sales Invoice"}
 
+SELLER_DOCUMENT_TYPES = {"Sales Order"}
+
 
 def get_system_prompt(document_schema: dict) -> str:
     return f"""You are a JSON data extraction and validation expert for your company's ERP platform.
@@ -41,7 +43,7 @@ def get_user_prompt(
 
     company_context = ""
     if company_info:
-        if document_type == "Sales Order":
+        if document_type in SELLER_DOCUMENT_TYPES:
             role_hint = "Use this to correctly identify the company as the seller/vendor and the other party as the customer/buyer."
         else:
             role_hint = "Use this to correctly identify the company as the buyer/recipient and the other party as the vendor/supplier."
