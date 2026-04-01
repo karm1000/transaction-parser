@@ -132,6 +132,7 @@ class BenchmarkRunner:
     # ── step 1: file parsing ────────────────────────────────
 
     def _run_file_parsing(self, file_docs: list[File]) -> list[str]:
+        # TODO: It is assumed that Process One Document Per Communication is enabled
         # to prevent stopping an already running tracemalloc instance
         was_tracing = tracemalloc.is_tracing()
         if not was_tracing:
