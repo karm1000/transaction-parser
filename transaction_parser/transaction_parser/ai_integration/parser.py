@@ -80,7 +80,9 @@ class AIParser:
         address = get_company_address(company)
         if address and address.company_address_display:
             address_text = strip_html(address.company_address_display).strip()
-            info += f"\nLocated at: {address_text}"
+
+            if address_text:
+                info += f"\nLocated at: {address_text}"
 
         return info
 
