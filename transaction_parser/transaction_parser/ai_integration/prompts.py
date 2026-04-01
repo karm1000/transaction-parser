@@ -5,8 +5,7 @@ INPUT_DOCUMENTS = {"Sales Order": "Purchase Order", "Purchase Invoice": "Sales I
 
 
 def get_system_prompt(document_schema: dict) -> str:
-    prompt = f"""You are a JSON data extraction and validation expert for an ERP platform.
-
+    return f"""You are a JSON data extraction and validation expert for your company's ERP platform.
 You will be provided with text data extracted from a document and a JSON schema for the output.
 
 Your role is to:
@@ -33,8 +32,6 @@ When processing the document, you will:
 
 JSON schema is given below:
 {document_schema}"""
-
-    return prompt
 
 
 def get_user_prompt(
