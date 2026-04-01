@@ -104,7 +104,7 @@ class Transaction:
             document_type=self.DOCTYPE,
             document_schema=schema,
             document_data=content,
-            file_doc_name=self.file.name,
+            file_doc_name=file.name,
             company=self.company,
         )
 

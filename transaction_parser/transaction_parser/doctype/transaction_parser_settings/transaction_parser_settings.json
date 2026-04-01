@@ -92,16 +92,16 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5"
   },
   {
-   "default": "OCR",
+   "default": "OCRMyPDF",
    "depends_on": "eval: doc.enabled",
-   "description": "Select the library to use for PDF text extraction. OCR uses PyMuPDF + OCRmyPDF. Docling provides advanced document understanding.",
+   "description": "Select the library to use for PDF text extraction",
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
-   "options": "OCR\nDocling"
+   "options": "OCRMyPDF\nDocling"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -174,7 +174,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-01 09:23:24.896779",
+ "modified": "2026-04-01 09:44:18.808088",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
