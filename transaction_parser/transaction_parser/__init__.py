@@ -54,7 +54,24 @@ def _parse(
             file_urls = [file_urls]
 
         file_names = frappe.get_list(
-            "File", filters={"file_url": ("in", file_urls)}, pluck="name"
+            "File",
+            filters={"file_url": ("in", file_urls)},
+            fields=["name", "file_type"],
+            order_by="creation desc",
+            group_by="file_url",
+        )
+
+        # xlsx/xls first, then pdf, then csv. If no xlsx/xls, csv takes its place.
+        file_types = {(f.file_type or "").lower() for f in file_names}
+        has_spreadsheet = file_types & {"xlsx", "xls"}
+
+        if has_spreadsheet:
+            FILE_TYPE_PRIORITY = {"xlsx": 0, "xls": 0, "pdf": 1, "csv": 2}
+        else:
+            FILE_TYPE_PRIORITY = {"csv": 0, "pdf": 1}
+
+        file_names.sort(
+            key=lambda f: FILE_TYPE_PRIORITY.get((f.file_type or "").lower(), 99)
         )
 
         files = []

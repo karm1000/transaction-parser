@@ -113,6 +113,7 @@ class Transaction:
         merger = ResponseMerger(
             response,
             schema=self.get_schema(),
+            match_keys=self.get_match_keys(),
         )
 
         for file in self.files[1:]:
@@ -127,6 +128,12 @@ class Transaction:
     ###################################
     ########## Output Schema ##########
     ###################################
+
+    def get_match_keys(self) -> dict[str, list[str]]:
+        """Return list field name -> key fields used to match items during merge."""
+        return {
+            "item_list": ["party_item_code", "quantity", "rate", "description"],
+        }
 
     def get_schema(self) -> dict:
         if not self.schema:

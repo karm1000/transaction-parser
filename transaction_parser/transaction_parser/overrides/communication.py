@@ -108,19 +108,12 @@ def _process_attachments(
     if not filtered_attachments:
         return
 
-    sorted_attachments = sorted(
-        filtered_attachments,
-        key=lambda attachment: {"xlsx": 0, "csv": 1, "pdf": 2}.get(
-            attachment.file_url.split(".")[-1].lower(), 3
-        ),
-    )
-
     frappe.enqueue(
         "transaction_parser.transaction_parser.overrides.communication._parse_attachments",
         doc=doc,
         country=country,
         transaction_type=transaction_type,
-        attachments=sorted_attachments,
+        attachments=filtered_attachments,
         ai_model=settings.default_ai_model,
         user=user,
         party=party,
