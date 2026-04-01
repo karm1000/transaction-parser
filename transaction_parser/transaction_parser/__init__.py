@@ -24,7 +24,7 @@ def parse(transaction, country, file_url, ai_model=None, page_limit=None, compan
         _parse,
         country=cstr(country),
         transaction=cstr(transaction),
-        file_url=cstr(file_url),
+        file_urls=cstr(file_url),
         ai_model=cstr(ai_model),
         page_limit=cint(page_limit),
         company=cstr(company) if company else None,
@@ -109,7 +109,7 @@ def _parse(
         ):
             notification = {
                 "document_type": "File",
-                "document_name": file,
+                "document_name": file.name if file else None,
                 "subject": _("Duplicate entry found for {0}").format(file_urls),
                 "message": str(e),
             }
