@@ -41,12 +41,17 @@ def get_user_prompt(
 
     company_context = ""
     if company_info:
+        if document_type == "Sales Order":
+            role_hint = "Use this to correctly identify the company as the seller/vendor and the other party as the customer/buyer."
+        else:
+            role_hint = "Use this to correctly identify the company as the buyer/recipient and the other party as the vendor/supplier."
+
         company_context = f"""
 
 This {input_doc_type} is received by the following company:
 {company_info}
 
-Use this to correctly identify the company as the buyer/recipient and the other party as the vendor/supplier.
+{role_hint}
 """
 
     return f"""Generate {document_type} for the given {input_doc_type} according to above JSON schema.{company_context}

@@ -53,7 +53,7 @@ def on_update(doc, method=None):
                 settings,
                 default_user,
                 matched_party_config.party,
-                matched_party_config.company,
+                matched_account.company,
             )
             return
 
