@@ -165,7 +165,7 @@
   },
   {
    "default": "0",
-   "description": "When enabled, all attachments from a communication are combined to create a single document. When disabled, each attachment creates a separate document.",
+   "description": "All attachments from a communication are combined to create a single document",
    "fieldname": "process_one_document_per_communication",
    "fieldtype": "Check",
    "label": "Process One Document Per Communication"
@@ -174,7 +174,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-01 09:44:18.808088",
+ "modified": "2026-04-01 15:11:22.650340",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",

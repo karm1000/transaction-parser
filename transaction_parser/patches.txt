@@ -10,3 +10,4 @@ execute:from transaction_parser.install import after_install; after_install() #2
 transaction_parser.patches.set_default_pdf_processor #1
 transaction_parser.patches.recalculate_accuracy
 transaction_parser.patches.populate_dataset_files_table
+transaction_parser.patches.enable_one_document_per_communication
