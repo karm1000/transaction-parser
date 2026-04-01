@@ -20,6 +20,7 @@ from transaction_parser.transaction_parser.controllers import get_controller
 from transaction_parser.transaction_parser.controllers.transaction import Transaction
 from transaction_parser.transaction_parser.utils.file_processor import FileProcessor
 from transaction_parser.transaction_parser.utils.pdf_processor import get_pdf_processor
+from transaction_parser.transaction_parser.utils.response_merger import ResponseMerger
 
 
 class BenchmarkRunner:
@@ -59,10 +60,10 @@ class BenchmarkRunner:
 
         try:
             file_docs: list[File] = self._get_file_docs()
-            self.controller: Transaction = self._get_controller(file_docs[0])
+            self.controller: Transaction = self._get_controller(file_docs)
 
-            file_content = self._run_file_parsing(file_docs)
-            ai_content = self._run_ai_parsing(file_content, file_docs[0].name)
+            file_contents = self._run_file_parsing(file_docs)
+            ai_content = self._run_ai_parsing(file_contents, file_docs)
             self._calculate_cost()
             self._score_response(ai_content)
 
@@ -85,15 +86,38 @@ class BenchmarkRunner:
         file_docs = self.dataset.get_file_docs()
         if not file_docs:
             frappe.throw(_("No files in dataset {0}").format(self.dataset.name))
+
+        # sort by file type priority to match the actual parser behavior
+        file_docs = self._sort_files_by_priority(file_docs)
         return file_docs
 
-    def _get_controller(self, file_doc: File) -> Transaction:
+    def _sort_files_by_priority(self, file_docs: list[File]) -> list[File]:
+        """Sort files by type priority: xlsx/xls first, then pdf, then csv.
+
+        If no xlsx/xls files exist, csv takes priority over pdf.
+        This mirrors the sorting logic in _parse() to ensure consistent file ordering.
+        """
+        # TODO: Too many code repetation with transaction_parser/transaction_parser/__init__.py. Refactor to centralize file sorting logic.
+        file_types = {(f.file_type or "").lower() for f in file_docs}
+        has_spreadsheet = file_types & {"xlsx", "xls"}
+
+        if has_spreadsheet:
+            FILE_TYPE_PRIORITY = {"xlsx": 0, "xls": 0, "pdf": 1, "csv": 2}
+        else:
+            FILE_TYPE_PRIORITY = {"csv": 0, "pdf": 1}
+
+        return sorted(
+            file_docs,
+            key=lambda f: FILE_TYPE_PRIORITY.get((f.file_type or "").lower(), 99),
+        )
+
+    def _get_controller(self, file_docs: list[File]) -> Transaction:
         ds = self.dataset
         cls = get_controller(ds.country, ds.transaction_type)
 
         controller: Transaction = cls(company=ds.company, party=ds.party)
         controller.initialize()
-        controller.file = file_doc
+        controller.files = file_docs
         controller.ai_model = self.log.ai_model
 
         return controller
@@ -107,7 +131,7 @@ class BenchmarkRunner:
 
     # ── step 1: file parsing ────────────────────────────────
 
-    def _run_file_parsing(self, file_docs: list[File]) -> str:
+    def _run_file_parsing(self, file_docs: list[File]) -> list[str]:
         # to prevent stopping an already running tracemalloc instance
         was_tracing = tracemalloc.is_tracing()
         if not was_tracing:
@@ -127,12 +151,6 @@ class BenchmarkRunner:
                     pdf_processor,
                 )
                 contents.append(content)
-
-            combined = (
-                "\n\n--- Document Separator ---\n\n".join(contents)
-                if len(contents) > 1
-                else contents[0]
-            )
         finally:
             self.log.file_parse_time = flt(default_timer() - start, self.precision)
             _, peak = tracemalloc.get_traced_memory()
@@ -142,12 +160,23 @@ class BenchmarkRunner:
                 peak / 1024 / 1024, self.precision
             )  # bytes → MB
 
-        self.log.file_content = combined
-        return combined
+        self.log.file_content = (
+            "\n\n--- Document Separator ---\n\n".join(contents)
+            if len(contents) > 1
+            else contents[0]
+        )
+        return contents
 
     # ── step 2: AI parsing ──────────────────────────────────
 
-    def _run_ai_parsing(self, file_content: str, file_name: str) -> dict:
+    def _run_ai_parsing(self, file_contents: list[str], file_docs: list[File]) -> dict:
+        if len(file_contents) == 1:
+            return self._run_single_ai_parse(file_contents[0], file_docs[0].name)
+
+        return self._run_multi_ai_parse(file_contents, file_docs)
+
+    def _run_single_ai_parse(self, file_content: str, file_name: str) -> dict:
+        """Parse a single file with AI."""
         parser = AIParser(self.log.ai_model)
 
         start = default_timer()
@@ -164,6 +193,73 @@ class BenchmarkRunner:
         self.log.prompt_tokens = usage.get("prompt_tokens", 0)
         self.log.completion_tokens = usage.get("completion_tokens", 0)
         self.log.total_tokens = usage.get("total_tokens", 0)
+        self.log.ai_response = frappe.as_json(ai_content, indent=2)
+
+        return ai_content
+
+    def _run_multi_ai_parse(
+        self, file_contents: list[str], file_docs: list[File]
+    ) -> dict:
+        """Parse multiple files individually with AI and merge responses.
+
+        Mirrors the controller's _parse_multiple_files flow:
+        parse each file → merge with ResponseMerger → aggregate tokens.
+        """
+        total_prompt = 0
+        total_completion = 0
+        total_tokens_count = 0
+        schema = self.controller.get_schema()
+
+        start = default_timer()
+
+        # parse first file
+        parser = AIParser(self.log.ai_model)
+        response = parser.parse(
+            document_type=self.controller.DOCTYPE,
+            document_schema=schema,
+            document_data=file_contents[0],
+            file_doc_name=file_docs[0].name,
+            company=self.dataset.company,
+        )
+
+        usage = parser.ai_response.get("usage", {})
+        total_prompt += usage.get("prompt_tokens", 0)
+        total_completion += usage.get("completion_tokens", 0)
+        total_tokens_count += usage.get("total_tokens", 0)
+
+        # merge remaining files
+        merger = ResponseMerger(
+            response,
+            schema=schema,
+            match_keys=self.controller.get_match_keys(),
+        )
+
+        for i, file_content in enumerate(file_contents[1:], 1):
+            if merger.is_complete():
+                break
+
+            parser = AIParser(self.log.ai_model)
+            new_response = parser.parse(
+                document_type=self.controller.DOCTYPE,
+                document_schema=schema,
+                document_data=file_content,
+                file_doc_name=file_docs[i].name,
+                company=self.dataset.company,
+            )
+
+            usage = parser.ai_response.get("usage", {})
+            total_prompt += usage.get("prompt_tokens", 0)
+            total_completion += usage.get("completion_tokens", 0)
+            total_tokens_count += usage.get("total_tokens", 0)
+
+            merger.merge(new_response)
+
+        self.log.ai_parse_time = flt(default_timer() - start, self.precision)
+        self.log.prompt_tokens = total_prompt
+        self.log.completion_tokens = total_completion
+        self.log.total_tokens = total_tokens_count
+
+        ai_content = merger.response
         self.log.ai_response = frappe.as_json(ai_content, indent=2)
 
         return ai_content
