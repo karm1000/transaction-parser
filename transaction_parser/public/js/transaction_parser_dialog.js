@@ -52,6 +52,17 @@ async function create_transaction_parser_dialog(transaction_type, list_view) {
 					default: get_default_country(),
 					reqd: 1,
 				},
+				{
+					fieldtype: "Section Break",
+				},
+				{
+					fieldname: "company",
+					label: __("Company"),
+					fieldtype: "Link",
+					options: "Company",
+					default: frappe.defaults.get_user_default("Company"),
+					reqd: 1,
+				},
 			],
 			primary_action_label: __("Submit"),
 			primary_action(values) {

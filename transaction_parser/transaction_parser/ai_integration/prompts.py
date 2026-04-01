@@ -5,7 +5,8 @@ INPUT_DOCUMENTS = {"Sales Order": "Purchase Order", "Purchase Invoice": "Sales I
 
 
 def get_system_prompt(document_schema: dict) -> str:
-    return f"""You are a JSON data extraction and validation expert for your company's ERP platform.
+    prompt = f"""You are a JSON data extraction and validation expert for an ERP platform.
+
 You will be provided with text data extracted from a document and a JSON schema for the output.
 
 Your role is to:
@@ -33,11 +34,25 @@ When processing the document, you will:
 JSON schema is given below:
 {document_schema}"""
 
+    return prompt
 
-def get_user_prompt(document_type: str, document_data: str) -> str:
+
+def get_user_prompt(
+    document_type: str, document_data: str, company_info: str = ""
+) -> str:
     input_doc_type = INPUT_DOCUMENTS.get(document_type, "document")
 
-    return f"""Generate {document_type} for given {input_doc_type} according to above JSON schema.
+    company_context = ""
+    if company_info:
+        company_context = f"""
+
+This {input_doc_type} is received by the following company:
+{company_info}
+
+Use this to correctly identify the company as the buyer/recipient and the other party as the vendor/supplier.
+"""
+
+    return f"""Generate {document_type} for the given {input_doc_type} according to above JSON schema.{company_context}
 Document data is given below:
 {document_data}"""
 

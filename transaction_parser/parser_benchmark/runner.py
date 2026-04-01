@@ -156,6 +156,7 @@ class BenchmarkRunner:
             document_schema=self.controller.get_schema(),
             document_data=file_content,
             file_doc_name=file_name,
+            company=self.dataset.company,
         )
         self.log.ai_parse_time = flt(default_timer() - start, self.precision)
 

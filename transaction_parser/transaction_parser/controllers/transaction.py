@@ -85,6 +85,7 @@ class Transaction:
             document_schema=schema,
             document_data=content,
             file_doc_name=self.file.name,
+            company=self.company,
         )
 
     ###################################
