@@ -34,10 +34,27 @@ JSON schema is given below:
 {document_schema}"""
 
 
-def get_user_prompt(document_type: str, document_data: str) -> str:
+def get_user_prompt(
+    document_type: str, document_data: str, company_info: str = ""
+) -> str:
     input_doc_type = INPUT_DOCUMENTS.get(document_type, "document")
 
-    return f"""Generate {document_type} for given {input_doc_type} according to above JSON schema.
+    company_context = ""
+    if company_info:
+        if document_type == "Sales Order":
+            role_hint = "Use this to correctly identify the company as the seller/vendor and the other party as the customer/buyer."
+        else:
+            role_hint = "Use this to correctly identify the company as the buyer/recipient and the other party as the vendor/supplier."
+
+        company_context = f"""
+
+This {input_doc_type} is received by the following company:
+{company_info}
+
+{role_hint}
+"""
+
+    return f"""Generate {document_type} for the given {input_doc_type} according to above JSON schema.{company_context}
 Document data is given below:
 {document_data}"""
 

@@ -13,6 +13,18 @@ def on_update(doc, method=None):
     if not (settings.enabled and settings.parse_incoming_emails):
         return
 
+    matched_account = next(
+        (
+            row
+            for row in settings.incoming_email_accounts
+            if row.to_email in doc.recipients
+        ),
+        None,
+    )
+
+    if not matched_account:
+        return
+
     if settings.parse_party_emails:
         matched_party_config = next(
             (row for row in settings.party_emails if row.party_email == doc.sender),
@@ -41,20 +53,9 @@ def on_update(doc, method=None):
                 settings,
                 default_user,
                 matched_party_config.party,
+                matched_account.company,
             )
             return
-
-    matched_account = next(
-        (
-            row
-            for row in settings.incoming_email_accounts
-            if row.to_email in doc.recipients
-        ),
-        None,
-    )
-
-    if not matched_account:
-        return
 
     # Attachments are not available when the Communication doc is created.
     # Next time the doc is updated, we will check for attachments,

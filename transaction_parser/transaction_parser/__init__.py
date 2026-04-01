@@ -15,7 +15,7 @@ TRANSACTION_MAP = {
 
 
 @frappe.whitelist()
-def parse(transaction, country, file_url, ai_model=None, page_limit=None):
+def parse(transaction, country, file_url, ai_model=None, page_limit=None, company=None):
     is_enabled()
 
     frappe.has_permission(TRANSACTION_MAP[transaction], "create", throw=True)
@@ -27,6 +27,7 @@ def parse(transaction, country, file_url, ai_model=None, page_limit=None):
         file_url=cstr(file_url),
         ai_model=cstr(ai_model),
         page_limit=cint(page_limit),
+        company=cstr(company) if company else None,
         queue="long",
         now=frappe.conf.developer_mode,
     )
