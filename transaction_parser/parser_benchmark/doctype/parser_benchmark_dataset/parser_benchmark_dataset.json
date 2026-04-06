@@ -293,7 +293,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-03-30 15:01:03.977940",
+ "modified": "2026-04-06 12:40:15.057627",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",
@@ -314,6 +314,7 @@
   }
  ],
  "row_format": "Dynamic",
+ "search_fields": "party,is_multiple_files",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

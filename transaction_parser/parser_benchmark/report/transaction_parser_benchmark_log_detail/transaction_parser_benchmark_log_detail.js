@@ -68,6 +68,16 @@ frappe.query_reports["Transaction Parser Benchmark Log Detail"] = {
 			label: __("Dataset"),
 			fieldtype: "Link",
 			options: "Parser Benchmark Dataset",
+			get_query() {
+				const filters = {};
+				const party_type = frappe.query_report.get_filter_value("party_type");
+				const party = frappe.query_report.get_filter_value("party");
+
+				if (party_type) filters.party_type = party_type;
+				if (party) filters.party = party;
+
+				return { filters };
+			},
 		},
 		{
 			fieldname: "ai_model",
