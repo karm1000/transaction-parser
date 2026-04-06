@@ -134,7 +134,7 @@ class Transaction:
     def get_match_keys(self) -> dict[str, list[str]]:
         """Return list field name -> key fields used to match items during merge."""
         return {
-            "item_list": ["party_item_code", "quantity", "rate", "description"],
+            "item_list": ["party_item_code", "barcode"],
         }
 
     def get_schema(self) -> dict:
@@ -195,8 +195,9 @@ class Transaction:
 
     def get_default_item_schema(self) -> dict:
         return {
-            "serial_number": "string | null",
+            "serial_number": "string | null (row number)",
             "party_item_code": "string | null (Dont confuse this with serial number)",
+            "barcode": "string | null (e.g., EAN, UPC, etc.)",
             "description": "string",
             "quantity": "float",
             "unit": "string (e.g., KG, MTR, PC, etc.)",

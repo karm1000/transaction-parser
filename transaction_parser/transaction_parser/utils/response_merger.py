@@ -209,7 +209,6 @@ class ResponseMerger:
         source_items: list[dict],
         key_fields: list[str],
     ) -> dict | None:
-        # Require at least 2 matching key fields to avoid false positives
         for source_item in source_items:
             if self._items_match(target_item, source_item, key_fields):
                 return source_item
@@ -222,13 +221,11 @@ class ResponseMerger:
         item2: dict,
         key_fields: list[str],
     ) -> bool:
-        matches = 0
-
         for field in key_fields:
             value1 = item1.get(field)
             value2 = item2.get(field)
 
             if value1 and value2 and value1 == value2:
-                matches += 1
+                return True  # Immediate match if any key field matches
 
-        return matches >= 2
+        return False
