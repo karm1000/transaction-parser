@@ -156,7 +156,7 @@ class ResponseMerger:
                 self._merge_list(field_type, target, key, source_value)
 
     def _merge_primitive(self, target: dict, key: str, source_value: Any) -> None:
-        if not target.get(key) and source_value:
+        if target.get(key) is None and source_value:
             target[key] = source_value
 
     def _merge_object(
