@@ -1,0 +1,46 @@
+{
+ "actions": [],
+ "creation": "2026-03-27 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "key",
+  "column_break_qaca",
+  "weight"
+ ],
+ "fields": [
+  {
+   "fieldname": "key",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Key",
+   "options": "document_number\ndocument_date\ncurrency\nitem_list\ntotals\npayment_terms\nlocal_terms\ndelivery_date\nbuyer\nvendor\ncompany\nsupplier",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "weight",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Weight",
+   "non_negative": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qaca",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-27 11:00:43.378124",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Key Weight",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

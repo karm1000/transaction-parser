@@ -1,0 +1,451 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-03-16 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "config_section",
+  "dataset",
+  "transaction_type",
+  "country",
+  "column_break_summary",
+  "company",
+  "party_type",
+  "party",
+  "section_break_peyo",
+  "total_time",
+  "column_break_fmal",
+  "status",
+  "version_section",
+  "commit_hash",
+  "column_break_version",
+  "commit_message",
+  "section_break_nmcv",
+  "naming_series",
+  "column_break_ubhs",
+  "file_parsing_tab",
+  "pdf_processor",
+  "column_break_file_metrics",
+  "page_limit",
+  "section_break_umzr",
+  "file_parse_time",
+  "column_break_kgph",
+  "file_parse_memory",
+  "section_break_file_content",
+  "file_content",
+  "ai_response_tab",
+  "other_details_section",
+  "ai_model",
+  "column_break_fsxb",
+  "ai_parse_time",
+  "api_cost_section",
+  "input_token_cost",
+  "currency",
+  "column_break_ncdl",
+  "output_token_cost",
+  "section_break_yqhs",
+  "prompt_tokens",
+  "completion_tokens",
+  "total_tokens",
+  "column_break_ai",
+  "input_cost",
+  "output_cost",
+  "total_cost",
+  "section_break_ai_content",
+  "ai_response",
+  "accuracy_tab",
+  "accuracy_section",
+  "accuracy_score",
+  "column_break_accuracy",
+  "score_details_section",
+  "score_details",
+  "error_tab",
+  "section_break_error",
+  "error"
+ ],
+ "fields": [
+  {
+   "default": "PAR-BM-LOG-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "PAR-BM-LOG-"
+  },
+  {
+   "fieldname": "dataset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Dataset",
+   "options": "Parser Benchmark Dataset",
+   "read_only": 1,
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "default": "Queued",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Queued\nRunning\nCompleted\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_summary",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ai_model",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "AI Model",
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5",
+   "read_only": 1
+  },
+  {
+   "fieldname": "pdf_processor",
+   "fieldtype": "Select",
+   "label": "PDF Processor",
+   "options": "\nOCRMyPDF\nDocling",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_time",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Time (s)",
+   "read_only": 1
+  },
+
+  {
+   "fieldname": "file_parsing_tab",
+   "fieldtype": "Tab Break",
+   "label": "File Parsing"
+  },
+  {
+   "fieldname": "file_parse_time",
+   "fieldtype": "Float",
+   "label": "Parse Time (s)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_file_metrics",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Peak memory allocated during file parsing, measured using tracemalloc",
+   "fieldname": "file_parse_memory",
+   "fieldtype": "Float",
+   "label": "Peak Memory (MB)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_file_content",
+   "fieldtype": "Section Break",
+   "label": "Extracted Content"
+  },
+  {
+   "fieldname": "file_content",
+   "fieldtype": "Code",
+   "label": "File Content",
+   "options": "Markdown",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ai_response_tab",
+   "fieldtype": "Tab Break",
+   "label": "AI Response"
+  },
+  {
+   "fieldname": "prompt_tokens",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Prompt Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completion_tokens",
+   "fieldtype": "Int",
+   "label": "Completion Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_tokens",
+   "fieldtype": "Int",
+   "label": "Total Tokens",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ai",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ai_parse_time",
+   "fieldtype": "Float",
+   "label": "AI Parse Time (s)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "input_cost",
+   "fieldtype": "Currency",
+   "label": "Input Cost",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "output_cost",
+   "fieldtype": "Currency",
+   "label": "Output Cost",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Cost",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_ai_content",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Only document content",
+   "fieldname": "ai_response",
+   "fieldtype": "Code",
+   "label": "AI Response",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval: doc.status === 'Failed'",
+   "fieldname": "section_break_error",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "error",
+   "fieldtype": "Code",
+   "label": "Error Traceback",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "version_section",
+   "fieldtype": "Section Break",
+   "label": "Version"
+  },
+  {
+   "fieldname": "commit_hash",
+   "fieldtype": "Data",
+   "label": "Commit Hash",
+   "length": 40,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_version",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "commit_message",
+   "fieldtype": "Small Text",
+   "label": "Commit Message",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_nmcv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ubhs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Cost per 1M input tokens at the time of this run",
+   "fieldname": "input_token_cost",
+   "fieldtype": "Currency",
+   "label": "Input Token Cost",
+   "non_negative": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "description": "Cost per 1M output tokens at the time of this run",
+   "fieldname": "output_token_cost",
+   "fieldtype": "Currency",
+   "label": "Output Token Cost",
+   "non_negative": 1,
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ncdl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_yqhs",
+   "fieldtype": "Section Break",
+   "label": "Token Details"
+  },
+  {
+   "fieldname": "accuracy_tab",
+   "fieldtype": "Tab Break",
+   "label": "Accuracy"
+  },
+  {
+   "fieldname": "accuracy_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "description": "Percentage of fields matching the expected result (0-100)",
+   "fieldname": "accuracy_score",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Accuracy Score (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_accuracy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "score_details_section",
+   "fieldtype": "Section Break",
+   "label": "Score Details"
+  },
+  {
+   "fieldname": "score_details",
+   "fieldtype": "Table",
+   "label": "Score Details",
+   "options": "Parser Benchmark Score Detail",
+   "read_only": 1
+  },
+  {
+   "fieldname": "error_tab",
+   "fieldtype": "Tab Break",
+   "label": "Error"
+  },
+  {
+   "fieldname": "api_cost_section",
+   "fieldtype": "Section Break",
+   "label": "API Cost"
+  },
+  {
+   "fieldname": "other_details_section",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "column_break_fsxb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transaction_type",
+   "fieldtype": "Select",
+   "is_virtual": 1,
+   "label": "Transaction Type",
+   "options": "Sales Order\nExpense",
+   "read_only": 1
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Select",
+   "is_virtual": 1,
+   "label": "Country",
+   "options": "India\nOther",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "is_virtual": 1,
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "is_virtual": 1,
+   "label": "Party Type",
+   "options": "DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "is_virtual": 1,
+   "label": "Party",
+   "options": "party_type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_peyo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_fmal",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "config_section",
+   "fieldtype": "Section Break",
+   "label": "Config"
+  },
+  {
+   "fieldname": "page_limit",
+   "fieldtype": "Int",
+   "is_virtual": 1,
+   "label": "Page Limit",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_umzr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_kgph",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-27 10:32:31.037034",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Log",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

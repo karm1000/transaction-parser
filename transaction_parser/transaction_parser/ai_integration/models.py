@@ -120,6 +120,6 @@ MODELS = {
     "OpenAI gpt-4o-mini": OpenAIGPT4oMini(),
     "OpenAI gpt-5": OpenAIGPT5(),
     "OpenAI gpt-5-mini": OpenAIGPT5Mini(),
-    "Google Gemini Pro": GeminiPro(),
-    "Google Gemini Flash": GeminiFlash(),
+    "Google Gemini Pro-2.5": GeminiPro(),
+    "Google Gemini Flash-2.5": GeminiFlash(),
 }

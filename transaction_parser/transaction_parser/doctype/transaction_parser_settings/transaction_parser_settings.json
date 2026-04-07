@@ -16,6 +16,7 @@
   "email_configuration_section",
   "parse_incoming_emails",
   "parse_party_emails",
+  "process_one_document_per_communication",
   "incoming_email_accounts",
   "party_emails",
   "custom_fields_tab",
@@ -91,7 +92,7 @@
    "fieldtype": "Select",
    "label": "Default AI Model",
    "mandatory_depends_on": "eval: doc.enabled",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro\nGoogle Gemini Flash"
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5"
   },
   {
    "default": "OCRMyPDF",
@@ -161,12 +162,20 @@
    "fieldname": "transaction_configurations_section",
    "fieldtype": "Section Break",
    "label": "Transaction Configurations"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.parse_incoming_emails",
+   "description": "All attachments from a communication are combined to create a single document",
+   "fieldname": "process_one_document_per_communication",
+   "fieldtype": "Check",
+   "label": "Process One Document Per Communication"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-14 13:35:17.150533",
+ "modified": "2026-04-01 15:29:35.262995",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
