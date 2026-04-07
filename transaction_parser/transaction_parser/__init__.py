@@ -15,7 +15,7 @@ TRANSACTION_MAP = {
 
 
 @frappe.whitelist()
-def parse(transaction, country, file_url, ai_model=None, page_limit=None):
+def parse(transaction, country, file_url, ai_model=None, page_limit=None, company=None):
     is_enabled()
 
     frappe.has_permission(TRANSACTION_MAP[transaction], "create", throw=True)
@@ -24,40 +24,79 @@ def parse(transaction, country, file_url, ai_model=None, page_limit=None):
         _parse,
         country=cstr(country),
         transaction=cstr(transaction),
-        file_url=cstr(file_url),
+        file_urls=cstr(file_url),
         ai_model=cstr(ai_model),
         page_limit=cint(page_limit),
+        company=cstr(company) if company else None,
         queue="long",
+        now=frappe.conf.developer_mode,
     )
 
 
 def _parse(
     country,
     transaction,
-    file_url,
+    file_urls,
     ai_model=None,
     page_limit=None,
     user=None,
     party=None,
     company=None,
 ):
-    try:
-        file = None
-        filename = file_url.split("/")[-1]
+    file = None
 
-        file = frappe.get_last_doc("File", filters={"file_url": file_url})
-        filename = file.file_name
+    try:
+        if (
+            isinstance(file_urls, str)
+            and file_urls.startswith("[")
+            and file_urls.endswith("]")
+        ):
+            file_urls = frappe.parse_json(file_urls)
+
+        elif isinstance(file_urls, str):
+            file_urls = [file_urls]
+
+        file_names = frappe.get_list(
+            "File",
+            filters={"file_url": ("in", file_urls)},
+            fields=["name", "file_type"],
+            order_by="creation desc",
+            group_by="file_url",
+        )
+
+        # xlsx/xls first, then pdf, then csv. If no xlsx/xls, csv takes its place.
+        file_types = {(f.file_type or "").lower() for f in file_names}
+        has_spreadsheet = file_types & {"xlsx", "xls"}
+
+        if has_spreadsheet:
+            FILE_TYPE_PRIORITY = {"xlsx": 0, "xls": 0, "pdf": 1, "csv": 2}
+        else:
+            FILE_TYPE_PRIORITY = {"csv": 0, "pdf": 1}
+
+        file_names.sort(
+            key=lambda f: FILE_TYPE_PRIORITY.get((f.file_type or "").lower(), 99)
+        )
+
+        files = []
+        for file_name in file_names:
+            file = frappe.get_doc("File", file_name)
+            files.append(file)
 
         controller = get_controller(country, transaction)(party=party, company=company)
-        doc = controller.generate(file, ai_model, page_limit)
+        doc = controller.generate(files, ai_model, page_limit)
 
+        filenames = (
+            ", ".join([f.file_name for f in files])
+            if len(files) > 1
+            else files[0].file_name
+        )
         notification = {
             "document_type": TRANSACTION_MAP[transaction],
             "document_name": doc.name,
             "subject": _("{0} {1} generated from {2}").format(
                 _(TRANSACTION_MAP[transaction]),
                 doc.name,
-                filename,
+                filenames,
             ),
         }
 
@@ -70,8 +109,8 @@ def _parse(
         ):
             notification = {
                 "document_type": "File",
-                "document_name": file.name if file else filename,
-                "subject": _("Duplicate entry found for {0}").format(filename),
+                "document_name": file.name if file else None,
+                "subject": _("Duplicate entry found for {0}").format(file_urls),
                 "message": str(e),
             }
             return
@@ -79,9 +118,9 @@ def _parse(
         error_log = frappe.log_error(
             "Transaction Parser API Error",
             reference_doctype="File",
-            reference_name=file.name if file else filename,
+            reference_name=(file.name if file else None),
         )
-        message = _("Failed to generate {0} from {1}").format(_(transaction), filename)
+        message = _("Failed to generate {0} from {1}").format(_(transaction), file_urls)
 
         notification = {
             "document_type": error_log.doctype,
@@ -90,7 +129,7 @@ def _parse(
             "message": str(e),
         }
 
-        email_failure(user, message, str(e), file_url)
+        email_failure(user, message, str(e), file_urls)
 
     finally:
         if notification:

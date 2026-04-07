@@ -27,3 +27,19 @@ doc_events = {
         "on_update": "transaction_parser.transaction_parser.overrides.communication.on_update",
     }
 }
+
+pdf_processors = {
+    "OCRMyPDF": "transaction_parser.transaction_parser.utils.pdf_processor.OCRMyPDFProcessor",
+    "Docling": "transaction_parser.transaction_parser.utils.pdf_processor.DoclingPDFProcessor",
+}
+
+export_python_type_annotations = True
+
+scheduler_events = {
+    "cron": {
+        # at 2:00 am every day
+        "0 2 * * *": [
+            "transaction_parser.parser_benchmark.doctype.parser_benchmark_settings.parser_benchmark_settings.run_scheduled_benchmarks",
+        ],
+    }
+}

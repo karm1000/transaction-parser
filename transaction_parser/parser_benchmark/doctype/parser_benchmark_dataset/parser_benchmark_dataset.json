@@ -1,0 +1,321 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-03-16 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "column_break_title",
+  "files_section",
+  "files",
+  "is_multiple_files",
+  "section_break_txfs",
+  "transaction_type",
+  "column_break_xusg",
+  "country",
+  "section_break_sobg",
+  "company",
+  "column_break_qccq",
+  "party_type",
+  "party",
+  "processing_section",
+  "column_break_ai_models",
+  "openai_gpt_4o_mini",
+  "openai_gpt_4o",
+  "openai_gpt_5_mini",
+  "openai_gpt_5",
+  "column_break_leid",
+  "deepseek_chat",
+  "deepseek_reasoner",
+  "column_break_zgpf",
+  "google_gemini_flash_25",
+  "google_gemini_pro_25",
+  "pdf_processor_section",
+  "ocrmypdf",
+  "docling",
+  "column_break_pdf_processor",
+  "other_config_section",
+  "page_limit",
+  "column_break_jjht",
+  "expected_fields_section",
+  "expected_fields",
+  "section_break_bhsg",
+  "naming_series",
+  "column_break_aoce",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "column_break_title",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Enabled"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "is_multiple_files",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Multiple Files",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transaction_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Transaction Type",
+   "options": "Sales Order\nExpense",
+   "reqd": 1
+  },
+  {
+   "default": "Other",
+   "fieldname": "country",
+   "fieldtype": "Select",
+   "label": "Country",
+   "options": "India\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Party Type",
+   "options": "DocType"
+  },
+  {
+   "depends_on": "eval: doc.party_type",
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "fieldname": "files_section",
+   "fieldtype": "Section Break",
+   "label": "Files"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "files",
+   "fieldtype": "Table",
+   "label": "Files",
+   "options": "Parser Benchmark Dataset File",
+   "reqd": 1
+  },
+  {
+   "fieldname": "processing_section",
+   "fieldtype": "Section Break",
+   "label": "AI Models"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "deepseek_chat",
+   "fieldtype": "Check",
+   "label": "DeepSeek Chat"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "deepseek_reasoner",
+   "fieldtype": "Check",
+   "label": "DeepSeek Reasoner"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "openai_gpt_4o",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-4o"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "openai_gpt_4o_mini",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-4o-mini"
+  },
+  {
+   "fieldname": "column_break_ai_models",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "1",
+   "fieldname": "openai_gpt_5",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-5"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "openai_gpt_5_mini",
+   "fieldtype": "Check",
+   "label": "OpenAI gpt-5-mini"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "google_gemini_pro_25",
+   "fieldtype": "Check",
+   "label": "Google Gemini Pro-2.5"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "google_gemini_flash_25",
+   "fieldtype": "Check",
+   "label": "Google Gemini Flash-2.5"
+  },
+  {
+   "fieldname": "pdf_processor_section",
+   "fieldtype": "Section Break",
+   "label": "PDF Processors"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "1",
+   "fieldname": "ocrmypdf",
+   "fieldtype": "Check",
+   "label": "OCRMyPDF"
+  },
+  {
+   "fieldname": "column_break_pdf_processor",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "docling",
+   "fieldtype": "Check",
+   "label": "Docling"
+  },
+  {
+   "fieldname": "other_config_section",
+   "fieldtype": "Section Break",
+   "label": "Other Configuration"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "page_limit",
+   "fieldtype": "Int",
+   "label": "Page Limit",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "expected_fields_section",
+   "fieldtype": "Section Break",
+   "label": "Expected Fields"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Add one row per response key you want to score. Pick the key and paste only its expected JSON value.",
+   "fieldname": "expected_fields",
+   "fieldtype": "Table",
+   "label": "Expected Fields",
+   "options": "Parser Benchmark Expected Field"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_bhsg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "PAR-BM-DTS-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "PAR-BM-DTS-"
+  },
+  {
+   "fieldname": "column_break_leid",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_jjht",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_zgpf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_sobg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_qccq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Parser Benchmark Dataset",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_aoce",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_txfs",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "column_break_xusg",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [
+  {
+   "link_doctype": "Parser Benchmark Log",
+   "link_fieldname": "dataset"
+  }
+ ],
+ "modified": "2026-04-06 12:40:15.057627",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Dataset",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "party,is_multiple_files",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

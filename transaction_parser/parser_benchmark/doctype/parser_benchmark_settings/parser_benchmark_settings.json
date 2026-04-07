@@ -1,0 +1,135 @@
+{
+ "actions": [],
+ "creation": "2026-03-16 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "column_break_gpyw",
+  "schedule_section",
+  "monday",
+  "thursday",
+  "sunday",
+  "column_break_schedule",
+  "tuesday",
+  "friday",
+  "column_break_kaxp",
+  "wednesday",
+  "saturday",
+  "section_break_kvgf",
+  "token_costs",
+  "key_weights_section",
+  "key_weights"
+ ],
+ "fields": [
+  {
+   "fieldname": "token_costs",
+   "fieldtype": "Table",
+   "label": "Token Costs",
+   "options": "Parser Benchmark Token Cost"
+  },
+  {
+   "depends_on": "eval: doc.enabled",
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "default": "0",
+   "fieldname": "monday",
+   "fieldtype": "Check",
+   "label": "Monday"
+  },
+  {
+   "default": "0",
+   "fieldname": "tuesday",
+   "fieldtype": "Check",
+   "label": "Tuesday"
+  },
+  {
+   "default": "0",
+   "fieldname": "wednesday",
+   "fieldtype": "Check",
+   "label": "Wednesday"
+  },
+  {
+   "default": "0",
+   "fieldname": "thursday",
+   "fieldtype": "Check",
+   "label": "Thursday"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "friday",
+   "fieldtype": "Check",
+   "label": "Friday"
+  },
+  {
+   "default": "0",
+   "fieldname": "saturday",
+   "fieldtype": "Check",
+   "label": "Saturday"
+  },
+  {
+   "default": "0",
+   "fieldname": "sunday",
+   "fieldtype": "Check",
+   "label": "Sunday"
+  },
+  {
+   "fieldname": "column_break_kaxp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_kvgf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_gpyw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Scheduling Enabled"
+  },
+  {
+   "fieldname": "key_weights_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "key_weights",
+   "fieldtype": "Table",
+   "label": "Key Weights",
+   "options": "Parser Benchmark Key Weight"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-03-27 12:19:19.982234",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

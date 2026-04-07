@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "creation": "2026-03-27 00:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "key",
+  "total",
+  "column_break_jhbx",
+  "matched",
+  "accuracy",
+  "section_break_zimm",
+  "mismatches"
+ ],
+ "fields": [
+  {
+   "fieldname": "key",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Key",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "description": "Number of leaf fields whose value matched the expected result",
+   "fieldname": "matched",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Matched",
+   "read_only": 1
+  },
+  {
+   "description": "Total number of leaf fields compared for this key",
+   "fieldname": "total",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "accuracy",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Accuracy (%)",
+   "read_only": 1
+  },
+  {
+   "description": "List of fields that did not match, with expected and actual values",
+   "fieldname": "mismatches",
+   "fieldtype": "Code",
+   "label": "Mismatches",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_jhbx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_zimm",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-27 12:30:17.720466",
+ "modified_by": "Administrator",
+ "module": "Parser Benchmark",
+ "name": "Parser Benchmark Score Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

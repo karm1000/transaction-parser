@@ -23,6 +23,7 @@ class AIParser:
         is_enabled(self.settings)
 
         self.model = self._get_model(model)
+        self.ai_response = {}
         if not self.model:
             frappe.throw(_(f"AI Model: {model} not found"))
 
@@ -35,17 +36,27 @@ class AIParser:
         document_schema: dict,
         document_data: str,
         file_doc_name: str | None = None,
+        company: str | None = None,
     ) -> dict:
-        messages = self._build_messages(document_type, document_schema, document_data)
-        response = self.send_message(messages=messages, file_doc_name=file_doc_name)
-        return self.get_content(response)
+        messages = self._build_messages(
+            document_type, document_schema, document_data, company
+        )
+        self.ai_response = self.send_message(
+            messages=messages, file_doc_name=file_doc_name
+        )
+        return self.get_content(self.ai_response)
 
     def _build_messages(
-        self, document_type: str, document_schema: dict, document_data: str
+        self,
+        document_type: str,
+        document_schema: dict,
+        document_data: str,
+        company: str | None = None,
     ) -> tuple:
         """Build the message structure for AI API call."""
+        company_info = self._get_company_info(company) if company else ""
         system_prompt = get_system_prompt(document_schema)
-        user_prompt = get_user_prompt(document_type, document_data)
+        user_prompt = get_user_prompt(document_type, document_data, company_info)
 
         return (
             {
@@ -57,6 +68,23 @@ class AIParser:
                 "content": user_prompt,
             },
         )
+
+    @staticmethod
+    def _get_company_info(company: str) -> str:
+        """Build a company context string with name and address if available."""
+        from frappe.contacts.doctype.address.address import get_company_address
+        from frappe.utils import strip_html
+
+        info = f"Company: {company}"
+
+        address = get_company_address(company)
+        if address and address.company_address_display:
+            address_text = strip_html(address.company_address_display).strip()
+
+            if address_text:
+                info += f"\nLocated at: {address_text}"
+
+        return info
 
     def send_message(self, messages: tuple, file_doc_name: str | None = None) -> dict:
         """Send messages to AI API and handle the response."""
@@ -81,16 +109,17 @@ class AIParser:
         finally:
             enqueue_integration_request(**log)
 
-    def _create_log_entry(self, file_doc_name: str | None) -> frappe._dict:
+    def _create_log_entry(self, doc_name: str | None) -> frappe._dict:
         """Create a log entry for the API call."""
         log = frappe._dict(url=self.model.base_url)
-        if file_doc_name:
-            log.update(
-                {
-                    "reference_doctype": "File",
-                    "reference_name": file_doc_name,
-                }
-            )
+
+        log.update(
+            {
+                "reference_doctype": "File",
+                "reference_name": doc_name,
+            }
+        )
+
         return log
 
     def _make_api_call(self, messages: tuple) -> Any:
@@ -132,7 +161,7 @@ class AIParser:
             _("API Key not found for model {0}").format(self.model.service_provider)
         )
 
-    def get_content(self, response: dict) -> dict | str:
+    def get_content(self, response: dict) -> dict:
         """Extract content from API response."""
         content = response["choices"][0]["message"]["content"]
 

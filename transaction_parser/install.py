@@ -20,7 +20,7 @@ CUSTOM_FIELDS = {
             "label": "Is Created By Transaction Parser",
             "read_only": 1,
             "insert_after": "is_internal_supplier",
-        }
+        },
     ],
     "Communication": [
         {
