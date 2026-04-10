@@ -7,33 +7,28 @@ from transaction_parser.transaction_parser.utils.__init__ import pretty_json
 
 SERVICE_NAME = "Transaction Parser API"
 
+PRETTY_JSON_FIELDS = [
+    "request_headers",
+    "data",
+    "output",
+    "error",
+]
+
 
 def enqueue_integration_request(**kwargs):
     frappe.enqueue(create_integration_request, **kwargs)
 
 
-def create_integration_request(
-    url=None,
-    request_id=None,
-    request_headers=None,
-    data=None,
-    output=None,
-    error=None,
-    reference_doctype=None,
-    reference_name=None,
-):
+def create_integration_request(**kwargs):
+    for field in PRETTY_JSON_FIELDS:
+        if field in kwargs:
+            kwargs[field] = pretty_json(kwargs[field])
+
     return frappe.get_doc(
         {
             "doctype": "Integration Request",
             "integration_request_service": SERVICE_NAME,
-            "request_id": request_id,
-            "url": url,
-            "request_headers": pretty_json(request_headers),
-            "data": pretty_json(data),
-            "output": pretty_json(output),
-            "error": pretty_json(error),
-            "status": "Failed" if error else "Completed",
-            "reference_doctype": reference_doctype,
-            "reference_docname": reference_name,
+            "status": "Failed" if kwargs.get("error") else "Completed",
+            **kwargs,
         }
     ).insert(ignore_permissions=True)
