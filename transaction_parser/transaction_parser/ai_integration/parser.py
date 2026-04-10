@@ -38,6 +38,14 @@ class AIParser:
         file_doc_name: str | None = None,
         company: str | None = None,
     ) -> dict:
+        self._request_data = (
+            f"Document Type: {document_type}\n\n"
+            f"---\n"
+            f"Schema:\n\n{frappe.as_json(document_schema)}\n\n"
+            f"---\n"
+            f"Parsed File:\n\n{document_data}"
+        )
+
         messages = self._build_messages(
             document_type, document_schema, document_data, company
         )
@@ -117,6 +125,7 @@ class AIParser:
             {
                 "reference_doctype": "File",
                 "reference_name": doc_name,
+                "data": getattr(self, "_request_data", None),
             }
         )
 
