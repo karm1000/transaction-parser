@@ -10,11 +10,12 @@ class FieldType:
 
     required: bool
 
-    def is_empty(self, value: Any) -> bool:
+    @staticmethod
+    def is_empty(value: Any) -> bool:
         return (
             value is None
             or value == ""
-            or (isinstance(value, list | dict) and len(value) == 0)
+            or (isinstance(value, list | set | tuple | dict) and len(value) == 0)
         )
 
 
@@ -156,8 +157,7 @@ class ResponseMerger:
                 self._merge_list(field_type, target, key, source_value)
 
     def _merge_primitive(self, target: dict, key: str, source_value: Any) -> None:
-        current = target.get(key)
-        if (current is None or current == "") and source_value:
+        if FieldType.is_empty(target.get(key)):
             target[key] = source_value
 
     def _merge_object(
