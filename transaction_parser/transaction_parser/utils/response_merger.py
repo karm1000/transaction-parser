@@ -143,7 +143,7 @@ class ResponseMerger:
         for key, field_type in fields.items():
             source_value = source.get(key)
 
-            if source_value is None:
+            if field_type.is_empty(source_value):
                 continue
 
             if isinstance(field_type, PrimitiveField):
