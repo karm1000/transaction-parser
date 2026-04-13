@@ -6,7 +6,7 @@ import pymupdf
 from frappe import _
 from frappe.core.doctype.file.file import File
 
-DEFAULT_PDF_PROCESSOR = "OCRMyPDF"
+DEFAULT_PDF_PROCESSOR = "PDFtoText"
 
 
 class PDFProcessor(ABC):
@@ -138,6 +138,24 @@ class DoclingPDFProcessor(PDFProcessor):
             )
 
         return DoclingPDFProcessor._converter
+
+
+class PDFtoTextProcessor(PDFProcessor):
+    """
+    PDF processor using pdftotext for layout-preserving text extraction.
+    """
+
+    def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
+        file = self.get_sanitized_file(file, page_limit)
+        return self.get_text(file)
+
+    def get_text(self, file: io.BytesIO) -> str:
+        import pdftotext
+
+        file.seek(0)
+        pdf = pdftotext.PDF(file, physical=True)
+
+        return "\n\n".join(page.strip() for page in pdf if page.strip())
 
 
 class OCRMyPDFProcessor(PDFProcessor):
