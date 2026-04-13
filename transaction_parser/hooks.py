@@ -28,12 +28,6 @@ doc_events = {
     }
 }
 
-pdf_processors = {
-    "PDFtoText": "transaction_parser.transaction_parser.utils.pdf_processor.PDFtoTextProcessor",
-    "OCRMyPDF": "transaction_parser.transaction_parser.utils.pdf_processor.OCRMyPDFProcessor",
-    "Docling": "transaction_parser.transaction_parser.utils.pdf_processor.DoclingPDFProcessor",
-}
-
 export_python_type_annotations = True
 
 scheduler_events = {

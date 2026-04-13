@@ -200,9 +200,20 @@ class OCRMyPDFProcessor(PDFProcessor):
         return temp_file
 
 
+BUILTIN_PDF_PROCESSORS = {
+    "PDFtoText": "transaction_parser.transaction_parser.utils.pdf_processor.PDFtoTextProcessor",
+    "OCRMyPDF": "transaction_parser.transaction_parser.utils.pdf_processor.OCRMyPDFProcessor",
+    "Docling": "transaction_parser.transaction_parser.utils.pdf_processor.DoclingPDFProcessor",
+}
+
+
 def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     """
     Factory function to get a PDF processor by name.
+
+    Resolution order:
+    1. Check `pdf_processors` hook
+    2. Fall back to built-in processors
 
     Usage:
 
@@ -211,7 +222,7 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     text = processor.process(file, page_limit=5)
     ```
 
-    To register a custom processor from another app, add to its hooks.py:
+    To register or override a processor from another app, add to its hooks.py:
 
     ```
     pdf_processors = {
@@ -225,16 +236,20 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
             or DEFAULT_PDF_PROCESSOR
         )
 
-    processors = frappe.get_hooks("pdf_processors") or {}
+    # hooks override takes precedence
+    hook_processors = frappe.get_hooks("pdf_processors") or {}
+    class_path = (hook_processors.get(name) or [None])[-1]
 
-    # [-1] → last in resolution order app's overrides will take precedence
-    class_path = (processors.get(name) or [None])[-1]
+    # fall back to built-in processors
+    if not class_path:
+        class_path = BUILTIN_PDF_PROCESSORS.get(name)
 
     if not class_path:
+        available = get_available_pdf_processors()
         frappe.throw(
             title=_("Unsupported PDF Processor"),
             msg=_("PDF Processor '{0}' is not supported. <br>Choose from: {1}").format(
-                name, ", ".join(processors.keys())
+                name, ", ".join(available)
             ),
         )
 
@@ -242,6 +257,6 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
 
 
 def get_available_pdf_processors() -> list[str]:
-    """Return names of all registered PDF processors from hooks."""
-    processors = frappe.get_hooks("pdf_processors") or {}
-    return list(processors.keys())
+    """Return names of all registered PDF processors (built-in + hooks)."""
+    hook_processors = frappe.get_hooks("pdf_processors") or {}
+    return list({*BUILTIN_PDF_PROCESSORS, *hook_processors})
