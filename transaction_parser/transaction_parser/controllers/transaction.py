@@ -33,14 +33,11 @@ class Transaction:
 
     def generate(
         self,
-        files,
+        files: list,
         ai_model: str | None = None,
         page_limit: int | None = None,
     ):
         self.initialize()
-
-        if isinstance(files, str):
-            files = [files]
 
         self.files = files
         self.ai_model = ai_model
