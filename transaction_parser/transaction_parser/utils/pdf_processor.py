@@ -194,25 +194,13 @@ class OCRMyPDFProcessor(PDFProcessor):
                 ),
             )
 
-        doc = pymupdf.open(stream=file, filetype="pdf")
-        pages_to_ocr = [
-            str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
-        ]
-
-        doc.close()
         file.seek(0)
-
-        if not pages_to_ocr:
-            return file
-
-        pages = ",".join(pages_to_ocr)
 
         temp_file = io.BytesIO()
 
         ocrmypdf.ocr(
             input_file=file,
             output_file=temp_file,
-            pages=pages,
             progress_bar=False,
             rotate_pages=True,
             force_ocr=True,
