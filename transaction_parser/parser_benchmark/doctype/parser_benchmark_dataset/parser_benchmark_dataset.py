@@ -18,6 +18,7 @@ AI_MODEL_FIELD_MAP = {
 }
 
 PDF_PROCESSOR_FIELD_MAP = {
+    "pdftotext": "PDFtoText",
     "ocrmypdf": "OCRMyPDF",
     "docling": "Docling",
 }
@@ -62,6 +63,7 @@ class ParserBenchmarkDataset(Document):
         page_limit: DF.Int
         party: DF.DynamicLink | None
         party_type: DF.Link | None
+        pdftotext: DF.Check
         transaction_type: DF.Literal["Sales Order", "Expense"]
     # end: auto-generated types
 
