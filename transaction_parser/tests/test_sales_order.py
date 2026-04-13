@@ -6,6 +6,7 @@ import re
 from unittest.mock import Mock, patch
 
 import frappe
+from frappe.core.doctype.file.file import File
 from frappe.tests.utils import FrappeTestCase, change_settings
 from frappe.utils import add_days, today
 
@@ -116,10 +117,12 @@ class TestSalesOrder(FrappeTestCase):
         cls.settings.reload()
 
         # Create test file mock
-        cls.file_mock = Mock()
-        cls.file_mock.name = "test_po_document.pdf"
-        cls.file_mock.file_name = "test_po_document.pdf"
-        cls.file_mock.file_type = "PDF"
+        file_mock = Mock(spec=File)
+        file_mock.name = "test_po_document.pdf"
+        file_mock.file_name = "test_po_document.pdf"
+        file_mock.file_type = "PDF"
+
+        cls.files_mock = [file_mock]
 
         # Sample parsed data structure
         cls.sample_data = json.loads(json.dumps(SAMPLE_DATA), object_hook=frappe._dict)
@@ -317,7 +320,7 @@ class TestSalesOrder(FrappeTestCase):
         controller = SalesOrder(company="_Test Company", party="_Test TP Customer")
 
         # Mock set_missing_values to avoid complex calculations
-        doc = controller.generate(self.file_mock)
+        doc = controller.generate(self.files_mock)
 
         self.assertIsNotNone(doc)
         self.assertEqual(doc.doctype, "Sales Order")
