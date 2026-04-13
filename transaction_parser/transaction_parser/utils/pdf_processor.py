@@ -6,8 +6,6 @@ import pymupdf
 from frappe import _
 from frappe.core.doctype.file.file import File
 
-DEFAULT_PDF_PROCESSOR = "PDFtoText"
-
 
 class PDFProcessor(ABC):
     """
@@ -97,8 +95,18 @@ class DoclingPDFProcessor(PDFProcessor):
 
     _converter = None
 
+    # TODO: Give detail of install `docling` system dependency and opencv-python-headless for OCR
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
-        from docling.datamodel.base_models import ConversionStatus, DocumentStream
+        try:
+            from docling.datamodel.base_models import ConversionStatus, DocumentStream
+        except ImportError:
+            frappe.throw(
+                title=_("Missing Dependency"),
+                msg=_(
+                    "docling is not installed.<br>"
+                    "Install it with: <code>bench pip install transaction_parser[docling]</code>"
+                ),
+            )
 
         file = self.get_sanitized_file(file, page_limit)
 
@@ -125,11 +133,15 @@ class DoclingPDFProcessor(PDFProcessor):
     def _get_converter(self):
         if DoclingPDFProcessor._converter is None:
             from docling.datamodel.base_models import InputFormat
-            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.datamodel.pipeline_options import (
+                EasyOcrOptions,
+                PdfPipelineOptions,
+            )
             from docling.document_converter import DocumentConverter, PdfFormatOption
 
             pipeline_options = PdfPipelineOptions()
-            pipeline_options.do_ocr = False  # TODO: OCR Setup
+            pipeline_options.do_ocr = True
+            pipeline_options.ocr_options = EasyOcrOptions()
 
             DoclingPDFProcessor._converter = DocumentConverter(
                 format_options={
@@ -169,8 +181,18 @@ class OCRMyPDFProcessor(PDFProcessor):
 
         return self.get_text(file)
 
+    # TODO: Give detail of install `tesseract-ocr` system dependency
     def apply_ocr(self, file: io.BytesIO) -> io.BytesIO:
-        import ocrmypdf
+        try:
+            import ocrmypdf
+        except ImportError:
+            frappe.throw(
+                title=_("Missing Dependency"),
+                msg=_(
+                    "ocrmypdf is not installed.<br>"
+                    "Install it with: <code>bench pip install transaction_parser[ocrmypdf]</code>"
+                ),
+            )
 
         doc = pymupdf.open(stream=file, filetype="pdf")
         pages_to_ocr = [
@@ -199,6 +221,8 @@ class OCRMyPDFProcessor(PDFProcessor):
         temp_file.seek(0)
         return temp_file
 
+
+DEFAULT_PDF_PROCESSOR = "PDFtoText"
 
 BUILTIN_PDF_PROCESSORS = {
     "PDFtoText": "transaction_parser.transaction_parser.utils.pdf_processor.PDFtoTextProcessor",
