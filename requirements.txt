@@ -1,4 +1,0 @@
-pre-commit
-openai
-ocrmypdf
-rapidfuzz
