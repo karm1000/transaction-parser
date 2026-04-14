@@ -49,4 +49,13 @@ INDIA_SPECIFIC_CUSTOM_FIELDS = {
 def after_install():
     create_custom_fields(CUSTOM_FIELDS)
     if "india_compliance" in frappe.get_installed_apps():
-        create_custom_fields(INDIA_SPECIFIC_CUSTOM_FIELDS)
+        create_india_specific_custom_fields()
+
+
+def after_app_install(app_name):
+    if app_name == "india_compliance":
+        create_india_specific_custom_fields()
+
+
+def create_india_specific_custom_fields():
+    create_custom_fields(INDIA_SPECIFIC_CUSTOM_FIELDS)
