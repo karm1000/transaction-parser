@@ -15,8 +15,8 @@ dependencies = [
 
 [project.optional-dependencies]
 ocrmypdf = ["ocrmypdf~=16.10.0"]
-docling = ["docling~=2.75.0"]
-all = ["ocrmypdf~=16.10.0", "docling~=2.75.0"]
+docling = ["docling~=2.75.0", "easyocr~=1.7.2"]
+all = ["ocrmypdf~=16.10.0", "docling~=2.75.0", "easyocr~=1.7.2"]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]
