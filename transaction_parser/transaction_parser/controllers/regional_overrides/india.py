@@ -193,6 +193,9 @@ class IndiaExpense(Expense, IndiaTransaction):
         return self.create_supplier()
 
     def search_supplier_based_on_gstin(self, gstin):
+        if not gstin:
+            return
+
         return frappe.db.get_value("Supplier", {"gstin": gstin})
 
     def create_supplier(self) -> str | None:
