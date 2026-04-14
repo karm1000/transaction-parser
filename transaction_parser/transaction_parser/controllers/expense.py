@@ -206,7 +206,7 @@ class Expense(Transaction):
         items = []
         mapped_indices = set()
         is_price_inclusive_of_taxes = any(
-            item.price_inclusive_of_taxes for item in self.data.item_list
+            item.is_price_inclusive_of_taxes for item in self.data.item_list
         )
         self.doc.apply_discount_on = (
             "Grand Total" if is_price_inclusive_of_taxes else "Net Total"
