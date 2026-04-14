@@ -107,6 +107,9 @@ class Expense(Transaction):
 
         # search
         for key, party in company_identification_order:
+            if not party:
+                continue
+
             if found := self.search_party(party, party_type, fieldname):
                 self.company_found_against = key
                 return found
@@ -114,6 +117,9 @@ class Expense(Transaction):
         # guess
         party_names = frappe.get_all(party_type, pluck="name")
         for key, party in company_identification_order:
+            if not party:
+                continue
+
             if found := self.guess_party(party, party_type, party_names):
                 self.company_found_against = key
                 return found
@@ -134,7 +140,7 @@ class Expense(Transaction):
 
         # search
         for key, party in supplier_identification_order:
-            if key == self.company_found_against:
+            if not party or key == self.company_found_against:
                 continue
 
             if found := self.search_party(party, party_type, fieldname):
@@ -146,7 +152,7 @@ class Expense(Transaction):
             frappe.get_all(party_type, fields=["name", fieldname], as_list=True)
         )
         for key, party in supplier_identification_order:
-            if key == self.company_found_against:
+            if not party or key == self.company_found_against:
                 continue
 
             if found := self.guess_party(party, party_type, party_names):
@@ -166,6 +172,9 @@ class Expense(Transaction):
             else self.data.supplier
         )
 
+        if not address_details:
+            return None
+
         return self.get_address(
             frappe._dict({**address_details, "name": self.doc.company}),
             "Company",
@@ -178,6 +187,9 @@ class Expense(Transaction):
             if self.supplier_found_against == "supplier"
             else (self.data.company.billing, self.data.company.shipping)
         )
+
+        # Filter out None values
+        supplier_address_details = [d for d in supplier_address_details if d]
 
         for detail in supplier_address_details:
             if found := self.get_address(
@@ -194,7 +206,7 @@ class Expense(Transaction):
         items = []
         mapped_indices = set()
         is_price_inclusive_of_taxes = any(
-            item.price_inclusive_of_taxes for item in self.data.item_list
+            item.is_price_inclusive_of_taxes for item in self.data.item_list
         )
         self.doc.apply_discount_on = (
             "Grand Total" if is_price_inclusive_of_taxes else "Net Total"
@@ -393,6 +405,9 @@ class Expense(Transaction):
 
     def get_item_conditions_map(self):
         tax_accounts = self.get_input_tax_accounts()
+        if not tax_accounts:
+            return {}
+
         item_conditions_map = {}
         for idx, row in enumerate(self.data.item_list):
             accounts = {}

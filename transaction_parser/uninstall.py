@@ -1,14 +1,21 @@
 import frappe
 
-FIELDS_TO_DELETE = {
-    "Transaction Parser Settings": ["in_auto_create_supplier"],
-    "Sales Order": ["is_created_by_transaction_parser"],
-    "Purchase Invoice": ["is_created_by_transaction_parser"],
-}
+from transaction_parser.install import CUSTOM_FIELDS, INDIA_SPECIFIC_CUSTOM_FIELDS
 
 
 def before_uninstall():
-    for doctype, fieldnames in FIELDS_TO_DELETE.items():
+    delete_custom_fields(CUSTOM_FIELDS)
+    delete_custom_fields(INDIA_SPECIFIC_CUSTOM_FIELDS)
+
+
+def before_app_uninstall(app_name):
+    if app_name == "india_compliance":
+        delete_custom_fields(INDIA_SPECIFIC_CUSTOM_FIELDS)
+
+
+def delete_custom_fields(custom_fields):
+    for doctype, fields in custom_fields.items():
+        fieldnames = [field["fieldname"] for field in fields]
         frappe.db.delete(
             "Custom Field", {"dt": doctype, "fieldname": ("in", fieldnames)}
         )
