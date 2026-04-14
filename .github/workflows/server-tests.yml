@@ -9,7 +9,6 @@ on:
       app_name:
         type: string
 
-
   pull_request:
     paths-ignore:
       - "**.css"
@@ -71,7 +70,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/*requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
