@@ -130,6 +130,79 @@ When enabled in settings, the system can automatically create suppliers:
    * Enable "Auto Create Supplier" in Transaction Parser Settings
    * Requires valid GSTIN in the invoice
 
+## PDF Processor Setup
+
+* Transaction Parser supports three PDF processors for text extraction.
+* Only **PDFtoText** (the default) is installed as a required dependency.
+* The other two are optional.
+
+### Installing Optional PDF Processors
+
+```bash
+# Install OCRMyPDF
+env/bin/pip install -e "apps/transaction_parser[ocrmypdf]"
+
+# Install Docling
+env/bin/pip install -e "apps/transaction_parser[docling]"
+
+# Install all optional processors
+env/bin/pip install -e "apps/transaction_parser[all]"
+```
+
+### 1. PDFtoText (Default)
+
+Layout-preserving text extraction using [pdftotext](https://github.com/jalan/pdftotext).
+
+> [!IMPORTANT]
+> Install OS dependencies **before** running `bench setup requirements` or `pip install`, otherwise the `pdftotext` Python package will fail to build.
+
+**OS Dependencies (Debian/Ubuntu):**
+
+```bash
+sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev
+```
+
+> For other operating systems, see [pdftotext OS dependencies](https://github.com/jalan/pdftotext#os-dependencies).
+
+### 2. OCRMyPDF (Optional)
+
+OCR-based text extraction using [OCRmyPDF](https://github.com/ocrmypdf/OCRmyPDF). Useful for scanned or image-based PDFs.
+
+**OS Dependencies (Debian/Ubuntu):**
+
+```bash
+sudo apt-get install -y tesseract-ocr ghostscript
+```
+
+### 3. Docling (Optional)
+
+Advanced document understanding using [Docling](https://docling-project.github.io/docling/) with EasyOCR for OCR support.
+
+> See [Docling OCR engines](https://docling-project.github.io/docling/getting_started/installation/#ocr-engines) for more details.
+
+**Post-install fix for headless servers:**
+
+After installing the `docling` extra, replace `opencv-python` with the headless variant:
+
+```bash
+bench pip uninstall opencv-python
+bench pip install opencv-python-headless
+```
+
+This is required because `opencv-python` depends on `libGL.so.1`, which is unavailable on headless servers:
+
+```bash
+ImportError: libGL.so.1: cannot open shared object file: No such file or directory
+```
+
+### Summary
+
+| Processor | Dependency Type | OS Packages Required                                        | OCR |
+|:----------|:----------------|:------------------------------------------------------------|:----|
+| PDFtoText | **Required**    | `build-essential libpoppler-cpp-dev pkg-config python3-dev` | No  |
+| OCRMyPDF  | Optional        | `tesseract-ocr ghostscript`                                 | Yes |
+| Docling   | Optional        | None                                                        | Yes |
+
 ## License
 
 [GNU General Public License (v3)](https://github.com/resilient-tech/transaction-parser/blob/version-15/license.txt)
