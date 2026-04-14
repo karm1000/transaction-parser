@@ -225,6 +225,9 @@ class IndiaExpense(Expense, IndiaTransaction):
                     "pincode": address.pincode,
                 }
             )
+            supplier.flags.ignore_mandatory = True
+            supplier.flags.ignore_links = True
+
             supplier.save(ignore_permissions=True)
             create_primary_address(supplier)
 
