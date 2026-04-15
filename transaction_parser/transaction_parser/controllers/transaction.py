@@ -2,6 +2,7 @@ import erpnext
 import frappe
 from erpnext.setup.utils import get_exchange_rate
 from erpnext.stock.get_item_details import get_item_details
+from frappe import _
 from rapidfuzz import fuzz, process
 
 from transaction_parser.transaction_parser.ai_integration.parser import AIParser
@@ -33,14 +34,17 @@ class Transaction:
 
     def generate(
         self,
-        files,
+        files: list,
         ai_model: str | None = None,
         page_limit: int | None = None,
     ):
-        self.initialize()
+        if not files:
+            frappe.throw(
+                msg=_("Please attach at least one file to parse"),
+                title=_("No files attached"),
+            )
 
-        if isinstance(files, str):
-            files = [files]
+        self.initialize()
 
         self.files = files
         self.ai_model = ai_model
@@ -323,9 +327,7 @@ class Transaction:
         self.doc.flags.ignore_links = True
 
     def _attach_file(self) -> None:
-        files_to_attach = self.files if isinstance(self.files, list) else [self.files]
-
-        for file_doc in files_to_attach:
+        for file_doc in self.files:
             file_doc.attached_to_doctype = self.DOCTYPE
             file_doc.attached_to_name = self.doc.name
             file_doc.save()
