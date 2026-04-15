@@ -6,8 +6,11 @@ app_email = "info@resilient.tech"
 app_license = "GNU General Public License (v3)"
 required_apps = ["frappe/erpnext"]
 
-before_uninstall = "transaction_parser.uninstall.before_uninstall"
 after_install = "transaction_parser.install.after_install"
+before_uninstall = "transaction_parser.uninstall.before_uninstall"
+
+after_app_install = "transaction_parser.install.after_app_install"
+before_app_uninstall = "transaction_parser.uninstall.before_app_uninstall"
 
 before_tests = "transaction_parser.tests.before_tests"
 

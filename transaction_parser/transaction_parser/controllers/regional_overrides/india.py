@@ -177,7 +177,7 @@ class IndiaExpense(Expense, IndiaTransaction):
         )
 
         for key, party in supplier_identification_order:
-            if key == self.company_found_against:
+            if not party or key == self.company_found_against:
                 continue
 
             if found := self.search_supplier_based_on_gstin(party.gstin):
@@ -193,10 +193,17 @@ class IndiaExpense(Expense, IndiaTransaction):
         return self.create_supplier()
 
     def search_supplier_based_on_gstin(self, gstin):
+        if not gstin:
+            return
+
         return frappe.db.get_value("Supplier", {"gstin": gstin})
 
     def create_supplier(self) -> str | None:
+        if not self.data.supplier:
+            return
+
         gstin = self.data.supplier.gstin
+
         if not gstin:
             return
 
@@ -221,6 +228,9 @@ class IndiaExpense(Expense, IndiaTransaction):
                     "pincode": address.pincode,
                 }
             )
+            supplier.flags.ignore_mandatory = True
+            supplier.flags.ignore_links = True
+
             supplier.save(ignore_permissions=True)
             create_primary_address(supplier)
 
