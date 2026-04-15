@@ -42,6 +42,7 @@ class TransactionParserSettings(Document):
             "OpenAI gpt-5-mini",
             "Google Gemini Pro-2.5",
             "Google Gemini Flash-2.5",
+            "Claude Haiku-4.5",
         ]
         enabled: DF.Check
         incoming_email_accounts: DF.Table[TransactionParserEmailAccount]

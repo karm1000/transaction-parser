@@ -111,6 +111,25 @@ class GeminiFlash(Model):
     response_format: str = ResponseFormat.JSON.value
 
 
+### Anthropic Models
+
+
+@dataclass
+class ClaudeHaiku(Model):
+    """Anthropic Claude Haiku 4.5 model configuration.
+
+    - `response_format` is set to JSON but JSON output is not guaranteed,
+    because Anthropic's compatibility layer silently ignores the `response_format` parameter.
+
+    - https://platform.claude.com/docs/en/api/openai-sdk
+    """
+
+    name: str = "claude-haiku-4-5"
+    service_provider: str = "Anthropic"
+    base_url: str = "https://api.anthropic.com/v1/"
+    response_format: str = ResponseFormat.JSON.value
+
+
 ### Model Registry
 
 MODELS = {
@@ -122,4 +141,5 @@ MODELS = {
     "OpenAI gpt-5-mini": OpenAIGPT5Mini(),
     "Google Gemini Pro-2.5": GeminiPro(),
     "Google Gemini Flash-2.5": GeminiFlash(),
+    "Claude Haiku-4.5": ClaudeHaiku(),
 }
