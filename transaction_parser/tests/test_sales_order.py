@@ -223,7 +223,7 @@ class TestSalesOrder(FrappeTestCase):
         controller.doc = frappe.get_doc({"doctype": "Sales Order"})
 
         self.assertRaisesRegex(
-            frappe.ValidationError,
+            frappe.DuplicateEntryError,
             re.compile(r"Duplicate Sales Order .* found with PO number .*"),
             controller.set_details,
         )
