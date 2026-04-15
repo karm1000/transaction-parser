@@ -21,8 +21,9 @@ _AI_MODEL_ORDER = {
     "OpenAI gpt-4o-mini": 3,
     "Google Gemini Pro-2.5": 4,
     "Google Gemini Flash-2.5": 5,
-    "DeepSeek Reasoner": 6,
-    "DeepSeek Chat": 7,
+    "Claude Haiku-4.5": 6,
+    "DeepSeek Reasoner": 7,
+    "DeepSeek Chat": 8,
 }
 
 _PDF_PROCESSOR_ORDER = {
