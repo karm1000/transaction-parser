@@ -129,9 +129,11 @@ class AIParser:
         request_params = {
             "model": self.model.name,
             "messages": messages,
-            "response_format": {"type": self.model.response_format},
             "stream": False,
         }
+
+        if self.model.supports_response_format:
+            request_params["response_format"] = {"type": self.model.response_format}
 
         # Only include temperature if the model supports it
         if self.model.supports_temperature:

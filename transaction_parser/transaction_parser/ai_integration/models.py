@@ -18,6 +18,7 @@ class Model:
     base_url: str
     response_format: str
     supports_temperature: bool = True
+    supports_response_format: bool = True
 
 
 ### DeepSeek Models
@@ -111,6 +112,27 @@ class GeminiFlash(Model):
     response_format: str = ResponseFormat.JSON.value
 
 
+### Anthropic Models
+
+
+@dataclass
+class ClaudeHaiku(Model):
+    """Anthropic Claude Haiku 4.5 model configuration.
+
+    - `response_format` is not sent because Anthropic's compatibility layer
+    rejects `json_object` and silently ignores other values.
+    - JSON output is not guaranteed.
+
+    - https://platform.claude.com/docs/en/api/openai-sdk
+    """
+
+    name: str = "claude-haiku-4-5"
+    service_provider: str = "Anthropic"
+    base_url: str = "https://api.anthropic.com/v1/"
+    response_format: str = ResponseFormat.TEXT.value
+    supports_response_format: bool = False
+
+
 ### Model Registry
 
 MODELS = {
@@ -122,4 +144,5 @@ MODELS = {
     "OpenAI gpt-5-mini": OpenAIGPT5Mini(),
     "Google Gemini Pro-2.5": GeminiPro(),
     "Google Gemini Flash-2.5": GeminiFlash(),
+    "Claude Haiku-4.5": ClaudeHaiku(),
 }

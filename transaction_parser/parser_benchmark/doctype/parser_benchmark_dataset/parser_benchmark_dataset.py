@@ -15,6 +15,7 @@ AI_MODEL_FIELD_MAP = {
     "openai_gpt_5_mini": "OpenAI gpt-5-mini",
     "google_gemini_pro_25": "Google Gemini Pro-2.5",
     "google_gemini_flash_25": "Google Gemini Flash-2.5",
+    "claude_haiku_45": "Claude Haiku-4.5",
 }
 
 PDF_PROCESSOR_FIELD_MAP = {
@@ -43,6 +44,7 @@ class ParserBenchmarkDataset(Document):
         )
 
         amended_from: DF.Link | None
+        claude_haiku_45: DF.Check
         company: DF.Link | None
         country: DF.Literal["India", "Other"]
         deepseek_chat: DF.Check

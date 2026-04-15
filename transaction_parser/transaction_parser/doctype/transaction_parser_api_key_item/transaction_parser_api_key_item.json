@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "service_provider",
+  "column_break_ogyu",
   "api_key"
  ],
  "fields": [
@@ -15,7 +16,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Service Provider",
-   "options": "DeepSeek\nOpenAI\nGoogle",
+   "options": "DeepSeek\nOpenAI\nGoogle\nAnthropic",
    "reqd": 1
   },
   {
@@ -24,18 +25,23 @@
    "in_list_view": 1,
    "label": "API Key",
    "reqd": 1
+  },
+  {
+   "fieldname": "column_break_ogyu",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-04-01 13:08:21.049741",
+ "modified": "2026-04-15 12:02:09.481616",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser API Key Item",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

@@ -31,6 +31,8 @@
   "column_break_zgpf",
   "google_gemini_flash_25",
   "google_gemini_pro_25",
+  "column_break_clde",
+  "claude_haiku_45",
   "pdf_processor_section",
   "pdftotext",
   "ocrmypdf",
@@ -184,6 +186,17 @@
    "label": "Google Gemini Flash-2.5"
   },
   {
+   "fieldname": "column_break_clde",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "claude_haiku_45",
+   "fieldtype": "Check",
+   "label": "Claude Haiku-4.5"
+  },
+  {
    "fieldname": "pdf_processor_section",
    "fieldtype": "Section Break",
    "label": "PDF Processors"
@@ -301,7 +314,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-04-13 09:37:12.298195",
+ "modified": "2026-04-15 12:00:20.190290",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

@@ -28,6 +28,7 @@ class ParserBenchmarkLog(Document):
             "OpenAI gpt-5-mini",
             "Google Gemini Pro-2.5",
             "Google Gemini Flash-2.5",
+            "Claude Haiku-4.5",
         ]
         ai_parse_time: DF.Float
         ai_response: DF.Code | None
