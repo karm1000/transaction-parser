@@ -32,6 +32,7 @@
   "google_gemini_flash_25",
   "google_gemini_pro_25",
   "pdf_processor_section",
+  "pdftotext",
   "ocrmypdf",
   "docling",
   "column_break_pdf_processor",
@@ -190,6 +191,13 @@
   {
    "allow_on_submit": 1,
    "default": "1",
+   "fieldname": "pdftotext",
+   "fieldtype": "Check",
+   "label": "PDFtoText"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
    "fieldname": "ocrmypdf",
    "fieldtype": "Check",
    "label": "OCRMyPDF"
@@ -293,7 +301,7 @@
    "link_fieldname": "dataset"
   }
  ],
- "modified": "2026-04-06 12:40:15.057627",
+ "modified": "2026-04-13 09:37:12.298195",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Dataset",

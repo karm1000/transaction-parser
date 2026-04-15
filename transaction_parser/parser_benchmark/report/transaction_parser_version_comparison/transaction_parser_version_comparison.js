@@ -12,7 +12,7 @@ const AI_MODELS = [
 	"Google Gemini Flash-2.5",
 ];
 
-const PDF_PROCESSORS = ["OCRMyPDF", "Docling"];
+const PDF_PROCESSORS = ["PDFtoText", "OCRMyPDF", "Docling"];
 
 const PARTY_TYPE_MAP = {
 	"Sales Order": "Customer",

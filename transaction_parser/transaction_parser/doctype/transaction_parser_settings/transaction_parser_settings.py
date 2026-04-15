@@ -51,7 +51,7 @@ class TransactionParserSettings(Document):
         parse_party_emails: DF.Check
         party_emails: DF.Table[TransactionParserPartyEmail]
         party_schema: DF.JSON | None
-        pdf_processor: DF.Literal["OCRMyPDF", "Docling"]
+        pdf_processor: DF.Literal["PDFtoText", "OCRMyPDF", "Docling"]
         process_one_document_per_communication: DF.Check
         tax_schema: DF.JSON | None
 

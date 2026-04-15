@@ -7,12 +7,16 @@ readme = "README.md"
 dynamic = ["version"]
 dependencies = [
     "pre_commit~=4.1.0",
-    "ocrmypdf~=16.10.0",
+    "pdftotext~=3.0.0",
     "rapidfuzz~=3.12.2",
     "pymupdf~=1.26.3",
-    "openai",
-    "docling>=2.75.0",
+    "openai~=2.31.0",
 ]
+
+[project.optional-dependencies]
+ocrmypdf = ["ocrmypdf~=16.10.0"]
+docling = ["docling~=2.75.0", "easyocr~=1.7.2"]
+all = ["ocrmypdf~=16.10.0", "docling~=2.75.0", "easyocr~=1.7.2"]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]

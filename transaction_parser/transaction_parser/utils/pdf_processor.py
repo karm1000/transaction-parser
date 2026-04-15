@@ -6,8 +6,6 @@ import pymupdf
 from frappe import _
 from frappe.core.doctype.file.file import File
 
-DEFAULT_PDF_PROCESSOR = "OCRMyPDF"
-
 
 class PDFProcessor(ABC):
     """
@@ -97,8 +95,18 @@ class DoclingPDFProcessor(PDFProcessor):
 
     _converter = None
 
+    # TODO: Give detail of install `docling` system dependency and opencv-python-headless for OCR
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
-        from docling.datamodel.base_models import ConversionStatus, DocumentStream
+        try:
+            from docling.datamodel.base_models import ConversionStatus, DocumentStream
+        except ImportError:
+            frappe.throw(
+                title=_("Missing Dependency"),
+                msg=_(
+                    "docling is not installed.<br>"
+                    "Install it with: <code>bench pip install transaction_parser[docling]</code>"
+                ),
+            )
 
         file = self.get_sanitized_file(file, page_limit)
 
@@ -125,11 +133,15 @@ class DoclingPDFProcessor(PDFProcessor):
     def _get_converter(self):
         if DoclingPDFProcessor._converter is None:
             from docling.datamodel.base_models import InputFormat
-            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.datamodel.pipeline_options import (
+                EasyOcrOptions,
+                PdfPipelineOptions,
+            )
             from docling.document_converter import DocumentConverter, PdfFormatOption
 
             pipeline_options = PdfPipelineOptions()
-            pipeline_options.do_ocr = False  # TODO: OCR Setup
+            pipeline_options.do_ocr = True
+            pipeline_options.ocr_options = EasyOcrOptions()
 
             DoclingPDFProcessor._converter = DocumentConverter(
                 format_options={
@@ -138,6 +150,34 @@ class DoclingPDFProcessor(PDFProcessor):
             )
 
         return DoclingPDFProcessor._converter
+
+
+class PDFtoTextProcessor(PDFProcessor):
+    """
+    PDF processor using pdftotext for layout-preserving text extraction.
+    """
+
+    def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
+        file = self.get_sanitized_file(file, page_limit)
+        return self.get_text(file)
+
+    def get_text(self, file: io.BytesIO) -> str:
+        try:
+            import pdftotext
+        except ImportError:
+            frappe.throw(
+                title=_("Missing Dependency"),
+                msg=_(
+                    "pdftotext is not installed.<br>"
+                    "Install OS dependencies first if not already installed: "
+                    "<code>sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev</code>"
+                    "<br>Then run: <code>bench setup requirements</code>"
+                ),
+            )
+
+        pdf = pdftotext.PDF(file, physical=True)
+
+        return "\n\n".join(page.strip() for page in pdf if page.strip())
 
 
 class OCRMyPDFProcessor(PDFProcessor):
@@ -151,28 +191,26 @@ class OCRMyPDFProcessor(PDFProcessor):
 
         return self.get_text(file)
 
+    # TODO: Give detail of install `tesseract-ocr` system dependency
     def apply_ocr(self, file: io.BytesIO) -> io.BytesIO:
-        import ocrmypdf
+        try:
+            import ocrmypdf
+        except ImportError:
+            frappe.throw(
+                title=_("Missing Dependency"),
+                msg=_(
+                    "ocrmypdf is not installed.<br>"
+                    "Install it with: <code>bench pip install transaction_parser[ocrmypdf]</code>"
+                ),
+            )
 
-        doc = pymupdf.open(stream=file, filetype="pdf")
-        pages_to_ocr = [
-            str(i) for i, page in enumerate(doc, 1) if not page.get_text("text").strip()
-        ]
-
-        doc.close()
         file.seek(0)
-
-        if not pages_to_ocr:
-            return file
-
-        pages = ",".join(pages_to_ocr)
 
         temp_file = io.BytesIO()
 
         ocrmypdf.ocr(
             input_file=file,
             output_file=temp_file,
-            pages=pages,
             progress_bar=False,
             rotate_pages=True,
             force_ocr=True,
@@ -182,9 +220,22 @@ class OCRMyPDFProcessor(PDFProcessor):
         return temp_file
 
 
+DEFAULT_PDF_PROCESSOR = "PDFtoText"
+
+BUILTIN_PDF_PROCESSORS = {
+    "PDFtoText": "transaction_parser.transaction_parser.utils.pdf_processor.PDFtoTextProcessor",
+    "OCRMyPDF": "transaction_parser.transaction_parser.utils.pdf_processor.OCRMyPDFProcessor",
+    "Docling": "transaction_parser.transaction_parser.utils.pdf_processor.DoclingPDFProcessor",
+}
+
+
 def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     """
     Factory function to get a PDF processor by name.
+
+    Resolution order:
+    1. Check `pdf_processors` hook
+    2. Fall back to built-in processors
 
     Usage:
 
@@ -193,7 +244,7 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
     text = processor.process(file, page_limit=5)
     ```
 
-    To register a custom processor from another app, add to its hooks.py:
+    To register or override a processor from another app, add to its hooks.py:
 
     ```
     pdf_processors = {
@@ -207,16 +258,20 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
             or DEFAULT_PDF_PROCESSOR
         )
 
-    processors = frappe.get_hooks("pdf_processors") or {}
+    # hooks override takes precedence
+    hook_processors = frappe.get_hooks("pdf_processors") or {}
+    class_path = (hook_processors.get(name) or [None])[-1]
 
-    # [-1] → last in resolution order app's overrides will take precedence
-    class_path = (processors.get(name) or [None])[-1]
+    # fall back to built-in processors
+    if not class_path:
+        class_path = BUILTIN_PDF_PROCESSORS.get(name)
 
     if not class_path:
+        available = get_available_pdf_processors()
         frappe.throw(
             title=_("Unsupported PDF Processor"),
             msg=_("PDF Processor '{0}' is not supported. <br>Choose from: {1}").format(
-                name, ", ".join(processors.keys())
+                name, ", ".join(available)
             ),
         )
 
@@ -224,6 +279,6 @@ def get_pdf_processor(name: str | None = None) -> PDFProcessor:
 
 
 def get_available_pdf_processors() -> list[str]:
-    """Return names of all registered PDF processors from hooks."""
-    processors = frappe.get_hooks("pdf_processors") or {}
-    return list(processors.keys())
+    """Return names of all registered PDF processors (built-in + hooks)."""
+    hook_processors = frappe.get_hooks("pdf_processors") or {}
+    return list({*BUILTIN_PDF_PROCESSORS, *hook_processors})

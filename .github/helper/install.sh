@@ -16,7 +16,7 @@ echo "Setting Up System Dependencies..."
 sudo apt update
 
 sudo apt remove mysql-server mysql-client
-sudo apt install libcups2-dev redis-server mariadb-client
+sudo apt install libcups2-dev redis-server mariadb-client libpoppler-cpp-dev pkg-config
 
 install_whktml() {
     wget -O /tmp/wkhtmltox.deb https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb

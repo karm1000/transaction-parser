@@ -26,8 +26,9 @@ _AI_MODEL_ORDER = {
 }
 
 _PDF_PROCESSOR_ORDER = {
-    "OCRMyPDF": 0,
-    "Docling": 1,
+    "PDFtoText": 0,
+    "OCRMyPDF": 1,
+    "Docling": 2,
 }
 
 

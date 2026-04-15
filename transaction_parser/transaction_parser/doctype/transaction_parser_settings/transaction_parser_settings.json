@@ -95,13 +95,13 @@
    "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5"
   },
   {
-   "default": "OCRMyPDF",
+   "default": "PDFtoText",
    "depends_on": "eval: doc.enabled",
    "description": "Select the library to use for PDF text extraction",
    "fieldname": "pdf_processor",
    "fieldtype": "Select",
    "label": "PDF Processor",
-   "options": "OCRMyPDF\nDocling"
+   "options": "PDFtoText\nOCRMyPDF\nDocling"
   },
   {
    "depends_on": "eval: doc.enabled",
@@ -175,7 +175,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-04-01 15:29:35.262995",
+ "modified": "2026-04-13 09:09:13.061580",
  "modified_by": "Administrator",
  "module": "Transaction Parser",
  "name": "Transaction Parser Settings",
