@@ -162,7 +162,18 @@ class PDFtoTextProcessor(PDFProcessor):
         return self.get_text(file)
 
     def get_text(self, file: io.BytesIO) -> str:
-        import pdftotext
+        try:
+            import pdftotext
+        except ImportError:
+            frappe.throw(
+                title=_("Missing Dependency"),
+                msg=_(
+                    "pdftotext is not installed.<br>"
+                    "Install OS dependencies first if not already installed: "
+                    "<code>sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev</code>"
+                    "<br>Then run: <code>bench setup requirements</code>"
+                ),
+            )
 
         pdf = pdftotext.PDF(file, physical=True)
 
