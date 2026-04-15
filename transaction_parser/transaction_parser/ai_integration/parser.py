@@ -91,7 +91,10 @@ class AIParser:
         log = self._create_log_entry(file_doc_name)
 
         try:
-            response = self._make_api_call(messages)
+            request_params = self._build_request_params(messages)
+            log.data = request_params
+
+            response = self._make_api_call(request_params)
             log.request_id = response.id
 
             response_dict = response.to_dict()
@@ -116,30 +119,32 @@ class AIParser:
         log.update(
             {
                 "reference_doctype": "File",
-                "reference_name": doc_name,
+                "reference_docname": doc_name,
             }
         )
 
         return log
 
-    def _make_api_call(self, messages: tuple) -> Any:
+    def _build_request_params(self, messages: tuple) -> dict:
+        request_params = {
+            "model": self.model.name,
+            "messages": messages,
+            "response_format": {"type": self.model.response_format},
+            "stream": False,
+        }
+
+        # Only include temperature if the model supports it
+        if self.model.supports_temperature:
+            request_params["temperature"] = 0.7
+
+        return request_params
+
+    def _make_api_call(self, request_params: dict) -> Any:
         """Make the actual API call to the AI service."""
         with OpenAI(
             api_key=self.get_api_key(),
             base_url=self.model.base_url,
         ) as client:
-            # Build the request parameters
-            request_params = {
-                "model": self.model.name,
-                "messages": messages,
-                "response_format": {"type": self.model.response_format},
-                "stream": False,
-            }
-
-            # Only include temperature if the model supports it
-            if self.model.supports_temperature:
-                request_params["temperature"] = 0.7
-
             return client.chat.completions.create(**request_params)
 
     def _process_response(self, response: dict) -> dict:
