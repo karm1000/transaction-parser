@@ -40,8 +40,8 @@ class Transaction:
     ):
         if not files:
             frappe.throw(
+                msg=_("Please attach at least one file to parse"),
                 title=_("No files attached"),
-                message=_("Please attach at least one file to parse"),
             )
 
         self.initialize()
