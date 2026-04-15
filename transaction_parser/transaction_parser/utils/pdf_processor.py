@@ -164,7 +164,6 @@ class PDFtoTextProcessor(PDFProcessor):
     def get_text(self, file: io.BytesIO) -> str:
         import pdftotext
 
-        file.seek(0)
         pdf = pdftotext.PDF(file, physical=True)
 
         return "\n\n".join(page.strip() for page in pdf if page.strip())
