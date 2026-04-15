@@ -102,7 +102,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "AI Model",
-   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5",
+   "options": "DeepSeek Chat\nDeepSeek Reasoner\nOpenAI gpt-4o\nOpenAI gpt-4o-mini\nOpenAI gpt-5\nOpenAI gpt-5-mini\nGoogle Gemini Pro-2.5\nGoogle Gemini Flash-2.5\nClaude Haiku-4.5",
    "read_only": 1
   },
   {
@@ -423,7 +423,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-13 09:38:44.604789",
+ "modified": "2026-04-15 12:00:33.722723",
  "modified_by": "Administrator",
  "module": "Parser Benchmark",
  "name": "Parser Benchmark Log",
