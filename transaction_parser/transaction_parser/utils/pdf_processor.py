@@ -132,12 +132,24 @@ class DoclingPDFProcessor(PDFProcessor):
 
     def _get_converter(self):
         if DoclingPDFProcessor._converter is None:
-            from docling.datamodel.base_models import InputFormat
-            from docling.datamodel.pipeline_options import (
-                EasyOcrOptions,
-                PdfPipelineOptions,
-            )
-            from docling.document_converter import DocumentConverter, PdfFormatOption
+            try:
+                from docling.datamodel.base_models import InputFormat
+                from docling.datamodel.pipeline_options import (
+                    EasyOcrOptions,
+                    PdfPipelineOptions,
+                )
+                from docling.document_converter import (
+                    DocumentConverter,
+                    PdfFormatOption,
+                )
+            except ImportError:
+                frappe.throw(
+                    title=_("Missing Dependency"),
+                    msg=_(
+                        "docling is not installed.<br>"
+                        "Install it with: <code>bench pip install transaction_parser[docling]</code>"
+                    ),
+                )
 
             pipeline_options = PdfPipelineOptions()
             pipeline_options.do_ocr = True
