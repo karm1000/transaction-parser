@@ -63,6 +63,23 @@ class TransactionParserSettings(Document):
         self.validate_incoming_email_accounts()
         self.validate_party_email()
         self.validate_json_fields()
+        self.warn_on_pdf_processor_change()
+
+    def warn_on_pdf_processor_change(self):
+        if not self.has_value_changed("pdf_processor"):
+            return
+
+        frappe.msgprint(
+            _(
+                "Make sure the required dependencies for {0} are installed.<br>"
+                "See {1} for setup instructions."
+            ).format(
+                frappe.bold(self.pdf_processor),
+                '<a href="https://github.com/resilient-tech/transaction-parser#pdf-processor-setup" target="_blank">PDF Processor Setup</a>',
+            ),
+            title=_("PDF Processor Changed"),
+            indicator="orange",
+        )
 
     def validate_lookback_count(self):
         if self.invoice_lookback_count <= 0:
