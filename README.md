@@ -6,7 +6,7 @@ Transaction Parser is an AI-powered add-on for ERPNext that automatically extrac
 
 ## Features
 
-**AI-Powered Extraction**: Uses advanced AI models (OpenAI, DeepSeek, Google Gemini) to extract structured data from PDFs
+**AI-Powered Extraction**: Uses advanced AI models (OpenAI, DeepSeek, Google Gemini, Anthropic) to extract structured data from PDFs
 * **Multi-Document Support**: Handles Sales Orders and Purchase Invoices (Expenses)
 * **Regional Support**: Special handling for India-specific requirements (GSTIN, PAN, HSN codes)
 * **Email Integration**: Automatically processes documents from incoming emails
@@ -29,8 +29,10 @@ Navigate to **Transaction Parser Settings** and configure:
 * OpenAI gpt-4o
 * OpenAI gpt-4o-mini
 * OpenAI gpt-5
-* Google Gemini 2.5 pro
-* Google Gemini 2.5 flash
+* OpenAI gpt-5-mini
+* Google Gemini Pro-2.5
+* Google Gemini Flash-2.5
+* Claude Haiku-4.5
 
   <img width="773" height="291" alt="image" src="https://github.com/user-attachments/assets/fc40bea1-1e11-4ef3-bcdf-f6c1db8585c8" />
 
@@ -38,11 +40,12 @@ Navigate to **Transaction Parser Settings** and configure:
 
 Add your API keys for the AI services:
 
-| Service Provider | Models Supported                 |
-|:-----------------|:---------------------------------|
-| OpenAI           | gpt-4o, gpt-4o-mini , gpt-5      |
-| DeepSeek         | deepseek-chat, deepseek-reasoner |
-| Google           | gemini 2.5 pro, gemini 2.5 flash |
+| Service Provider | Models Supported                       |
+|:-----------------|:---------------------------------------|
+| OpenAI           | gpt-4o, gpt-4o-mini, gpt-5, gpt-5-mini |
+| DeepSeek         | deepseek-chat, deepseek-reasoner       |
+| Google           | gemini-2.5-pro, gemini-2.5-flash       |
+| Anthropic        | claude-haiku-4-5                       |
 
   <img width="800" height="148" alt="image" src="https://github.com/user-attachments/assets/77f30bd8-59a1-4b66-8bf4-964bc2347ce4" />
 
@@ -94,15 +97,17 @@ When enabled, the system automatically:
 
 ## Model Comparison
 
-| Model             | Provider | Best For                                                | Speed     | Cost        |
-|:------------------|:---------|:--------------------------------------------------------|:----------|:------------|
-| gpt-5             | OpenAI   | State-of-the-art accuracy, complex multi-page documents | Medium    | High        |
-| gpt-4o            | OpenAI   | Complex documents, high accuracy                        | Medium    | Medium-High |
-| gpt-4o-mini       | OpenAI   | Cost-effective, good accuracy                           | Fast      | Low         |
-| gemini-2.5-pro    | Google   | Advanced reasoning, large context window                | Medium    | Medium      |
-| gemini-2.5-flash  | Google   | Fast processing, bulk documents                         | Very Fast | Low         |
-| deepseek-chat     | DeepSeek | General purpose extraction                              | Fast      | Low         |
-| deepseek-reasoner | DeepSeek | Complex reasoning tasks                                 | Slow      | Medium      |
+| Model             | Provider  | Best For                                                | Speed     | Cost        |
+|:------------------|:----------|:--------------------------------------------------------|:----------|:------------|
+| gpt-5             | OpenAI    | State-of-the-art accuracy, complex multi-page documents | Medium    | High        |
+| gpt-5-mini        | OpenAI    | Efficient reasoning, cost-effective                     | Fast      | Medium      |
+| gpt-4o            | OpenAI    | Complex documents, high accuracy                        | Medium    | Medium-High |
+| gpt-4o-mini       | OpenAI    | Cost-effective, good accuracy                           | Fast      | Low         |
+| gemini-2.5-pro    | Google    | Advanced reasoning, large context window                | Medium    | Medium      |
+| gemini-2.5-flash  | Google    | Fast processing, bulk documents                         | Very Fast | Low         |
+| deepseek-chat     | DeepSeek  | General purpose extraction                              | Fast      | Low         |
+| deepseek-reasoner | DeepSeek  | Complex reasoning tasks                                 | Slow      | Medium      |
+| claude-haiku-4-5  | Anthropic | Fast, lightweight tasks                                 | Fast      | Low         |
 
 ## India-Specific Features
 

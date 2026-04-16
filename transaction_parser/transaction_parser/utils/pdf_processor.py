@@ -95,7 +95,10 @@ class DoclingPDFProcessor(PDFProcessor):
 
     _converter = None
 
-    # TODO: Give detail of install `docling` system dependency and opencv-python-headless for OCR
+    SETUP_URL = (
+        "https://github.com/resilient-tech/transaction-parser#3-docling-optional"
+    )
+
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
         try:
             from docling.datamodel.base_models import ConversionStatus, DocumentStream
@@ -104,8 +107,9 @@ class DoclingPDFProcessor(PDFProcessor):
                 title=_("Missing Dependency"),
                 msg=_(
                     "docling is not installed.<br>"
-                    "Install it with: <code>bench pip install transaction_parser[docling]</code>"
-                ),
+                    "Install it with: <code>bench pip install transaction_parser[docling]</code><br>"
+                    "See <a href='{0}'>setup instructions</a> for more details."
+                ).format(self.SETUP_URL),
             )
 
         file = self.get_sanitized_file(file, page_limit)
@@ -132,12 +136,25 @@ class DoclingPDFProcessor(PDFProcessor):
 
     def _get_converter(self):
         if DoclingPDFProcessor._converter is None:
-            from docling.datamodel.base_models import InputFormat
-            from docling.datamodel.pipeline_options import (
-                EasyOcrOptions,
-                PdfPipelineOptions,
-            )
-            from docling.document_converter import DocumentConverter, PdfFormatOption
+            try:
+                from docling.datamodel.base_models import InputFormat
+                from docling.datamodel.pipeline_options import (
+                    EasyOcrOptions,
+                    PdfPipelineOptions,
+                )
+                from docling.document_converter import (
+                    DocumentConverter,
+                    PdfFormatOption,
+                )
+            except ImportError:
+                frappe.throw(
+                    title=_("Missing Dependency"),
+                    msg=_(
+                        "docling is not installed.<br>"
+                        "Install it with: <code>bench pip install transaction_parser[docling]</code><br>"
+                        "See <a href='{0}'>setup instructions</a> for more details."
+                    ).format(self.SETUP_URL),
+                )
 
             pipeline_options = PdfPipelineOptions()
             pipeline_options.do_ocr = True
@@ -157,6 +174,10 @@ class PDFtoTextProcessor(PDFProcessor):
     PDF processor using pdftotext for layout-preserving text extraction.
     """
 
+    SETUP_URL = (
+        "https://github.com/resilient-tech/transaction-parser#1-pdftotext-default"
+    )
+
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
         file = self.get_sanitized_file(file, page_limit)
         return self.get_text(file)
@@ -171,8 +192,9 @@ class PDFtoTextProcessor(PDFProcessor):
                     "pdftotext is not installed.<br>"
                     "Install OS dependencies first if not already installed: "
                     "<code>sudo apt install build-essential libpoppler-cpp-dev pkg-config python3-dev</code>"
-                    "<br>Then run: <code>bench setup requirements</code>"
-                ),
+                    "<br>Then run: <code>bench setup requirements</code><br>"
+                    "See <a href='{0}'>setup instructions</a> for more details."
+                ).format(self.SETUP_URL),
             )
 
         pdf = pdftotext.PDF(file, physical=True)
@@ -185,13 +207,16 @@ class OCRMyPDFProcessor(PDFProcessor):
     PDF processor using PyMuPDF for text extraction and OCRMyPDF for OCR.
     """
 
+    SETUP_URL = (
+        "https://github.com/resilient-tech/transaction-parser#2-ocrmypdf-optional"
+    )
+
     def process(self, file: io.BytesIO | File, page_limit: int | None = None) -> str:
         file = self.get_sanitized_file(file, page_limit)
         file = self.apply_ocr(file)
 
         return self.get_text(file)
 
-    # TODO: Give detail of install `tesseract-ocr` system dependency
     def apply_ocr(self, file: io.BytesIO) -> io.BytesIO:
         try:
             import ocrmypdf
@@ -200,8 +225,9 @@ class OCRMyPDFProcessor(PDFProcessor):
                 title=_("Missing Dependency"),
                 msg=_(
                     "ocrmypdf is not installed.<br>"
-                    "Install it with: <code>bench pip install transaction_parser[ocrmypdf]</code>"
-                ),
+                    "Install it with: <code>bench pip install transaction_parser[ocrmypdf]</code><br>"
+                    "See <a href='{0}'>setup instructions</a> for more details."
+                ).format(self.SETUP_URL),
             )
 
         file.seek(0)
