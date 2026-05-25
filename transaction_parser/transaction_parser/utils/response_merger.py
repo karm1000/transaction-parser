@@ -168,7 +168,7 @@ class ResponseMerger:
         source_value: dict,
     ) -> None:
         if key not in target or target[key] is None:
-            target[key] = {}
+            target[key] = _dict()
 
         self._merge_fields(field_type.children, target[key], source_value)
 
