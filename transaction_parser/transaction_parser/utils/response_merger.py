@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from frappe import _dict
+import frappe
 
 
 @dataclass
@@ -89,7 +89,9 @@ class ResponseMerger:
         schema: dict,
         match_keys: dict[str, list[str]] | None = None,
     ):
-        self.response = _dict(response) if isinstance(response, dict) else response
+        self.response = (
+            frappe._dict(response) if isinstance(response, dict) else response
+        )
         self.schema = schema
         self.match_keys = match_keys or {}
 
@@ -168,7 +170,7 @@ class ResponseMerger:
         source_value: dict,
     ) -> None:
         if key not in target or target[key] is None:
-            target[key] = _dict()
+            target[key] = frappe._dict()
 
         self._merge_fields(field_type.children, target[key], source_value)
 
