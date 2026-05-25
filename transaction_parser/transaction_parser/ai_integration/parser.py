@@ -1,3 +1,4 @@
+import json
 import re
 from typing import Any
 
@@ -97,7 +98,9 @@ class AIParser:
             response = self._make_api_call(request_params)
             log.request_id = response.id
 
-            response_dict = response.to_dict()
+            response_dict = json.loads(
+                response.model_dump_json(), object_hook=frappe._dict
+            )
             log.output = response_dict
 
             processed_response = self._process_response(response_dict)
