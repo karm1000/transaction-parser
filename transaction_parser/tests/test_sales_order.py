@@ -341,6 +341,22 @@ class TestSalesOrder(FrappeTestCase):
 
         self.assertEqual(controller.get_terms(), "Only description")
 
+    def test_get_terms_with_missing_local_terms_key(self):
+        """Test terms generation when the local_terms key is completely absent.
+
+        Unlike an explicit None value, this verifies get_terms relies on
+        frappe._dict returning None for a missing attribute rather than the
+        key merely being present with a null value.
+        """
+        modified_data = copy.deepcopy(self.sample_data)
+        if hasattr(modified_data, "local_terms"):
+            delattr(modified_data, "local_terms")
+
+        controller = SalesOrder()
+        controller.data = modified_data
+
+        self.assertEqual(controller.get_terms(), "")
+
     # ----------------------
     # Integration Tests
     # ----------------------
