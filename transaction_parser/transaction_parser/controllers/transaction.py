@@ -496,11 +496,11 @@ class Transaction:
     ### Terms and Conditions
 
     def get_terms(self) -> str:
-        terms = (
-            description if (description := self.data.local_terms.description) else ""
-        )
+        local_terms = self.data.local_terms or frappe._dict()
 
-        if incoterms := self.data.local_terms.incoterms:
+        terms = local_terms.description or ""
+
+        if incoterms := local_terms.incoterms:
             terms += f"\nIncoterms: {incoterms}"
 
         return terms
