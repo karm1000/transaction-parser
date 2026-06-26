@@ -301,6 +301,47 @@ class TestSalesOrder(FrappeTestCase):
         self.assertEqual(item.parentfield, "items")
 
     # ----------------------
+    # Terms and Conditions Tests
+    # ----------------------
+
+    def test_get_terms_with_local_terms(self):
+        """Test terms generation from local_terms data."""
+        controller = SalesOrder()
+        controller.data = self.sample_data
+
+        terms = controller.get_terms()
+
+        self.assertIn("Standard terms and conditions", terms)
+        self.assertIn("Incoterms: EXW", terms)
+
+    def test_get_terms_with_missing_local_terms(self):
+        """Test terms generation does not fail when local_terms is None.
+
+        The AI response may omit `local_terms` or return it as null, so
+        get_terms must handle a None value gracefully instead of raising
+        AttributeError.
+        """
+        modified_data = copy.deepcopy(self.sample_data)
+        modified_data.local_terms = None
+
+        controller = SalesOrder()
+        controller.data = modified_data
+
+        self.assertEqual(controller.get_terms(), "")
+
+    def test_get_terms_with_partial_local_terms(self):
+        """Test terms generation when local_terms has only a description."""
+        modified_data = copy.deepcopy(self.sample_data)
+        modified_data.local_terms = frappe._dict(
+            {"description": "Only description", "incoterms": None}
+        )
+
+        controller = SalesOrder()
+        controller.data = modified_data
+
+        self.assertEqual(controller.get_terms(), "Only description")
+
+    # ----------------------
     # Integration Tests
     # ----------------------
     @patch("transaction_parser.transaction_parser.controllers.transaction.AIParser")
