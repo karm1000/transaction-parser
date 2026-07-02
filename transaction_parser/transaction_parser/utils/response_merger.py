@@ -80,6 +80,53 @@ class SchemaParser:
             return PrimitiveField(required=True)
 
 
+def normalize_response(response: dict, schema: dict) -> frappe._dict:
+    """Coerce an AI response to the schema's shape (see _normalize_fields)."""
+    response = frappe._dict(response) if isinstance(response, dict) else response
+    _normalize_fields(SchemaParser().parse(schema), response)
+    return response
+
+
+def _normalize_fields(fields: dict[str, FieldType], data: dict) -> None:
+    """Coerce data to the schema's shape, in place.
+
+    The AI may return null (or omit keys) where the schema expects an object
+    or a list. Consumers access the response by attribute path
+    (e.g. data.buyer.billing.contact.email) and expect list fields to support
+    concatenation, so object fields must always be frappe._dict and list
+    fields must always be lists.
+    """
+    for key, field_type in fields.items():
+        value = data.get(key)
+
+        if isinstance(field_type, ObjectField):
+            if not isinstance(value, dict):
+                value = frappe._dict()
+            elif not isinstance(value, frappe._dict):
+                value = frappe._dict(value)
+
+            data[key] = value
+            _normalize_fields(field_type.children, value)
+
+        elif isinstance(field_type, ListField):
+            if value is None:
+                value = []
+            elif not isinstance(value, list):
+                value = [value]
+
+            data[key] = value
+
+            if isinstance(field_type.item_type, ObjectField):
+                for idx, item in enumerate(value):
+                    if not isinstance(item, dict):
+                        continue
+
+                    if not isinstance(item, frappe._dict):
+                        value[idx] = item = frappe._dict(item)
+
+                    _normalize_fields(field_type.item_type.children, item)
+
+
 class ResponseMerger:
     """Schema-driven merger for AI responses from multiple attachments."""
 
@@ -97,6 +144,8 @@ class ResponseMerger:
 
         parser = SchemaParser()
         self.fields = parser.parse(schema)
+
+        _normalize_fields(self.fields, self.response)
 
     def is_complete(self) -> bool:
         """Return True if all required fields are filled."""
@@ -136,6 +185,10 @@ class ResponseMerger:
     def merge(self, new_response: dict) -> None:
         """Merge new_response into the existing response."""
         self._merge_fields(self.fields, self.response, new_response)
+
+        # values copied from new_response (e.g. whole lists) may themselves
+        # contain nulls where the schema expects objects or lists
+        _normalize_fields(self.fields, self.response)
 
     def _merge_fields(
         self,

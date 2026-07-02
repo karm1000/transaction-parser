@@ -10,6 +10,7 @@ from transaction_parser.transaction_parser.utils import to_dict
 from transaction_parser.transaction_parser.utils.file_processor import FileProcessor
 from transaction_parser.transaction_parser.utils.response_merger import (
     ResponseMerger,
+    normalize_response,
 )
 
 
@@ -93,7 +94,10 @@ class Transaction:
         if len(self.files) > 1:
             return self._parse_multiple_files(ai_model, page_limit)
 
-        return self._parse_single_file(self.files[0], ai_model, page_limit)
+        return normalize_response(
+            self._parse_single_file(self.files[0], ai_model, page_limit),
+            self.get_schema(),
+        )
 
     def _parse_single_file(
         self,
