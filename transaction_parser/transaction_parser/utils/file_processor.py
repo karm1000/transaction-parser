@@ -1,4 +1,6 @@
+import copy
 import io
+import zipfile
 
 import frappe
 from frappe import _
@@ -13,6 +15,25 @@ from transaction_parser.transaction_parser.utils.pdf_processor import (
     PDFProcessor,
     get_pdf_processor,
 )
+
+
+def normalize_xlsx_content(file_content: bytes) -> bytes:
+    """
+    Rewrite XLSX zip entries written with OS path separators (xl\\workbook.xml),
+    which openpyxl cannot look up. Returns content unchanged if already valid.
+    """
+    with zipfile.ZipFile(io.BytesIO(file_content)) as source:
+        if not any("\\" in name for name in source.namelist()):
+            return file_content
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as target:
+            for info in source.infolist():
+                normalized_info = copy.copy(info)
+                normalized_info.filename = info.filename.replace("\\", "/")
+                target.writestr(normalized_info, source.read(info))
+
+    return buffer.getvalue()
 
 
 class FileProcessor:
@@ -55,19 +76,36 @@ class FileProcessor:
         """
         file_content = doc.get_content()
 
-        if doc.file_type == "CSV":
-            file_content_str = self.decode_csv_content(file_content)
-            rows = read_csv_content(file_content_str)
-        elif doc.file_type == "XLSX":
-            rows = read_xlsx_file_from_attached_file(fcontent=file_content)
-        elif doc.file_type == "XLS":
-            rows = read_xls_file_from_attached_file(file_content)
-        else:
+        if doc.file_type not in ("CSV", "XLSX", "XLS"):
             frappe.throw(
                 title=_("Unsupported File Type"),
                 msg=_(
                     "Cannot process spreadsheet with file type: {0}. <br> Supported types are CSV, XLSX, and XLS."
                 ).format(doc.file_type),
+            )
+
+        try:
+            if doc.file_type == "CSV":
+                file_content_str = self.decode_csv_content(file_content)
+                rows = read_csv_content(file_content_str)
+            elif doc.file_type == "XLSX":
+                rows = read_xlsx_file_from_attached_file(
+                    fcontent=normalize_xlsx_content(file_content)
+                )
+            else:
+                rows = read_xls_file_from_attached_file(file_content)
+        except frappe.ValidationError:
+            raise
+        except Exception:
+            frappe.log_error(
+                title="Transaction Parser: spreadsheet parse failed",
+                message=frappe.get_traceback(),
+            )
+            frappe.throw(
+                title=_("Unable to Read File"),
+                msg=_("Unable to read {0}. The file may be corrupted.").format(
+                    doc.file_name
+                ),
             )
 
         # Convert rows to a formatted string representation
