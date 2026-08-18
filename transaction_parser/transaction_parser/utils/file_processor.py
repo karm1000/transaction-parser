@@ -84,29 +84,17 @@ class FileProcessor:
                 ).format(doc.file_type),
             )
 
-        try:
-            if doc.file_type == "CSV":
-                file_content_str = self.decode_csv_content(file_content)
-                rows = read_csv_content(file_content_str)
-            elif doc.file_type == "XLSX":
-                rows = read_xlsx_file_from_attached_file(
-                    fcontent=normalize_xlsx_content(file_content)
-                )
-            else:
-                rows = read_xls_file_from_attached_file(file_content)
-        except frappe.ValidationError:
-            raise
-        except Exception:
-            frappe.log_error(
-                title="Transaction Parser: spreadsheet parse failed",
-                message=frappe.get_traceback(),
+        if doc.file_type == "CSV":
+            file_content_str = self.decode_csv_content(file_content)
+            rows = read_csv_content(file_content_str)
+
+        elif doc.file_type == "XLSX":
+            rows = read_xlsx_file_from_attached_file(
+                fcontent=normalize_xlsx_content(file_content)
             )
-            frappe.throw(
-                title=_("Unable to Read File"),
-                msg=_("Unable to read {0}. The file may be corrupted.").format(
-                    doc.file_name
-                ),
-            )
+
+        elif doc.file_type == "XLS":
+            rows = read_xls_file_from_attached_file(file_content)
 
         # Convert rows to a formatted string representation
         return self.format_rows_as_text(rows)
