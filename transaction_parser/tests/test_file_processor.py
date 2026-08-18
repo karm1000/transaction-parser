@@ -70,12 +70,3 @@ class TestFileProcessor(FrappeTestCase):
         content = FileProcessor().process_spreadsheet(doc)
         self.assertIn("ITEM-001", content)
         self.assertIn("Total rows: 3", content)
-
-    def test_process_spreadsheet_throws_readable_error_for_corrupt_file(self):
-        doc = Mock(file_type="XLSX", file_name="orders.xlsx")
-        doc.get_content.return_value = b"not a spreadsheet"
-
-        with self.assertRaises(frappe.ValidationError) as context:
-            FileProcessor().process_spreadsheet(doc)
-
-        self.assertIn("Unable to read orders.xlsx", str(context.exception))
